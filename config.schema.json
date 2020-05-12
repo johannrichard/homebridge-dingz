@@ -1,7 +1,7 @@
 {
   "pluginAlias": "Dingz",
   "pluginType": "platform",
-  "singular": true,
+  "singular": false,
   "schema": {
     "type": "object",
     "properties": {
@@ -19,7 +19,7 @@
       "devices": {
         "title": "Dingz Devices",
         "type": "array",
-        "dingz": {
+        "items": {
           "title": "Dingz",
           "type": "object",
           "properties": {
