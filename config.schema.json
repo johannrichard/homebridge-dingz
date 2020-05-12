@@ -1,5 +1,5 @@
 {
-  "pluginAlias": "ExampleHomebridgePlugin",
+  "pluginAlias": "Dingz",
   "pluginType": "platform",
   "singular": true,
   "schema": {
@@ -8,8 +8,40 @@
       "name": {
         "title": "Name",
         "type": "string",
-        "required": true,
-        "default": "Example Dynamic Platform"
+        "default": "Dingz SmartHome Device",
+        "required": true
+      },
+      "globalToken": {
+        "title": "Global REST API Token",
+        "type": "string",
+        "description": "Set a global authentication token. This will be used for auto-discovery on the local network and as default token for manually specified devices."
+      },
+      "devices": {
+        "title": "Dingz Devices",
+        "type": "array",
+        "dingz": {
+          "title": "Dingz",
+          "type": "object",
+          "properties": {
+            "name": {
+              "title": "Name",
+              "type": "string",
+              "default": "Dingz SmartHome Device",
+              "required": true
+            },
+            "address": {
+              "title": "IP / Hostname",
+              "type": "string",
+              "format": "hostname",
+              "required": true
+            },
+            "token": {
+              "title": "REST API Token",
+              "type": "string",
+              "description": "If you have set a Token to protect the REST API, enter it here. Highly recommended."
+            }
+          }
+        }
       }
     }
   }

@@ -1,16 +1,17 @@
 {
   "private": true,
-  "displayName": "Plugin Name",
-  "name": "homebridge-plugin-name",
+  "displayName": "Homebridge Dingz Plugin",
+  "name": "homebridge-dingz-da",
   "version": "1.0.0",
-  "description": "A short description about what your plugin does.",
+  "author": "johannrichard",
+  "description": "Homebridge Plugin for Dingz & myStrom Devices. Implements some (but not all, due to API limitations) functions of a [dingz](https://dingz.ch) Smart Home Device.",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "git://github.com/USERNAME/GITHUB_PROJECT_NAME.git"
+    "url": "git://github.com/johannrichard/homebridge-dingz-da.git"
   },
   "bugs": {
-    "url": "https://github.com/USERNAME/GITHUB_PROJECT_NAME/issues"
+    "url": "https://github.com/johannrichard/homebridge-dingz-da/issues"
   },
   "engines": {
     "node": ">=10.17.0",
@@ -24,18 +25,28 @@
     "prepublishOnly": "npm run lint && npm run build"
   },
   "keywords": [
-    "homebridge-plugin"
+    "homebridge-plugin",
+    "dingz",
+    "smarthome",
+    "iot"
   ],
   "dependencies": {},
   "devDependencies": {
     "@types/node": "^13.13.4",
+    "@types/node-fetch": "^2.5.7",
     "@typescript-eslint/eslint-plugin": "^2.30.0",
     "@typescript-eslint/parser": "^2.30.0",
+    "abort-controller": "^3.0.0",
     "eslint": "^6.8.0",
+    "gretchen": "^1.1.2",
     "homebridge": "^1.0.4",
+    "node-fetch": "^2.6.0",
     "nodemon": "^2.0.3",
     "rimraf": "^3.0.2",
     "ts-node": "^8.10.1",
-    "typescript": "^3.8.3"
+    "typescript": "^3.8.3",
+    "popsicle": "^12.0.5",
+    "async-mutex": "^0.2.2",
+    "cockatiel": "^0.1.5"
   }
 }

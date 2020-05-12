@@ -1,0 +1,745 @@
+import {
+  CharacteristicEventTypes,
+  CharacteristicGetCallback,
+  CharacteristicSetCallback,
+  CharacteristicValue,
+  PlatformAccessory,
+  Service,
+} from 'homebridge';
+
+import { Policy, ConsecutiveBreaker } from 'cockatiel';
+
+// Internal types
+import {
+  TemperatureData,
+  MotionData,
+  DingzDevices,
+  DingzDeviceInfo,
+  DingzInputInfoItem,
+  DingzInputInfo,
+  DeviceInfo,
+  Disposable,
+  DimmerTimer,
+  DimmerId,
+  DimmerProps,
+  WindowCoverProps,
+  DimmerState,
+  WindowCoveringId,
+  WindowCoveringState,
+  WindowCoveringTimer,
+} from './util/internalTypes';
+
+import { MethodNotImplementedError } from './util/errors';
+import { DingzDaHomebridgePlatform } from './platform';
+
+// Define a policy that will retry 20 times at most
+const retry = Policy.handleAll()
+  .retry()
+  .exponential({ maxDelay: 10 * 1000, maxAttempts: 20 });
+
+// Create a circuit breaker that'll stop calling the executed function for 10
+// seconds if it fails 5 times in a row. This can give time for e.g. a database
+// to recover without getting tons of traffic.
+const circuitBreaker = Policy.handleAll().circuitBreaker(10 * 1000, new ConsecutiveBreaker(5));
+const retryWithBreaker = Policy.wrap(retry, circuitBreaker);
+/**
+ * Interfaces
+ */
+
+interface Success {
+  name: string;
+  occupation: string;
+}
+
+interface Error {
+  code: number;
+  errors: string[];
+}
+
+/**
+ * Platform Accessory
+ * An instance of this class is created for each accessory your platform registers
+ * Each accessory may expose multiple services of different service types.
+ */
+
+export class DingzDaAccessory implements Disposable {
+  /*
+  private readonly name: string;
+  private readonly address: string;
+  private readonly baseUrl: string;
+  private readonly token: string;
+  private readonly hap: HAP;
+  private readonly hasPir: boolean = false;
+  */
+  private services: Service[] = [];
+
+  // Eventually replaced by:
+  private switchOn = false;
+  private device: DeviceInfo;
+  private dingzDeviceInfo: DingzDeviceInfo;
+  private baseUrl: string;
+
+  /**
+   * These are just used to create a working example
+   * You should implement your own code to track the state of your accessory
+   */
+  private exampleStates = {
+    On: false,
+    Brightness: 100,
+  }
+
+  // Todo: Make proper internal representation
+  private dingzStates = {
+    Temperature: 0,
+    Dimmers: {
+      0: { on: false, value: 0, ramp: 0 },
+      1: { on: false, value: 0, ramp: 0 },
+      2: { on: false, value: 0, ramp: 0 },
+      3: { on: false, value: 0, ramp: 0 },
+    } as DimmerProps,
+    WindowCovers: {
+      0: {
+        target: { blind: 0, lamella: 0 },
+        current: { blind: 0, lamella: 0 },
+      } as WindowCoveringState,
+      1: {
+        target: { blind: 0, lamella: 0 },
+        current: { blind: 0, lamella: 0 },
+      } as WindowCoveringState,
+    } as WindowCoverProps,
+    Motion: false,
+  }
+
+  // Take stock of intervals to dispose at the end of the life of the Accessory
+  private serviceTimers: NodeJS.Timer[] = [];
+  private motionTimer: NodeJS.Timer | undefined;
+  private dimmerTimers = {} as DimmerTimer;
+  private windowCoveringTimers = {} as WindowCoveringTimer;
+
+  constructor(
+    private readonly platform: DingzDaHomebridgePlatform,
+    private readonly accessory: PlatformAccessory,
+  ) {
+    // Set Base URL
+    this.device = this.accessory.context.device;
+    this.dingzDeviceInfo = this.device.dingzDeviceInfo as DingzDeviceInfo;
+    this.baseUrl = 'http://' + this.device.address;
+    /*
+     * ID Gneration for the various Accessories in the myStrom / Dingz Universe:
+     * DINGZ Dimmer: [MAC]-D[0-3] for Dimmer 1-4
+     * DINGZ PIR: [MAC]-PIR
+     * DINGZ Temperature: [MAC]-T
+     * DINGZ Motion Sensor: [MAC]-M
+     * DINGZ Blinds/Shades: [MAC]-BD[0-1] for Blinds 1/2
+     * DINGZ Button: [MAC]-BT[0-3] for Button 1/4
+     */
+
+    this.platform.log.debug('Setting informationService Characteristics ->', this.device.model);
+    this.accessory.getService(this.platform.Service.AccessoryInformation)!
+      .setCharacteristic(this.platform.Characteristic.Manufacturer, 'Iolo AG')
+      .setCharacteristic(this.platform.Characteristic.Model, this.device.model as string)
+      .setCharacteristic(this.platform.Characteristic.FirmwareRevision, this.dingzDeviceInfo.fw_version)
+      .setCharacteristic(this.platform.Characteristic.HardwareRevision, this.dingzDeviceInfo.fw_version_puck)
+      .setCharacteristic(this.platform.Characteristic.SerialNumber, this.device.mac);
+    /**** 
+     * How to discover Accessories:
+     * - Check for UDP Packets and/or use manually configured accessories
+     */
+
+    // Add Dimmers, Blinds etc.
+    this.platform.log.debug('Adding output devices -> [...]');
+    retryWithBreaker.execute(() => this.getDeviceInputConfig()).then(data => {
+      this.platform.log.debug('Got DeviceInputConfig ->', JSON.stringify(data));
+      if (data.inputs) {
+        this.device.dingzInputInfo = data.inputs;
+      }
+      this.addOutputServices();
+    });
+
+    /** 
+     * Add auxiliary services (Motion, Temperature)
+     */
+    if (this.dingzDeviceInfo.has_pir) {
+      // Dingz has a Motion sensor -- let's create it
+      this.addMotionService();
+    } else {
+      this.platform.log.debug('Your Dingz ', this.accessory.displayName, 'has no Motion sensor.');
+    }
+    // Dingz has a temperature sensor, make it available here
+    // create a new Temperature Sensor service
+    const temperatureService: Service =
+      this.accessory.getService(this.platform.Service.TemperatureSensor) ??
+      this.accessory.addService(this.platform.Service.TemperatureSensor);
+    temperatureService.setCharacteristic(this.platform.Characteristic.Name, this.device.name + ' Funky Temperature');
+
+    // create handlers for required characteristics
+    temperatureService.getCharacteristic(this.platform.Characteristic.CurrentTemperature)
+      .on(CharacteristicEventTypes.GET, this.getTemperature.bind(this));
+    this.services.push(temperatureService);
+
+    this.services.forEach(service => {
+      this.platform.log.debug('Service created ->', service.getCharacteristic(this.platform.Characteristic.Name).value);
+    });
+
+    const updateInterval: NodeJS.Timer = setInterval(() => {
+      // Update Device Config (TODO: Eventually only every few hours or so)
+      this.updateAccessory();
+
+      // Get temperature value from Device
+      let currentTemperature: number;
+      this.getDeviceTemperature().then(data => {
+
+        if (data.success) {
+          currentTemperature = data.temperature;
+
+          if (this.dingzStates.Temperature !== currentTemperature) {
+            this.dingzStates.Temperature = currentTemperature;
+
+            temperatureService.updateCharacteristic(this.platform.Characteristic.CurrentTemperature, currentTemperature);
+            this.platform.log.debug('Pushed updated current Temperature state of',
+              temperatureService.getCharacteristic(this.platform.Characteristic.Name).value,
+              'to HomeKit:', currentTemperature);
+          }
+        }
+      });
+    }, 10000);
+    this.serviceTimers.push(updateInterval);
+  }
+
+  /**
+   * Handle the "GET" requests from HomeKit 
+   * to get the current value of the "Current Temperature" characteristic
+   */
+  private getTemperature(callback: CharacteristicSetCallback) {
+
+    // set this to a valid value for CurrentTemperature
+    const currentTemperature: number = this.dingzStates.Temperature;
+    this.platform.log.debug('Get Characteristic Temperature ->', currentTemperature);
+
+    callback(null, currentTemperature);
+  }
+
+
+  /**
+   * Handle Handle the "GET" requests from HomeKit
+   * to get the current value of the "Motion Detected" characteristic
+   */
+  private getMotionDetected(callback: CharacteristicSetCallback) {
+
+    // set this to a valid value for MotionDetected
+    const isMotion = this.dingzStates.Motion;
+    this.platform.log.debug('Get Characteristic getMotionDetected ->', isMotion);
+
+    callback(null, isMotion);
+  }
+
+  /*
+     * This method is optional to implement. It is called when HomeKit ask to identify the accessory.
+     * Typical this only ever happens at the pairing process.
+     */
+  identify(): void {
+    this.platform.log.debug('Identify! -> Who am I? I am', this.accessory.displayName);
+  }
+
+  private addOutputServices() {
+
+    // This is the block for the multiple services (Dimmers 1-4 / Blinds 1-2 / Buttons 1-4)
+    // If "Input" is set, Dimmer 1 won't work. We have to take this into account
+
+    // To avoid "Cannot add a Service with the same UUID another Service without also defining a unique 'subtype' property." error,
+    // when creating multiple services of the same type, you need to use the following syntax to specify a name and subtype id:
+    // this.accessory.getService('NAME') ?? this.accessory.addService(this.platform.Service.Lightbulb, 'NAME', 'USER_DEFINED_SUBTYPE');
+
+    // get the LightBulb service if it exists, otherwise create a new LightBulb service
+    // you can create multiple services for each accessory
+    const dimmerServices: Service[] = [];
+    const windowCoverServices: Service[] = [];
+
+    const inputConfig: DingzInputInfoItem[] | undefined = this.device.dingzInputInfo;
+    const baseName: string = this.accessory.displayName;
+    switch (this.dingzDeviceInfo.dip_config) {
+      case 0:
+        // DIP = 0: D0, D1, D2, D3; (Subtypes) (Unless Input, then D1, D2, D3)
+        if (inputConfig && !inputConfig[0].active) { // D0
+          dimmerServices.push(this.addDimmerService(baseName, 0));
+        }
+        // D1, D2, D3
+        dimmerServices.push(this.addDimmerService(baseName, 1));
+        dimmerServices.push(this.addDimmerService(baseName, 2));
+        dimmerServices.push(this.addDimmerService(baseName, 3));
+        break;
+      case 1:
+        // DIP = 1: M0, D2, D3; 
+        windowCoverServices.push(this.addWindowCoveringService(baseName, 0));
+        dimmerServices.push(this.addDimmerService(baseName, 2));
+        dimmerServices.push(this.addDimmerService(baseName, 3));
+        break;
+      case 2:
+        // DIP = 2: D0, D1, M1; (Unless Input, then D1, M1);
+        if (inputConfig && !inputConfig[0].active) { // D0
+          dimmerServices.push(this.addDimmerService(baseName, 0));
+        }
+        dimmerServices.push(this.addDimmerService(baseName, 1));
+        windowCoverServices.push(this.addWindowCoveringService(baseName, 1));
+        break;
+      case 3:
+        // DIP = 3: M0, M1;
+        windowCoverServices.push(this.addWindowCoveringService(baseName, 0));
+        windowCoverServices.push(this.addWindowCoveringService(baseName, 1));
+        break;
+      default:
+        break;
+    }
+
+    windowCoverServices.forEach(service => {
+      this.services.push(service);
+    });
+    dimmerServices.forEach(service => {
+      this.services.push(service);
+    });
+  }
+
+  private addDimmerService(name: string, id?: DimmerId) {
+
+    let service: Service;
+    if (id) {
+      service = this.accessory.getServiceById(this.platform.Service.Lightbulb, id.toString()) ??
+        this.accessory.addService(this.platform.Service.Lightbulb, `${name} D${id}`, id.toString());
+    } else {
+      service = this.accessory.getService(this.platform.Service.Lightbulb) ??
+        this.accessory.addService(this.platform.Service.Lightbulb, name);
+    }
+    // each service must implement at-minimum the "required characteristics" for the given service type
+    // see https://developers.homebridge.io/#/service/Lightbulb
+
+    // register handlers for the On/Off Characteristic
+    service.getCharacteristic(this.platform.Characteristic.On)
+      .on(CharacteristicEventTypes.SET, this.setOn.bind(this, id as DimmerId)) // SET - bind to the `setOn` method below
+      .on(CharacteristicEventTypes.GET, this.getOn.bind(this, id as DimmerId)); // GET - bind to the `getOn` method below
+
+    // register handlers for the Brightness Characteristic
+    service.getCharacteristic(this.platform.Characteristic.Brightness)
+      .on(CharacteristicEventTypes.SET, this.setBrightness.bind(this, id as DimmerId)); // SET - bind to the 'setBrightness` method below
+
+    // Here we change update the brightness to a random value every 5 seconds using 
+    // the `updateCharacteristic` method.
+    const updateInterval: NodeJS.Timer = setInterval(() => {
+      // assign the current brightness a random value between 0 and 100      
+      
+      try {
+        this.getDeviceDimmer(id as DimmerId).then(state => {
+          if (typeof state !== 'undefined' && id) {
+          // push the new value to HomeKit
+            this.dingzStates.Dimmers[id].on = state.on;
+            this.dingzStates.Dimmers[id].value = state.value;
+            this.dingzStates.Dimmers[id].ramp = state.ramp;
+
+            service.updateCharacteristic(this.platform.Characteristic.Brightness, state.value);
+            service.updateCharacteristic(this.platform.Characteristic.On, state.on);
+
+            this.platform.log.debug('Pushed updated current Brightness and On state of',
+              service.getCharacteristic(this.platform.Characteristic.Name).value,
+              'to HomeKit:', state.value, '->', state.on);
+
+          }
+        });
+      } catch (e) {
+        this.platform.log.error(
+          'Error ->',
+          e.name,
+          ', unable to fetch Dimmer data',
+        );
+      }
+    }, 10000);
+
+    // FIXME: Seprate intervals variable to keep track
+    if (id && updateInterval) {
+      this.dimmerTimers[id as number] = updateInterval;
+    }
+    return service;
+  }
+
+  private removeDimmerService(id: 0 | 1 | 2 | 3) {
+    // Remove motionService
+    const service: Service | undefined = this.accessory.getServiceById(this.platform.Service.Lightbulb, id.toString());
+    if (service) {
+      this.platform.log.debug('Removing Dimmer ->', service.displayName);
+      this.accessory.removeService(service);
+      clearTimeout(this.dimmerTimers[id]);
+    }
+  }
+
+  /**
+   * Handle "SET" requests from HomeKit
+   * These are sent when the user changes the state of an accessory, for example, turning on a Light bulb.
+   */
+  private async setOn(id: DimmerId, value: CharacteristicValue, callback: CharacteristicSetCallback) {
+    this.dingzStates.Dimmers[id].on = value as boolean;
+    this.platform.log.debug('Set Characteristic D', id, 'On ->', value);
+    try {
+      await this.setDeviceDimmer(id, value as boolean);
+    } catch (e) {
+      this.platform.log.error(
+        'Error ->',
+        e.name,
+        ', unable to set Dimmer data ', id,
+      );
+    }
+    // you must call the callback function
+    callback(null);
+  }
+
+  /**
+   * Handle the "GET" requests from HomeKit   
+   */
+  private async getOn(id: DimmerId, callback: CharacteristicGetCallback) {
+
+    this.platform.log.debug('Dimmers: ', JSON.stringify(this.dingzStates.Dimmers));
+    const isOn: boolean = this.dingzStates.Dimmers[id].on;
+
+    this.platform.log.debug('Get Characteristic ', id, 'On ->', isOn);
+
+    // you must call the callback function
+    // the first argument should be null if there were no errors
+    // the second argument should be the value to return
+    await callback(null, isOn);
+  }
+
+  /**
+   * Handle "SET" requests from HomeKit
+   * These are sent when the user changes the state of an accessory, for example, changing the Brightness
+   */
+  private async setBrightness(id: DimmerId, value: CharacteristicValue, callback: CharacteristicSetCallback) {
+    // implement your own code to set the brightness
+    const isOn: boolean = value > 0 ? true : false;
+    this.dingzStates.Dimmers[id].value = value as number;
+
+    this.platform.log.debug('Set Characteristic Brightness -> ', value);
+    // Call setDimmerValue()
+    await this.setDeviceDimmer(id, isOn, value as number);
+    // you must call the callback function
+    callback(null);
+  }
+
+  // Add WindowCovering (Blinds)
+  private addWindowCoveringService(name: string, id?: WindowCoveringId) {
+    let service: Service;
+    if (id) {
+      service = this.accessory.getServiceById(this.platform.Service.WindowCovering, id.toString()) ??
+        this.accessory.addService(this.platform.Service.WindowCovering, `${name} B${id}`, id.toString());
+    } else {
+      service = this.accessory.getService(this.platform.Service.WindowCovering) ??
+        this.accessory.addService(this.platform.Service.WindowCovering, name);
+    }
+    // each service must implement at-minimum the "required characteristics" for the given service type
+    // see https://developers.homebridge.io/#/service/Lightbulb
+
+    // register handlers for the On/Off Characteristic
+    service.getCharacteristic(this.platform.Characteristic.TargetPosition)
+      .on(CharacteristicEventTypes.SET, this.setPosition.bind(this, id as WindowCoveringId)); 
+    service.getCharacteristic(this.platform.Characteristic.TargetHorizontalTiltAngle)
+      .on(CharacteristicEventTypes.SET, this.setTiltAngle.bind(this, id as WindowCoveringId)); 
+
+    service.getCharacteristic(this.platform.Characteristic.CurrentPosition)
+      .on(CharacteristicEventTypes.GET, this.getPosition.bind(this, id as WindowCoveringId)); 
+    service.getCharacteristic(this.platform.Characteristic.CurrentHorizontalTiltAngle)
+      .on(CharacteristicEventTypes.GET, this.getTiltAngle.bind(this, id as WindowCoveringId)); 
+
+    // Here we change update the brightness to a random value every 5 seconds using 
+    // the `updateCharacteristic` method.
+    const updateInterval: NodeJS.Timer = setInterval(() => {
+      // assign the current brightness a random value between 0 and 100      
+      try {
+        this.getWindowCovering(id as WindowCoveringId).then(state => {
+          if (typeof state !== 'undefined' && id) {
+            // push the new value to HomeKit
+            this.dingzStates.WindowCovers[id] = state;
+            service.updateCharacteristic(this.platform.Characteristic.TargetPosition, state.target.blind);
+            service.updateCharacteristic(this.platform.Characteristic.TargetHorizontalTiltAngle, state.target.lamella);
+            service.updateCharacteristic(this.platform.Characteristic.CurrentPosition, state.current.blind);
+            service.updateCharacteristic(this.platform.Characteristic.CurrentHorizontalTiltAngle, state.current.lamella);
+              
+            this.platform.log.debug('Pushed updated current WindowCovering state of',
+              service.getCharacteristic(this.platform.Characteristic.Name).value,
+              'to HomeKit:', JSON.stringify(state));
+          }
+        });
+      } catch (e) {
+        this.platform.log.error(
+          'Error ->',
+          e.name,
+          ', unable to fetch WindowCovering data',
+        );
+      }
+    }, 10000);
+        
+    // FIXME: Seprate intervals variable to keep track
+    if (id && updateInterval) {
+      this.windowCoveringTimers[id as number] = updateInterval;
+    }
+    return service;
+  }
+
+  private removeWindowCoveringService(id: 0 | 1) {
+    // Remove motionService
+
+    const service: Service | undefined = this.accessory.getServiceById(this.platform.Service.Lightbulb, id.toString());
+    if (service) {
+      this.platform.log.debug('Removing WindowCovering ->', service.displayName);
+      this.accessory.removeService(service);
+      clearTimeout(this.windowCoveringTimers[id]);
+    }
+  }
+
+  /**
+   * Handle "SET" requests from HomeKit
+   * These are sent when the user changes the state of an accessory, for example, changing the Brightness
+   */
+  private async setPosition(id: WindowCoveringId, value: CharacteristicValue, callback: CharacteristicSetCallback) {
+    // implement your own code to set the brightness
+    const blind: number = value as number;
+    const lamella: number = this.dingzStates.WindowCovers[id].target.lamella;
+    this.dingzStates.WindowCovers[id].target.blind = blind;
+
+    this.platform.log.debug('Set Characteristic TargetPosition -> ', value);
+    // Call setDimmerValue()
+    await this.setWindowCovering(id, blind, lamella);
+    // you must call the callback function
+    callback(null);
+  }
+
+  /**
+    * Handle the "GET" requests from HomeKit   
+    */
+  private getPosition(id: WindowCoveringId, callback: CharacteristicGetCallback) {
+
+    this.platform.log.debug('WindowCoverings: ', JSON.stringify(this.dingzStates.WindowCovers));
+    const position: number = this.dingzStates.WindowCovers[id].current.blind;
+
+    this.platform.log.debug('Get Characteristic for WindowCovering', id, 'Current Position ->', position);
+
+    // you must call the callback function
+    // the first argument should be null if there were no errors
+    // the second argument should be the value to return
+    callback(null, position);
+  }
+
+  /**
+    * Handle "SET" requests from HomeKit
+    * These are sent when the user changes the state of an accessory, for example, changing the Brightness
+    */
+  private async setTiltAngle(id: WindowCoveringId, value: CharacteristicValue, callback: CharacteristicSetCallback) {
+    // implement your own code to set the brightness
+    const blind: number = this.dingzStates.WindowCovers[id].target.blind;
+    const lamella: number = value as number;
+    this.dingzStates.WindowCovers[id].target.lamella = lamella;
+
+    this.platform.log.debug('Set Characteristic TargetHorizontalTiltAngle on ', id, '->', value);
+    // Call setDimmerValue()
+    await this.setWindowCovering(id, blind, lamella);
+    // you must call the callback function
+    callback(null);
+  }
+
+  /**
+   * Handle the "GET" requests from HomeKit
+   */
+  private getTiltAngle(id: WindowCoveringId, callback: CharacteristicGetCallback) {
+
+    this.platform.log.debug('WindowCoverings: ', JSON.stringify(this.dingzStates.WindowCovers));
+    const tiltAngle: number = this.dingzStates.WindowCovers[id].current.lamella;
+
+    this.platform.log.debug('Get Characteristic for WindowCovering', id, 'Current TiltAngle ->', tiltAngle);
+
+    // you must call the callback function
+    // the first argument should be null if there were no errors
+    // the second argument should be the value to return
+    callback(null, tiltAngle);
+  }
+
+  /** 
+   * Motion Service Methods
+  */
+  private addMotionService() {
+    let service: Service | null = null;
+
+    service =
+      this.accessory.getService(this.platform.Service.MotionSensor) ??
+      this.accessory.addService(this.platform.Service.MotionSensor);
+    service.setCharacteristic(this.platform.Characteristic.Name, this.accessory.displayName + ' Funky Commotion');
+    this.services.push(service);
+    // Only check for motion if we have a PIR and set the Interval
+    const motionInterval: NodeJS.Timer = setInterval(() => {
+      let isMotion: boolean;
+      try {
+        this.getDeviceMotion().then(data => {
+          if (data.success) {
+            isMotion = data.motion;
+            
+            // Only update if motionService exists *and* if there's a change in motion'
+            if (service && this.dingzStates.Motion !== isMotion) {
+              this.dingzStates.Motion = isMotion;
+              service.updateCharacteristic(this.platform.Characteristic.MotionDetected, isMotion);
+              this.platform.log.debug('Pushed updated current Motion state of',
+                service.getCharacteristic(this.platform.Characteristic.Name).value,
+                'to HomeKit:', isMotion);
+            }
+          }
+        });
+      } catch(e) {
+        this.platform.log.error('Error ->', e.name, ', unable to fetch DeviceMotion data');
+      }
+    }, 2000); // Shorter term updates for motion sensor
+    this.motionTimer = motionInterval;
+  }
+
+  // Remove motion service
+  private removeMotionService() {
+    // Remove motionService & motionTimer
+    if (this.motionTimer) {
+      clearTimeout(this.motionTimer);
+      this.motionTimer = undefined;
+    }
+    const service: Service | undefined = this.accessory.getService(this.platform.Service.MotionSensor);
+    if (service) {
+      this.platform.log.debug('Removing Motion service ->', service.displayName);
+      this.accessory.removeService(service);
+    }
+  }
+
+  // Updates the Accessory (e.g. if the config has changed)
+  private async updateAccessory() {
+    this.platform.log.debug('Update accessory -> Check for changed config.');
+
+    const currentDingzDeviceInfo: DingzDeviceInfo = this.accessory.context.device.dingzDeviceInfo;
+    const updatedDingzDeviceInfo: DingzDeviceInfo = await this.getDingzDeviceInfo() ?? currentDingzDeviceInfo;
+
+    const currentDingzInputInfo: DingzInputInfoItem = this.accessory.context.device.dingzInputInfo;
+    const updatedDingzInputConfig: DingzInputInfo = await this.getDeviceInputConfig();
+    const updatedDingzInputInfo: DingzInputInfoItem = updatedDingzInputConfig.inputs[0] ?? currentDingzInputInfo;
+
+    try {
+      if (currentDingzDeviceInfo.has_pir !== updatedDingzDeviceInfo.has_pir) {
+        // Update PIR Service
+        this.platform.log.debug('Update accessory -> PIR config changed.');
+        if (updatedDingzDeviceInfo.has_pir) {
+          // Add PIR service
+          this.addMotionService();
+        } else {
+          // Remove PIR service
+          this.removeMotionService();
+        }
+      }
+
+      if ((currentDingzInputInfo.active !== updatedDingzInputInfo.active) ||
+        (currentDingzInputInfo.output !== updatedDingzInputInfo.output)) {
+        // Something about the Input config changed -- either remove or add the Dimmer, 
+        // but only if DIP is not set to WindowCovers
+        if (currentDingzInputInfo.active) {
+          this.removeDimmerService(0);
+        } else if ((updatedDingzDeviceInfo.dip_config === 0 || updatedDingzDeviceInfo.dip_config === 2)) {
+          // Only add Dimmer 0 if we're not in "WindowCover" mode
+          this.addDimmerService(this.accessory.displayName, 0);
+        }
+      }
+      // DIP overrides Input
+      if (currentDingzDeviceInfo.dip_config !== updatedDingzDeviceInfo.dip_config) {
+        // Update Dimmer & Blinds Services
+        throw new MethodNotImplementedError('Update Dimmer accessories not yet implemented -> ' + this.accessory.displayName + '');
+      }
+    } finally {
+      this.accessory.context.device.dingzDeviceInfo = updatedDingzDeviceInfo;
+      this.accessory.context.device.dingzInputInfo = updatedDingzInputConfig;
+    }
+    /* Old code (destroy and re-create)
+    (currentDingzDeviceInfo.has_pir != updatedDingzDeviceInfo.has_pir || 
+        currentDingzDeviceInfo.dip_config != updatedDingzDeviceInfo.dip_config )) {
+      this.log.debug('Existing accessory ', device.name, 'with UUID', uuid, 
+      'has changed substantially. Will destroy and recreate it eventually.');
+      try {
+        this.log.debug('Unregister accessory ->', accessory.displayName);
+        this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
+      } catch(e) {
+        this.log.error('Error in unregisterPlatformAccessories for accessory ->', accessory.displayName, ': ', e.message);
+      } finally {
+        this.log.debug('Dispose accessory ->', accessory.displayName);
+        delete this.accessories[uuid];
+        dingzDaAccessory.dispose();
+      }
+    }
+    */
+  }
+
+  // Disposes the Accessory 
+  dispose() {
+    // Dispose of intervals
+    this.platform.log.debug('Clearing timers ->', this.dimmerTimers);
+    if (this.motionTimer) {
+      clearTimeout(this.motionTimer);
+    }
+
+    for (const key in this.dimmerTimers) {
+      clearTimeout(this.dimmerTimers[key]);
+    }
+  }
+
+  /**
+   * Device Methods -- these are used to retrieve the data from the Dingz
+   * TODO: Refactor duplicate code into proper API caller 
+   */
+
+  private async getDingzDeviceInfo(): Promise<DingzDeviceInfo> {
+    const dingzDevices: DingzDevices | unknown = await this.platform.getDeviceInfo(this.device.address, this.device.token);
+    try {
+      const dingzDeviceInfo: DingzDeviceInfo = (dingzDevices as DingzDevices)[this.device.mac];
+      if (dingzDeviceInfo) {
+        return dingzDeviceInfo;
+      }
+    } catch (e) {
+      this.platform.log.debug('Error in getting Device Info ->', e.message);
+    }
+    throw new Error('Dingz Device update failed -> Empty data.');
+  }
+
+  private async getDeviceTemperature(): Promise<TemperatureData> {
+    const getTemperatureUrl = `${this.baseUrl}/api/v1/temp`;
+    return await this.platform.fetch(getTemperatureUrl);
+  }
+
+  private async getDeviceMotion(): Promise<MotionData> {
+    const getMotionUrl = `${this.baseUrl}/api/v1/motion`;
+    return await this.platform.fetch(getMotionUrl);
+  }
+
+  // Set individual dimmer
+  private async setDeviceDimmer(id: DimmerId, isOn?: boolean, level?: number): Promise<void> {
+    // /api/v1/dimmer/<DIMMER>/on/?value=<value>
+    const setDimmerUrl = `${this.baseUrl}/api/v1/dimmer/${id}/${isOn ? 'on' : 'off'}/${level ? '?value=' + level : ''}`;
+    await this.platform.fetch(setDimmerUrl, 'POST');
+  }
+
+  // TODO: get all values at once
+  private async getDeviceDimmer(id: DimmerId): Promise<DimmerState | undefined> {
+    const getDimmerUrl = `${this.baseUrl}/api/v1/dimmer/${id}`;
+    return await this.platform.fetch(getDimmerUrl);
+  }
+
+  // Set individual dimmer
+  private async setWindowCovering(id: WindowCoveringId, blind?: number, lamella?: number): Promise<void> {
+    // {{ip}}/api/v1/shade/0?blind=<value>&lamella=<value>
+    const setWindowCoveringUrl = 
+    `${this.baseUrl}/api/v1/dimmer/${id}/?${blind ? '&blind=' + blind : ''}${lamella ? '&lamella=' + lamella : ''}`;
+    await this.platform.fetch(setWindowCoveringUrl, 'POST');
+  }
+
+  // TODO: get all values at once
+  private async getWindowCovering(id: WindowCoveringId): Promise<WindowCoveringState> {
+    const getWindowCoveringUrl = `${this.baseUrl}/api/v1/shade/${id}`;
+    return await this.platform.fetch(getWindowCoveringUrl);
+  }
+
+  private async getDeviceInputConfig(): Promise<DingzInputInfo> {
+    const setDimmerUrl = `${this.baseUrl}/api/v1/input_config`; // /api/v1/dimmer/<DIMMER>/on/?value=<value>
+    return await this.platform.fetch(setDimmerUrl);
+  }
+}
