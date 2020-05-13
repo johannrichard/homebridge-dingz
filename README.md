@@ -12,7 +12,7 @@ The plugin attempts to
 
 The following Dingz services are implemented:
 
-- Dimmers (LightBulb)
+- Dimmers (LightBulb) 
 - Shades (Blinds)
 - Room temperature
 - Motion sensor status (polling only, only for Dingz+ models)
