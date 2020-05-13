@@ -2,13 +2,14 @@
 // Based on the API definition
 
 import { DingzDaAccessory } from '../dingzDaAccessory';
+import { MyStromSwitchAccessory } from '../myStromSwitchAccessory';
 
-export interface TemperatureData {
+export interface DingzTemperatureData {
   success: boolean;
   temperature: number;
 }
 
-export interface MotionData {
+export interface DingzMotionData {
   success: boolean;
   motion: boolean;
 }
@@ -51,7 +52,27 @@ export interface DingzDeviceInfo {
   has_pir: boolean;
   hk_activation_code: string;
 }
+export interface MyStromDeviceInfo {
+  version: string;
+  mac: string;
+  type: string | number;
+  name?: string;
+  ssid: string;
+  ip: string;
+  mask: string;
+  gw: string;
+  dns: string;
+  static: boolean;
+  connected: boolean;
+  signal: boolean;
+}
 
+export interface MyStromSwitchReport {
+  power: number;
+  relay: boolean;
+  temperature: number;
+  Ws?: number;
+}
 export interface DingzInputInfo {
   inputs: DingzInputInfoItem[];
 }
@@ -66,16 +87,16 @@ export interface DeviceInfo {
   name: string;
   address: string;
   mac: string;
-  type: 'dingz' | 'mystrom';
-  model?: 'Dingz' | 'Dingz+';
+  model?: string;
   token?: string;
-  dingzDeviceInfo?: DingzDeviceInfo;
+  hwInfo?: DingzDeviceInfo | MyStromDeviceInfo;
   dingzInputInfo?: DingzInputInfoItem[];
   lastUpdate?: Date;
+  accessoryClass?: 'DingzDaAccessory' | 'MyStromSwitchAccessory';
 }
 
-export interface DingzDaAccessories {
-  [key: string]: DingzDaAccessory;
+export interface DingzAccessories {
+  [key: string]: DingzDaAccessory | MyStromSwitchAccessory;
 }
 
 // Internal representation of Dimmer in Plugin
@@ -98,7 +119,7 @@ export interface WindowCoveringState {
   target:   WindowCoveringPositon;
   current:  WindowCoveringPositon;
 }
-export type WindowCoverProps = Record<WindowCoveringId, WindowCoveringState>;
+export type WindowCoveringProps = Record<WindowCoveringId, WindowCoveringState>;
 
 export interface Disposable {
     dispose(): void;

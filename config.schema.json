@@ -23,6 +23,19 @@
           "title": "Dingz",
           "type": "object",
           "properties": {
+            "type": {
+              "title": "Device Type",
+              "type": "string",
+              "default": "form",
+              "oneOf": [
+                { "title": "Dingz", "enum": ["Dingz"] },
+                { "title": "myStrom Switch", "enum": ["myStromSwitch"] },
+                { "title": "myStrom Lightbulb (Not implemented)", "enum": ["myStromBulb"] },
+                { "title": "myStrom LED Strip (Not implemented)", "enum": ["myStromLED"] },
+                { "title": "myStrom Motion Sensor (Not implemented)", "enum": ["myStromPIR"] }
+              ],
+              "required": true
+            },
             "name": {
               "title": "Name",
               "type": "string",

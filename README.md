@@ -1,5 +1,7 @@
 # Homebridge Plugin for Dingz Devices: homebridge-dingz-da
 
+![Build and Lint](https://github.com/johannrichard/homebridge-dingz-da/workflows/Build%20and%20Lint/badge.svg)
+
 This plugin implements some (but not all) functions of a [dingz](https://dingz.ch) Smart Home Device. Might eventually also support myStrom Devices as they share much of the same API definitions and concepts with Dingz.
 
 The plugin attempts to
@@ -9,7 +11,7 @@ The plugin attempts to
 
 While the plugin attempts to discover different kinds of devices, currently only Dingz devices are supported, but eventually also myStrom might be implemented, as these share a lot of the code.
 
-The following servies are implemented:
+The following services are implemented:
 
 - Room temperature
 - Motion sensor status (polling only)
@@ -18,10 +20,10 @@ The following servies are implemented:
 
 Not yet implemented:
 
-- Switches (Switch)
-- LED ()
+- LED (LightBulb)
 - Buttons (StatefulProgrammableSwitch)
 - Thermostat (Temperature)
+- Motion sensor WebHook (push mode instead of polling)
 
 ## Usage
 
