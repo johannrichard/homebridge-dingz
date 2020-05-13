@@ -1,5 +1,4 @@
 {
-  "private": true,
   "displayName": "Homebridge Dingz Plugin",
   "name": "homebridge-dingz-da",
   "version": "1.0.0",
