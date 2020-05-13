@@ -1,0 +1,641 @@
+{
+  "openapi": "3.0.0",
+  "info": { "title": "DingZ", "version": "1.0.0" },
+  "servers": [{ "url": "http://localhost:80/" }],
+  "components": {
+    "parameters": {
+      "dimmerId": {
+        "name": "dimmerId",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "array",
+          "enum": [0, 1, 2, 3]
+        },
+        "description": "Number of Dimmer to use"
+      }
+    }
+  },
+  "paths": {
+    "/api/v1/puck": {
+      "get": {
+        "description": "Get Puck version number",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": { "application/json": {} },
+            "headers": {}
+          }
+        }
+      }
+    },
+    "/api/v1/info": {
+      "get": {
+        "description": "General information",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": { "application/json": {} },
+            "headers": {}
+          }
+        }
+      }
+    },
+    "/api/v1/temp": {
+      "get": {
+        "description": "Get (room) temperature",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": { "application/json": {} },
+            "headers": {}
+          }
+        }
+      }
+    },
+    "/api/v1/motion": {
+      "get": {
+        "description": "Get motion sensor value",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": { "application/json": {} },
+            "headers": {}
+          }
+        }
+      }
+    },
+    "/api/v1/device": {
+      "get": {
+        "description": "Get device specific information",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": { "application/json": {} },
+            "headers": {}
+          }
+        }
+      }
+    },
+    "/log": {
+      "get": {
+        "description": "Get log",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": { "text/plain": {} },
+            "headers": {}
+          }
+        }
+      }
+    },
+    "/api/v1/scan": {
+      "get": {
+        "description": "Scan Wifi",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": { "application/json": {} },
+            "headers": {}
+          }
+        }
+      }
+    },
+    "/networks": {
+      "get": {
+        "description": "Scan Wifi (detailed)",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": { "application/json": {} },
+            "headers": {}
+          }
+        }
+      }
+    },
+    "/api/v1/wps": {
+      "post": {
+        "description": "Activate WPS",
+        "responses": {
+          "418": {
+            "description": "",
+            "content": { "application/json": {} },
+            "headers": {}
+          }
+        }
+      }
+    },
+    "/api/v1/connect": {
+      "post": {
+        "description": "Connect to Wifi",
+        "responses": {
+          "418": {
+            "description": "",
+            "content": { "application/json": {} },
+            "headers": {}
+          }
+        }
+      }
+    },
+    "/rest": {
+      "get": {
+        "description": "Enable/Disable REST API",
+        "responses": {
+          "418": {
+            "description": "",
+            "content": { "application/json": {} },
+            "headers": {}
+          }
+        }
+      }
+    },
+    "/panel": {
+      "get": {
+        "description": "Enable/Disable Web UI",
+        "responses": {
+          "418": {
+            "description": "",
+            "content": { "application/json": {} },
+            "headers": {}
+          }
+        }
+      }
+    },
+    "/api/v1/settings": {
+      "get": {
+        "description": "Get settings information",
+        "responses": {
+          "418": {
+            "description": "",
+            "content": { "application/json": {} },
+            "headers": {}
+          }
+        }
+      }
+    },
+    "/load": {
+      "post": {
+        "description": "Manual firmware upgrade",
+        "responses": {
+          "418": {
+            "description": "",
+            "content": { "application/json": {} },
+            "headers": {}
+          }
+        }
+      }
+    },
+    "/api/v1/action": {
+      "get": {
+        "description": "Get button actions",
+        "responses": {
+          "418": {
+            "description": "",
+            "content": { "application/json": {} },
+            "headers": {}
+          }
+        }
+      }
+    },
+    "/api/v1/action/btn1": {
+      "get": {
+        "description": "Get specific button actions",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": { "application/json": {} },
+            "headers": {}
+          }
+        }
+      }
+    },
+    "/api/v1/action/btn1/single": {
+      "get": {
+        "description": "Get actions for specific button and interaction type",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": { "application/json": {} },
+            "headers": {}
+          }
+        }
+      },
+      "post": {
+        "description": "Set button action",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": { "text/plain": {} },
+            "headers": {}
+          }
+        }
+      }
+    },
+    "/api/v1/dimmer/{dimmerId}/on": {
+      "post": {
+        "description": "Set dimmer values",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": { "text/plain": {} },
+            "headers": {}
+          }
+        }
+      }
+    },
+    "/api/v1/dimmer/0/off": {
+      "post": {
+        "description": "Set dimmer values",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": { "text/plain": {} },
+            "headers": {}
+          }
+        }
+      }
+    },
+    "/api/v1/dimmer/1/on": {
+      "post": {
+        "description": "Set dimmer values",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": { "text/plain": {} },
+            "headers": {}
+          }
+        }
+      }
+    },
+    "/api/v1/dimmer/1/off": {
+      "post": {
+        "description": "Set dimmer values",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": { "text/plain": {} },
+            "headers": {}
+          }
+        }
+      }
+    },
+    "/api/v1/dimmer/2/on": {
+      "post": {
+        "description": "Set dimmer values",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": { "text/plain": {} },
+            "headers": {}
+          }
+        }
+      }
+    },
+    "/api/v1/dimmer/2/off": {
+      "post": {
+        "description": "Set dimmer values",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": { "text/plain": {} },
+            "headers": {}
+          }
+        }
+      }
+    },
+    "/api/v1/dimmer/3/on": {
+      "post": {
+        "description": "Set dimmer values",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": { "text/plain": {} },
+            "headers": {}
+          }
+        }
+      }
+    },
+    "/api/v1/dimmer/3/off": {
+      "post": {
+        "description": "Set dimmer values",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": { "text/plain": {} },
+            "headers": {}
+          }
+        }
+      }
+    },
+    "/api/v1/dimmer": {
+      "get": {
+        "description": "Get dimmer status",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": { "application/json": {} },
+            "headers": {}
+          }
+        }
+      }
+    },
+    "/api/v1/dimmer/{dimmerId}": {
+      "get": {
+        "description": "Get specific dimmer status",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": { "application/json": { "example": "{ \"on\": {{boolean}}, \"value\": {{int 0 100}}, \"ramp\": 0}\" }" },
+            "headers": {}
+          }
+        }
+      }
+    },
+    "/api/v1/input_config": {
+      "get": {
+        "description": "Get input configutaion",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": { "application/json": {} },
+            "headers": {}
+          }
+        }
+      },
+      "post": {
+        "description": "Set input configuration",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": { "application/json": {} },
+            "headers": {}
+          }
+        }
+      }
+    },
+    "/api/v1/led/get": {
+      "get": {
+        "description": "Get current front LED information",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": { "application/json": {} },
+            "headers": {}
+          }
+        }
+      }
+    },
+    "/api/v1/led/red": {
+      "post": {
+        "description": "Set RGB channel values for front led",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": { "text/plain": {} },
+            "headers": {}
+          }
+        }
+      }
+    },
+    "/api/v1/led/green": {
+      "post": {
+        "description": "Set RGB channel values for front led",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": { "text/plain": {} },
+            "headers": {}
+          }
+        }
+      }
+    },
+    "/api/v1/led/blue": {
+      "post": {
+        "description": "Set RGB channel values for front led",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": { "text/plain": {} },
+            "headers": {}
+          }
+        }
+      }
+    },
+    "/api/v1/shade": {
+      "get": {
+        "description": "Get shade information",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": { "application/json": {} },
+            "headers": {}
+          }
+        }
+      }
+    },
+    "/api/v1/shade/0": {
+      "get": {
+        "description": "Get specific shade information",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": { "application/json": {} },
+            "headers": {}
+          }
+        }
+      },
+      "post": {
+        "description": "Set shade values",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": { "text/plain": {} },
+            "headers": {}
+          }
+        }
+      }
+    },
+    "/api/v1/shade/1": {
+      "get": {
+        "description": "Get specific shade information",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": { "application/json": {} },
+            "headers": {}
+          }
+        }
+      },
+      "post": {
+        "description": "Set shade values",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": { "text/plain": {} },
+            "headers": {}
+          }
+        }
+      }
+    },
+    "/api/v1/pir_config": {
+      "get": {
+        "description": "Get PIR configuration",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": { "application/json": {} },
+            "headers": {}
+          }
+        }
+      },
+      "post": {
+        "description": "Set PIR configuration",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": { "application/json": {} },
+            "headers": {}
+          }
+        }
+      }
+    },
+    "/api/v1/light": {
+      "get": {
+        "description": "Get PIR light sensor",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": { "application/json": {} },
+            "headers": {}
+          }
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "description": "Misc not working functions",
+        "responses": {
+          "418": {
+            "description": "",
+            "content": { "application/json": {} },
+            "headers": {}
+          }
+        }
+      }
+    },
+    "/api/v1/led/set": {
+      "post": {
+        "description": "Set front led",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": { "text/plain": {} },
+            "headers": {}
+          }
+        }
+      }
+    },
+    "/api/v1/thermostat_config": {
+      "get": {
+        "description": "Get thermostat configuration",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": { "application/json": {} },
+            "headers": {}
+          }
+        }
+      },
+      "post": {
+        "description": "Set thermostat configuration",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": { "application/json": {} },
+            "headers": {}
+          }
+        }
+      }
+    },
+    "/api/v1/timer": {
+      "get": {
+        "description": "Get active timers",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": { "text/plain": {} },
+            "headers": {}
+          }
+        }
+      },
+      "post": {
+        "description": "Create and activate timer",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": { "application/json": {} },
+            "headers": {}
+          }
+        }
+      }
+    },
+    "/api/v1/timer/stop": {
+      "post": {
+        "description": "Stop timer",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": { "application/json": {} },
+            "headers": {}
+          }
+        }
+      }
+    },
+    "/api/v1/schedule": {
+      "post": {
+        "description": "Set schedule",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": { "application/json": {} },
+            "headers": {}
+          }
+        }
+      },
+      "get": {
+        "description": "Get schedule",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": { "application/json": {} },
+            "headers": {}
+          }
+        }
+      }
+    },
+    "/api/v1/schedule/add": {
+      "post": {
+        "description": "Add schedule item",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": { "application/json": {} },
+            "headers": {}
+          }
+        }
+      }
+    },
+    "/api/v1/schedule/remove": {
+      "post": {
+        "description": "Remove schedule item",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": { "application/json": {} },
+            "headers": {}
+          }
+        }
+      }
+    }
+  }
+}

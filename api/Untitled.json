@@ -1,0 +1,1435 @@
+{
+    "source": "mockoon:1.8.0",
+    "data": [
+        {
+            "type": "environment",
+            "item": {
+                "uuid": "",
+                "lastMigration": 10,
+                "name": "dingz",
+                "endpointPrefix": "",
+                "latency": 0,
+                "port": 80,
+                "routes": [
+                    {
+                        "uuid": "",
+                        "documentation": "Get Puck version number",
+                        "method": "get",
+                        "endpoint": "api/v1/puck",
+                        "responses": [
+                            {
+                                "uuid": "",
+                                "body": "{\n    \"fw\": {\n        \"success\": true,\n        \"version\": \"0.6.1\"\n    },\n    \"hw\": {\n        \"success\": false\n    }\n}",
+                                "latency": 0,
+                                "statusCode": "200",
+                                "label": "",
+                                "headers": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": false,
+                                "rules": []
+                            }
+                        ],
+                        "enabled": true
+                    },
+                    {
+                        "uuid": "",
+                        "documentation": "General information",
+                        "method": "get",
+                        "endpoint": "api/v1/info",
+                        "responses": [
+                            {
+                                "uuid": "",
+                                "body": "{\n    \"version\": \"3.14.36\",\n    \"mac\": \"840D9E030BF0\",\n    \"ssid\": \"\",\n    \"ip\": \"10.147.1.16\",\n    \"mask\": \"255.255.255.0\",\n    \"gateway\": \"10.147.1.1\",\n    \"dns\": \"1.1.1.1\",\n    \"static\": false,\n    \"connected\": true\n}",
+                                "latency": 0,
+                                "statusCode": "200",
+                                "label": "",
+                                "headers": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": false,
+                                "rules": []
+                            }
+                        ],
+                        "enabled": true
+                    },
+                    {
+                        "uuid": "",
+                        "documentation": "Get (room) temperature",
+                        "method": "get",
+                        "endpoint": "api/v1/temp",
+                        "responses": [
+                            {
+                                "uuid": "",
+                                "body": "{\n    \"success\": true,\n    \"temperature\": {{float 21 23 round=0.000001}}\n}",
+                                "latency": 0,
+                                "statusCode": "200",
+                                "label": "",
+                                "headers": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": false,
+                                "rules": []
+                            }
+                        ],
+                        "enabled": true
+                    },
+                    {
+                        "uuid": "",
+                        "documentation": "Get motion sensor value",
+                        "method": "get",
+                        "endpoint": "api/v1/motion",
+                        "responses": [
+                            {
+                                "uuid": "",
+                                "body": "{\n    \"success\": true,\n    \"motion\": {{boolean}}\n}",
+                                "latency": 0,
+                                "statusCode": "200",
+                                "label": "",
+                                "headers": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": false,
+                                "rules": []
+                            }
+                        ],
+                        "enabled": true
+                    },
+                    {
+                        "uuid": "",
+                        "documentation": "Get device specific information",
+                        "method": "get",
+                        "endpoint": "api/v1/device",
+                        "responses": [
+                            {
+                                "uuid": "",
+                                "body": "{\n    \"840D8E030BF0\": {\n        \"type\": \"dingz\",\n        \"battery\": false,\n        \"reachable\": true,\n        \"meshroot\": true,\n        \"fw_version\": \"3.14.36\",\n        \"fw_version_puck\": \"0.6.1\",\n        \"bl_version_puck\": \"0.0.0\",\n        \"dip_config\": 3,\n        \"has_pir\": true,\n        \"hk_activation_code\": \"443-85-511\"\n    }\n}",
+                                "latency": 0,
+                                "statusCode": "200",
+                                "label": "",
+                                "headers": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": false,
+                                "rules": []
+                            }
+                        ],
+                        "enabled": true
+                    },
+                    {
+                        "uuid": "",
+                        "documentation": "Get log",
+                        "method": "get",
+                        "endpoint": "log",
+                        "responses": [
+                            {
+                                "uuid": "",
+                                "body": "\r\nTIMESTAMP\tMODULE\tLEVEL\tCODE\tVALUE\r\n5C1276D4\t1\t4\t19\r\n5C1276D4\t1\t4\t18\t3\r\n5C1276D4\t1\t4\t18\t2\r\n5C1276D4\t1\t4\t18\t13\r\n5C1276DB\t1\t3\t11\r\n5C1276DB\t1\t4\t8\r\n5C1276DB\t1\t4\t18\t3\r\n5C1276DB\t1\t4\t18\t14\r\n5C1276DB\t1\t3\t15\r\n5C1276DB\t1\t4\t28\r\n5C1276DB\t1\t4\t18\t2\r\n5C1276DB\t1\t4\t10\r\n5C127753\t1\t4\t18\t11\r\n5C127754\t1\t3\t5\r\n5C127754\t1\t3\t7\r\n5C127754\t1\t4\t18\t3\r\n5C127754\t1\t4\t18\t2\r\n5C127754\t1\t4\t18\t13\r\n5C127812\t1\t4\t18\t15\r\n5C12781B\t1\t4\t18\t17\r\n5C1278B6\t1\t3\t11\r\n5C1278B6\t1\t4\t8\r\n5C1278B6\t1\t4\t18\t3\r\n5C1278B6\t1\t4\t18\t16\r\n5C1278B6\t1\t4\t18\t14\r\n5C1278B6\t1\t3\t15\r\n5C1278B6\t1\t4\t28\r\n5C1278B6\t1\t4\t18\t2\r\n5C1278B6\t1\t4\t10\r\n5C1278C9\t1\t4\t18\t5\r\n5C1278CA\t1\t4\t18\t9\r\n5C1278CA\t1\t4\t16\r\n5C1278CB\t1\t4\t11\r\n5C1278CB\t1\t4\t3\r\n5C1278CB\t1\t4\t18\t3\r\n5C1278CB\t1\t3\t13\r\n5C1278CB\t1\t4\t26\r\n5C1278CB\t1\t4\t18\t2\r\n5C1278CC\t1\t4\t18\t4\r\n5C1278CC\t1\t4\t18\t7\r\n5C1278CC\t1\t4\t12\r\n5C1278CD\t1\t4\t18\t19\r\n5C1278CD\t1\t4\t14\r\n5C1278CD\t1\t4\t1\r\n5C1278CD\t2\t4\t34\r\n5C1278E2\t1\t4\t18\t19\r\n5C1278E5\t2\t4\t27\r\n5C1278E5\t2\t4\t28\r\n5C1278E5\t2\t4\t30\r\n5C1278E5\t2\t4\t31\r\n5C1278E6\t2\t4\t32\r\n5C1278E6\t2\t4\t22\r\n5C1278E6\t2\t4\t23\r\n5C1278E6\t2\t4\t24\r\n5C1278E6\t2\t4\t5\r\n5C1278E6\t2\t4\t2\t30\r\n5C1278E6\t2\t4\t1\t60\r\n5C1278E7\t2\t4\t4\r\n5C127904\t2\t4\t4\r\n5C127922\t2\t4\t24\r\n5C127922\t2\t4\t7\r\n5C127922\t2\t4\t4\r\n5C127940\t2\t4\t4\r\n5C12795E\t2\t4\t4\r\n",
+                                "latency": 0,
+                                "statusCode": "200",
+                                "label": "",
+                                "headers": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "text/plain"
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": false,
+                                "rules": []
+                            }
+                        ],
+                        "enabled": true
+                    },
+                    {
+                        "uuid": "",
+                        "documentation": "Scan Wifi",
+                        "method": "get",
+                        "endpoint": "api/v1/scan",
+                        "responses": [
+                            {
+                                "uuid": "",
+                                "body": "[\n    \"UPC42A3283\",\n    -49,\n    \"FRITZ!Box 7490\",\n    -77,\n    \"UPC3B0283\",\n    -63,\n    \"UPC9CE144A\",\n    -69,\n    \"WN-C61328_2GEXT\",\n    -77\n]",
+                                "latency": 0,
+                                "statusCode": "200",
+                                "label": "",
+                                "headers": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": false,
+                                "rules": []
+                            }
+                        ],
+                        "enabled": true
+                    },
+                    {
+                        "uuid": "",
+                        "documentation": "Scan Wifi (detailed)",
+                        "method": "get",
+                        "endpoint": "networks",
+                        "responses": [
+                            {
+                                "uuid": "",
+                                "body": "{\n\n    \"UPC42A3283\": {\n        \"name\": \"UPC42A3283\",\n        \"signal\": 94,\n        \"encryption-on\": true,\n        \"encryption\": \"WPA_WPA2_PSK\"\n    },\n\n    \"FRITZ!Box 7490\": {\n        \"name\": \"FRITZ!Box 7490\",\n        \"signal\": 62,\n        \"encryption-on\": true,\n        \"encryption\": \"WPA2_PSK\"\n    },\n\n    \"WN-43A58D\": {\n        \"name\": \"WN-43A58D\",\n        \"signal\": 24,\n        \"encryption-on\": true,\n        \"encryption\": \"WPA2_PSK\"\n    },\n    \"UPCBF1B9C2\": {\n        \"name\": \"UPCBF1B9C2\",\n        \"signal\": 22,\n        \"encryption-on\": true,\n        \"encryption\": \"WPA_WPA2_PSK\"\n    }\n}",
+                                "latency": 0,
+                                "statusCode": "200",
+                                "label": "",
+                                "headers": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": false,
+                                "rules": []
+                            }
+                        ],
+                        "enabled": true
+                    },
+                    {
+                        "uuid": "",
+                        "documentation": "Activate WPS",
+                        "method": "post",
+                        "endpoint": "api/v1/wps",
+                        "responses": [
+                            {
+                                "uuid": "",
+                                "body": "{ \"error\": \"Not implemented\" }",
+                                "latency": 0,
+                                "statusCode": "418",
+                                "label": "",
+                                "headers": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": false,
+                                "rules": []
+                            }
+                        ],
+                        "enabled": true
+                    },
+                    {
+                        "uuid": "",
+                        "documentation": "Connect to Wifi",
+                        "method": "post",
+                        "endpoint": "api/v1/connect",
+                        "responses": [
+                            {
+                                "uuid": "",
+                                "body": "{ \"error\": \"Not implemented\" }",
+                                "latency": 0,
+                                "statusCode": "418",
+                                "label": "",
+                                "headers": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": false,
+                                "rules": []
+                            }
+                        ],
+                        "enabled": true
+                    },
+                    {
+                        "uuid": "",
+                        "documentation": "Enable/Disable REST API",
+                        "method": "get",
+                        "endpoint": "rest",
+                        "responses": [
+                            {
+                                "uuid": "",
+                                "body": "{ \"error\": \"Not implemented\" }",
+                                "latency": 0,
+                                "statusCode": "418",
+                                "label": "",
+                                "headers": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": false,
+                                "rules": []
+                            }
+                        ],
+                        "enabled": true
+                    },
+                    {
+                        "uuid": "",
+                        "documentation": "Enable/Disable Web UI",
+                        "method": "get",
+                        "endpoint": "panel",
+                        "responses": [
+                            {
+                                "uuid": "",
+                                "body": "{ \"error\": \"Not implemented\" }",
+                                "latency": 0,
+                                "statusCode": "418",
+                                "label": "",
+                                "headers": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": false,
+                                "rules": []
+                            }
+                        ],
+                        "enabled": true
+                    },
+                    {
+                        "uuid": "",
+                        "documentation": "Get settings information",
+                        "method": "get",
+                        "endpoint": "api/v1/settings",
+                        "responses": [
+                            {
+                                "uuid": "",
+                                "body": "{ \"error\": \"Not implemented\" }",
+                                "latency": 0,
+                                "statusCode": "418",
+                                "label": "",
+                                "headers": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": false,
+                                "rules": []
+                            }
+                        ],
+                        "enabled": true
+                    },
+                    {
+                        "uuid": "",
+                        "documentation": "Manual firmware upgrade",
+                        "method": "post",
+                        "endpoint": "load",
+                        "responses": [
+                            {
+                                "uuid": "",
+                                "body": "{ \"error\": \"Not implemented\" }",
+                                "latency": 0,
+                                "statusCode": "418",
+                                "label": "",
+                                "headers": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": false,
+                                "rules": []
+                            }
+                        ],
+                        "enabled": true
+                    },
+                    {
+                        "uuid": "",
+                        "documentation": "Get button actions",
+                        "method": "get",
+                        "endpoint": "api/v1/action",
+                        "responses": [
+                            {
+                                "uuid": "",
+                                "body": "{ \"error\": \"Not implemented\" }",
+                                "latency": 0,
+                                "statusCode": "418",
+                                "label": "",
+                                "headers": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": false,
+                                "rules": []
+                            }
+                        ],
+                        "enabled": true
+                    },
+                    {
+                        "uuid": "",
+                        "documentation": "Get specific button actions",
+                        "method": "get",
+                        "endpoint": "api/v1/action/btn1",
+                        "responses": [
+                            {
+                                "uuid": "",
+                                "body": "",
+                                "latency": 0,
+                                "statusCode": "200",
+                                "label": "",
+                                "headers": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": false,
+                                "rules": []
+                            }
+                        ],
+                        "enabled": true
+                    },
+                    {
+                        "uuid": "",
+                        "documentation": "Get actions for specific button and interaction type",
+                        "method": "get",
+                        "endpoint": "api/v1/action/btn1/single",
+                        "responses": [
+                            {
+                                "uuid": "",
+                                "body": "",
+                                "latency": 0,
+                                "statusCode": "200",
+                                "label": "",
+                                "headers": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": false,
+                                "rules": []
+                            }
+                        ],
+                        "enabled": true
+                    },
+                    {
+                        "uuid": "",
+                        "documentation": "Set button action",
+                        "method": "post",
+                        "endpoint": "api/v1/action/btn1/single",
+                        "responses": [
+                            {
+                                "uuid": "",
+                                "body": "",
+                                "latency": 0,
+                                "statusCode": "200",
+                                "label": "",
+                                "headers": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "text/plain"
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": false,
+                                "rules": []
+                            }
+                        ],
+                        "enabled": true
+                    },
+                    {
+                        "uuid": "",
+                        "documentation": "Set dimmer values",
+                        "method": "post",
+                        "endpoint": "api/v1/dimmer/0/on",
+                        "responses": [
+                            {
+                                "uuid": "",
+                                "body": "",
+                                "latency": 0,
+                                "statusCode": "200",
+                                "label": "",
+                                "headers": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "text/plain"
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": false,
+                                "rules": []
+                            }
+                        ],
+                        "enabled": true
+                    },
+                    {
+                        "uuid": "",
+                        "documentation": "Set dimmer values",
+                        "method": "post",
+                        "endpoint": "api/v1/dimmer/0/off",
+                        "responses": [
+                            {
+                                "uuid": "",
+                                "body": "",
+                                "latency": 0,
+                                "statusCode": "200",
+                                "label": "",
+                                "headers": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "text/plain"
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": false,
+                                "rules": []
+                            }
+                        ],
+                        "enabled": true
+                    },
+                    {
+                        "uuid": "",
+                        "documentation": "Set dimmer values",
+                        "method": "post",
+                        "endpoint": "api/v1/dimmer/1/on",
+                        "responses": [
+                            {
+                                "uuid": "",
+                                "body": "",
+                                "latency": 0,
+                                "statusCode": "200",
+                                "label": "",
+                                "headers": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "text/plain"
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": false,
+                                "rules": []
+                            }
+                        ],
+                        "enabled": true
+                    },
+                    {
+                        "uuid": "",
+                        "documentation": "Set dimmer values",
+                        "method": "post",
+                        "endpoint": "api/v1/dimmer/1/off",
+                        "responses": [
+                            {
+                                "uuid": "",
+                                "body": "",
+                                "latency": 0,
+                                "statusCode": "200",
+                                "label": "",
+                                "headers": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "text/plain"
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": false,
+                                "rules": []
+                            }
+                        ],
+                        "enabled": true
+                    },
+                    {
+                        "uuid": "",
+                        "documentation": "Set dimmer values",
+                        "method": "post",
+                        "endpoint": "api/v1/dimmer/2/on",
+                        "responses": [
+                            {
+                                "uuid": "",
+                                "body": "",
+                                "latency": 0,
+                                "statusCode": "200",
+                                "label": "",
+                                "headers": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "text/plain"
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": false,
+                                "rules": []
+                            }
+                        ],
+                        "enabled": true
+                    },
+                    {
+                        "uuid": "",
+                        "documentation": "Set dimmer values",
+                        "method": "post",
+                        "endpoint": "api/v1/dimmer/2/off",
+                        "responses": [
+                            {
+                                "uuid": "",
+                                "body": "",
+                                "latency": 0,
+                                "statusCode": "200",
+                                "label": "",
+                                "headers": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "text/plain"
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": false,
+                                "rules": []
+                            }
+                        ],
+                        "enabled": true
+                    },
+                    {
+                        "uuid": "",
+                        "documentation": "Set dimmer values",
+                        "method": "post",
+                        "endpoint": "api/v1/dimmer/3/on",
+                        "responses": [
+                            {
+                                "uuid": "",
+                                "body": "",
+                                "latency": 0,
+                                "statusCode": "200",
+                                "label": "",
+                                "headers": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "text/plain"
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": false,
+                                "rules": []
+                            }
+                        ],
+                        "enabled": true
+                    },
+                    {
+                        "uuid": "",
+                        "documentation": "Set dimmer values",
+                        "method": "post",
+                        "endpoint": "api/v1/dimmer/3/off",
+                        "responses": [
+                            {
+                                "uuid": "",
+                                "body": "",
+                                "latency": 0,
+                                "statusCode": "200",
+                                "label": "",
+                                "headers": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "text/plain"
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": false,
+                                "rules": []
+                            }
+                        ],
+                        "enabled": true
+                    },
+                    {
+                        "uuid": "",
+                        "documentation": "Get dimmer status",
+                        "method": "get",
+                        "endpoint": "api/v1/dimmer",
+                        "responses": [
+                            {
+                                "uuid": "",
+                                "body": "{\n    \"0\": {\n    \"on\": {{boolean}},\n    \"value\": {{int 0 100}},\n    \"ramp\": 0\n},\n    \"1\": {\n    \"on\": {{boolean}},\n    \"value\": {{int 0 100}},\n    \"ramp\": 0\n},\n    \"2\": {\n    \"on\": {{boolean}},\n    \"value\": {{int 0 100}},\n    \"ramp\": 0\n},\n    \"3\": {\n    \"on\": {{boolean}},\n    \"value\": {{int 0 100}},\n    \"ramp\": 0\n}\n}",
+                                "latency": 0,
+                                "statusCode": "200",
+                                "label": "",
+                                "headers": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": false,
+                                "rules": []
+                            }
+                        ],
+                        "enabled": true
+                    },
+                    {
+                        "uuid": "",
+                        "documentation": "Get specific dimmer status",
+                        "method": "get",
+                        "endpoint": "api/v1/dimmer/0",
+                        "responses": [
+                            {
+                                "uuid": "",
+                                "body": "{\n    \"on\": {{boolean}},\n    \"value\": {{int 0 100}},\n    \"ramp\": 0\n}",
+                                "latency": 0,
+                                "statusCode": "200",
+                                "label": "",
+                                "headers": [
+                                    {
+                                        "key": "content-type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": false,
+                                "rules": []
+                            }
+                        ],
+                        "enabled": true
+                    },
+                    {
+                        "uuid": "",
+                        "documentation": "Get specific dimmer status",
+                        "method": "get",
+                        "endpoint": "api/v1/dimmer/1",
+                        "responses": [
+                            {
+                                "uuid": "",
+                                "body": "{\n    \"on\": {{boolean}},\n    \"value\": {{int 0 100}},\n    \"ramp\": 0\n}",
+                                "latency": 0,
+                                "statusCode": "200",
+                                "label": "",
+                                "headers": [
+                                    {
+                                        "key": "content-type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": false,
+                                "rules": []
+                            }
+                        ],
+                        "enabled": true
+                    },
+                    {
+                        "uuid": "",
+                        "documentation": "Get specific dimmer status",
+                        "method": "get",
+                        "endpoint": "api/v1/dimmer/2",
+                        "responses": [
+                            {
+                                "uuid": "",
+                                "body": "{\n    \"on\": {{boolean}},\n    \"value\": {{int 0 100}},\n    \"ramp\": 0\n}",
+                                "latency": 0,
+                                "statusCode": "200",
+                                "label": "",
+                                "headers": [
+                                    {
+                                        "key": "content-type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": false,
+                                "rules": []
+                            }
+                        ],
+                        "enabled": true
+                    },
+                    {
+                        "uuid": "",
+                        "documentation": "Get specific dimmer status",
+                        "method": "get",
+                        "endpoint": "api/v1/dimmer/3",
+                        "responses": [
+                            {
+                                "uuid": "",
+                                "body": "{\n    \"on\": {{boolean}},\n    \"value\": {{int 0 100}},\n    \"ramp\": 0\n}",
+                                "latency": 0,
+                                "statusCode": "200",
+                                "label": "",
+                                "headers": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": false,
+                                "rules": []
+                            }
+                        ],
+                        "enabled": true
+                    },
+                    {
+                        "uuid": "",
+                        "documentation": "Get input configutaion",
+                        "method": "get",
+                        "endpoint": "api/v1/input_config",
+                        "responses": [
+                            {
+                                "uuid": "",
+                                "body": "{\n    \"inputs\": [\n        {\n            \"output\": 1,\n            \"feedback\": \"white\",\n            \"feedback_intensity\": 100,\n            \"active\": false\n        }\n    ]\n}",
+                                "latency": 0,
+                                "statusCode": "200",
+                                "label": "",
+                                "headers": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": false,
+                                "rules": []
+                            }
+                        ],
+                        "enabled": true
+                    },
+                    {
+                        "uuid": "",
+                        "documentation": "Get current front LED information",
+                        "method": "get",
+                        "endpoint": "api/v1/led/get",
+                        "responses": [
+                            {
+                                "uuid": "",
+                                "body": "{\n    \"on\": false,\n    \"hsv\": \"0;0;100\",\n    \"rgb\": \"FFFFFF\",\n    \"mode\": \"hsv\"\n}",
+                                "latency": 0,
+                                "statusCode": "200",
+                                "label": "",
+                                "headers": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": false,
+                                "rules": []
+                            }
+                        ],
+                        "enabled": true
+                    },
+                    {
+                        "uuid": "",
+                        "documentation": "Set RGB channel values for front led",
+                        "method": "post",
+                        "endpoint": "api/v1/led/red",
+                        "responses": [
+                            {
+                                "uuid": "",
+                                "body": "\n",
+                                "latency": 0,
+                                "statusCode": "200",
+                                "label": "",
+                                "headers": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "text/plain"
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": false,
+                                "rules": []
+                            }
+                        ],
+                        "enabled": true
+                    },
+                    {
+                        "uuid": "",
+                        "documentation": "Set RGB channel values for front led",
+                        "method": "post",
+                        "endpoint": "api/v1/led/green",
+                        "responses": [
+                            {
+                                "uuid": "",
+                                "body": "",
+                                "latency": 0,
+                                "statusCode": "200",
+                                "label": "",
+                                "headers": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "text/plain"
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": false,
+                                "rules": []
+                            }
+                        ],
+                        "enabled": true
+                    },
+                    {
+                        "uuid": "",
+                        "documentation": "Set RGB channel values for front led",
+                        "method": "post",
+                        "endpoint": "api/v1/led/blue",
+                        "responses": [
+                            {
+                                "uuid": "",
+                                "body": "",
+                                "latency": 0,
+                                "statusCode": "200",
+                                "label": "",
+                                "headers": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "text/plain"
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": false,
+                                "rules": []
+                            }
+                        ],
+                        "enabled": true
+                    },
+                    {
+                        "uuid": "",
+                        "documentation": "Get shade information",
+                        "method": "get",
+                        "endpoint": "api/v1/shade",
+                        "responses": [
+                            {
+                                "uuid": "",
+                                "body": "{\n    \"0\": {\n        \"target\": {\n            \"blind\": {{random 0 90}},\n            \"lamella\": {{random 0 100}}\n        },\n        \"current\": {\n            \"blind\": {{random 0 90}},\n            \"lamella\": {{random 0 100}}\n        }\n    }\n}",
+                                "latency": 0,
+                                "statusCode": "200",
+                                "label": "",
+                                "headers": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": false,
+                                "rules": []
+                            }
+                        ],
+                        "enabled": true
+                    },
+                    {
+                        "uuid": "",
+                        "documentation": "Get specific shade information",
+                        "method": "get",
+                        "endpoint": "api/v1/shade/0",
+                        "responses": [
+                            {
+                                "uuid": "",
+                                "body": "{\n    \"target\": {\n        \"blind\": {{random 0 90}},\n        \"lamella\": {{random 0 100}}\n    },\n    \"current\": {\n        \"blind\": {{random 0 90}},\n        \"lamella\": {{random 0 100}}\n    }\n}",
+                                "latency": 0,
+                                "statusCode": "200",
+                                "label": "",
+                                "headers": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": false,
+                                "rules": []
+                            }
+                        ],
+                        "enabled": true
+                    },
+                    {
+                        "uuid": "",
+                        "documentation": "Get specific shade information",
+                        "method": "get",
+                        "endpoint": "api/v1/shade/1",
+                        "responses": [
+                            {
+                                "uuid": "",
+                                "body": "{\n    \"target\": {\n        \"blind\": {{random 0 90}},\n        \"lamella\": {{random 0 100}}\n    },\n    \"current\": {\n        \"blind\": {{random 0 90}},\n        \"lamella\": {{random 0 100}}\n    }\n}",
+                                "latency": 0,
+                                "statusCode": "200",
+                                "label": "",
+                                "headers": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": false,
+                                "rules": []
+                            }
+                        ],
+                        "enabled": true
+                    },
+                    {
+                        "uuid": "",
+                        "documentation": "Set shade values",
+                        "method": "post",
+                        "endpoint": "api/v1/shade/0",
+                        "responses": [
+                            {
+                                "uuid": "",
+                                "body": "",
+                                "latency": 0,
+                                "statusCode": "200",
+                                "label": "",
+                                "headers": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "text/plain"
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": false,
+                                "rules": []
+                            }
+                        ],
+                        "enabled": true
+                    },
+                    {
+                        "uuid": "",
+                        "documentation": "Set shade values",
+                        "method": "post",
+                        "endpoint": "api/v1/shade/1",
+                        "responses": [
+                            {
+                                "uuid": "",
+                                "body": "",
+                                "latency": 0,
+                                "statusCode": "200",
+                                "label": "",
+                                "headers": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "text/plain"
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": false,
+                                "rules": []
+                            }
+                        ],
+                        "enabled": true
+                    },
+                    {
+                        "uuid": "",
+                        "documentation": "Get PIR configuration",
+                        "method": "get",
+                        "endpoint": "api/v1/pir_config",
+                        "responses": [
+                            {
+                                "uuid": "",
+                                "body": "{\n    \"pir_output\": 1,\n    \"pir_feedback\": \"green\",\n    \"feedback_intensity\": 100,\n    \"threshold\": 200,\n    \"timer\": 15,\n    \"on_time\": 15,\n    \"off_time\": 600,\n    \"min_dim_value\": 0,\n    \"max_dim_value\": 100,\n    \"smart_dimmer\": false,\n    \"backoff\": 1,\n    \"inhibit_time\": 1,\n    \"feedback_time\": 1,\n    \"enabled\": true\n}",
+                                "latency": 0,
+                                "statusCode": "200",
+                                "label": "",
+                                "headers": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": false,
+                                "rules": []
+                            }
+                        ],
+                        "enabled": true
+                    },
+                    {
+                        "uuid": "",
+                        "documentation": "Set PIR configuration",
+                        "method": "post",
+                        "endpoint": "api/v1/pir_config",
+                        "responses": [
+                            {
+                                "uuid": "",
+                                "body": "",
+                                "latency": 0,
+                                "statusCode": "200",
+                                "label": "",
+                                "headers": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": false,
+                                "rules": []
+                            }
+                        ],
+                        "enabled": true
+                    },
+                    {
+                        "uuid": "",
+                        "documentation": "Get PIR light sensor",
+                        "method": "get",
+                        "endpoint": "api/v1/light",
+                        "responses": [
+                            {
+                                "uuid": "",
+                                "body": "{\n    \"success\": true,\n    \"intensity\": 13.399999618530273,\n    \"day\": false\n}",
+                                "latency": 0,
+                                "statusCode": "200",
+                                "label": "",
+                                "headers": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": false,
+                                "rules": []
+                            }
+                        ],
+                        "enabled": true
+                    },
+                    {
+                        "uuid": "",
+                        "documentation": "Misc not working functions",
+                        "method": "get",
+                        "endpoint": "",
+                        "responses": [
+                            {
+                                "uuid": "",
+                                "body": "{ \"error\": \"Not implemented\" }",
+                                "latency": 0,
+                                "statusCode": "418",
+                                "label": "",
+                                "headers": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": false,
+                                "rules": []
+                            }
+                        ],
+                        "enabled": true
+                    },
+                    {
+                        "uuid": "",
+                        "documentation": "Set front led",
+                        "method": "post",
+                        "endpoint": "api/v1/led/set",
+                        "responses": [
+                            {
+                                "uuid": "",
+                                "body": "",
+                                "latency": 0,
+                                "statusCode": "200",
+                                "label": "",
+                                "headers": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "text/plain"
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": false,
+                                "rules": []
+                            }
+                        ],
+                        "enabled": true
+                    },
+                    {
+                        "uuid": "",
+                        "documentation": "Get thermostat configuration",
+                        "method": "get",
+                        "endpoint": "api/v1/thermostat_config",
+                        "responses": [
+                            {
+                                "uuid": "",
+                                "body": "",
+                                "latency": 0,
+                                "statusCode": "200",
+                                "label": "",
+                                "headers": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": false,
+                                "rules": []
+                            }
+                        ],
+                        "enabled": true
+                    },
+                    {
+                        "uuid": "",
+                        "documentation": "Set thermostat configuration",
+                        "method": "post",
+                        "endpoint": "api/v1/thermostat_config",
+                        "responses": [
+                            {
+                                "uuid": "",
+                                "body": "",
+                                "latency": 0,
+                                "statusCode": "200",
+                                "label": "",
+                                "headers": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": false,
+                                "rules": []
+                            }
+                        ],
+                        "enabled": true
+                    },
+                    {
+                        "uuid": "",
+                        "documentation": "Set input configuration",
+                        "method": "post",
+                        "endpoint": "api/v1/input_config",
+                        "responses": [
+                            {
+                                "uuid": "",
+                                "body": "",
+                                "latency": 0,
+                                "statusCode": "200",
+                                "label": "",
+                                "headers": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": false,
+                                "rules": []
+                            }
+                        ],
+                        "enabled": true
+                    },
+                    {
+                        "uuid": "",
+                        "documentation": "Get active timers",
+                        "method": "get",
+                        "endpoint": "api/v1/timer",
+                        "responses": [
+                            {
+                                "uuid": "",
+                                "body": "",
+                                "latency": 0,
+                                "statusCode": "200",
+                                "label": "",
+                                "headers": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "text/plain"
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": false,
+                                "rules": []
+                            }
+                        ],
+                        "enabled": true
+                    },
+                    {
+                        "uuid": "",
+                        "documentation": "Create and activate timer",
+                        "method": "post",
+                        "endpoint": "api/v1/timer",
+                        "responses": [
+                            {
+                                "uuid": "",
+                                "body": "",
+                                "latency": 0,
+                                "statusCode": "200",
+                                "label": "",
+                                "headers": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": false,
+                                "rules": []
+                            }
+                        ],
+                        "enabled": true
+                    },
+                    {
+                        "uuid": "",
+                        "documentation": "Stop timer",
+                        "method": "post",
+                        "endpoint": "api/v1/timer/stop",
+                        "responses": [
+                            {
+                                "uuid": "",
+                                "body": "",
+                                "latency": 0,
+                                "statusCode": "200",
+                                "label": "",
+                                "headers": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": false,
+                                "rules": []
+                            }
+                        ],
+                        "enabled": true
+                    },
+                    {
+                        "uuid": "",
+                        "documentation": "Set schedule",
+                        "method": "post",
+                        "endpoint": "api/v1/schedule",
+                        "responses": [
+                            {
+                                "uuid": "",
+                                "body": "",
+                                "latency": 0,
+                                "statusCode": "200",
+                                "label": "",
+                                "headers": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": false,
+                                "rules": []
+                            }
+                        ],
+                        "enabled": true
+                    },
+                    {
+                        "uuid": "",
+                        "documentation": "Get schedule",
+                        "method": "get",
+                        "endpoint": "api/v1/schedule",
+                        "responses": [
+                            {
+                                "uuid": "",
+                                "body": "",
+                                "latency": 0,
+                                "statusCode": "200",
+                                "label": "",
+                                "headers": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": false,
+                                "rules": []
+                            }
+                        ],
+                        "enabled": true
+                    },
+                    {
+                        "uuid": "",
+                        "documentation": "Add schedule item",
+                        "method": "post",
+                        "endpoint": "api/v1/schedule/add",
+                        "responses": [
+                            {
+                                "uuid": "",
+                                "body": "",
+                                "latency": 0,
+                                "statusCode": "200",
+                                "label": "",
+                                "headers": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": false,
+                                "rules": []
+                            }
+                        ],
+                        "enabled": true
+                    },
+                    {
+                        "uuid": "",
+                        "documentation": "Remove schedule item",
+                        "method": "post",
+                        "endpoint": "api/v1/schedule/remove",
+                        "responses": [
+                            {
+                                "uuid": "",
+                                "body": "",
+                                "latency": 0,
+                                "statusCode": "200",
+                                "label": "",
+                                "headers": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "filePath": "",
+                                "sendFileAsBody": false,
+                                "rules": []
+                            }
+                        ],
+                        "enabled": true
+                    }
+                ],
+                "proxyMode": false,
+                "proxyHost": "",
+                "https": false,
+                "cors": true,
+                "headers": [],
+                "proxyReqHeaders": [
+                    {
+                        "key": "",
+                        "value": ""
+                    }
+                ],
+                "proxyResHeaders": [
+                    {
+                        "key": "",
+                        "value": ""
+                    }
+                ]
+            }
+        }
+    ]
+}

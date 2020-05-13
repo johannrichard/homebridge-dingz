@@ -2,7 +2,7 @@
 
 ![Build and Lint](https://github.com/johannrichard/homebridge-dingz-da/workflows/Build%20and%20Lint/badge.svg)
 ![Node.js Package](https://github.com/johannrichard/homebridge-dingz-da/workflows/Node.js%20Package/badge.svg)
-)
+
 This plugin implements some (but not all) functions of [Dingz](https://dingz.ch) Smart Home Devices. The plugin also supports (some) myStrom Devices as they share much of the same API definitions and concepts with Dingz.
 
 The plugin attempts to
@@ -40,7 +40,7 @@ Add a "Dingz" platform block to your Homebridge config (under platforms) (or add
   {
       "name": "Dingz SmartHome Devices",
       "platform": "Dingz",
-      "globalToken": "74ccbf570f4b4be09d37b7ff4ea03954551f9263",
+      "globalToken": "74ccbf570f4b4be09d37b7ff4ea03954551f9263"
   }
 ]
 ```

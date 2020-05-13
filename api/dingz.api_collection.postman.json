@@ -1,0 +1,3280 @@
+{
+	"info": {
+		"_postman_id": "8d617969-351e-41a1-95d1-6bce3833e0b0",
+		"name": "dingz",
+		"description": "# REST API\r\nDingz offers a REST API (REST = representational State Transfer).\r\n\r\nThe interface allows you to access/control your dingz device directly from your local network independently from the dingz cloud.\r\nWith those rules you can integrate your dingz in almost any environment.\r\n\r\nFor some calls you will get `success` back. This should almost always be `true`. If it is `false` however, it means that your dingz has experienced an internal error.\r\n\r\n## MAC address\r\n\r\nOften in these request you will see a number like this `200AD4074I68`. This is the MAC address of the device without any delimiers.\r\n\r\n\r\n## Detect dingz\r\n\r\nTo discover a dingz in your network, you have to listen on udp port 7979. Each dingz device will broadcast a message. The first 6 bytes contain the mac address of the device and the following two bytes are a number that corresponds to the device type. Currently all dingz devices have the type number \"108\".\r\n\r\n## Security\r\nThe interface is transparent and has no authentication. If someone has access to your local network, **they will be able to control your dingz**.\r\nPlease apply strong security mechanisms to protect your network.\r\n\r\n",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "dingz Information ",
+			"item": [
+				{
+					"name": "Get Puck version number",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{ip}}/api/v1/puck",
+							"host": [
+								"{{ip}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"puck"
+							]
+						},
+						"description": "Returns a JSON object with two fields namely `fw` for firmware and `hw` for hardware. \n\nIn the `fw` object the field `version` denotes the current puck firmware version.\nIn the `hw` object the field `version` denotes the current bootloader version of the puck."
+					},
+					"response": [
+						{
+							"name": "Get Version Number",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{ip}}/api/v1/puck",
+									"host": [
+										"{{ip}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"puck"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Pragma",
+									"value": "no-cache"
+								},
+								{
+									"key": "Cache-Control",
+									"value": "no-store, no-cache"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Content-Length",
+									"value": "64"
+								},
+								{
+									"key": "Connection",
+									"value": "close"
+								},
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": "*"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"fw\": {\n        \"success\": true,\n        \"version\": \"0.6.1\"\n    },\n    \"hw\": {\n        \"success\": false\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "General information",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{ip}}/api/v1/info",
+							"host": [
+								"{{ip}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"info"
+							]
+						},
+						"description": "Gets general information about your dingz device. Will return a JSON object with:\n\n- `version`: Current firmware version\n- `mac`: MAC address, without any delimiters\n- `ssid`: SSID of the currently connected network\n- `ip`: Current ip address\n- `mask`: Mask of the current network\n- `gateway`: Gateway of the current network\n- `dns`: DNS of the curent network\n- `static`: Wether or not the ip address is static\n- `connected`: Wether or not the device is connected to the internet"
+					},
+					"response": [
+						{
+							"name": "General information",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{ip}}/api/v1/info",
+									"host": [
+										"{{ip}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"info"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": "*"
+								},
+								{
+									"key": "Cache-Control",
+									"value": "no-store, no-cache"
+								},
+								{
+									"key": "Content-Encoding",
+									"value": "gzip"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Date",
+									"value": "Fri, 08 May 2020 14:50:49 GMT"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"b4-8VD1vdvihl4dUko9PHA/9AhgYAU\""
+								},
+								{
+									"key": "Pragma",
+									"value": "no-cache"
+								},
+								{
+									"key": "Server",
+									"value": "nginx"
+								},
+								{
+									"key": "Vary",
+									"value": "Accept-Encoding"
+								},
+								{
+									"key": "X-RateLimit-Limit",
+									"value": "120"
+								},
+								{
+									"key": "X-RateLimit-Remaining",
+									"value": "119"
+								},
+								{
+									"key": "X-RateLimit-Reset",
+									"value": "1588949508"
+								},
+								{
+									"key": "x-srv-span",
+									"value": "v=1;s=2b61522ba066702a"
+								},
+								{
+									"key": "x-srv-trace",
+									"value": "v=1;t=cdbdf37df8477e62"
+								},
+								{
+									"key": "Content-Length",
+									"value": "125"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"version\": \"3.14.36\",\n    \"mac\": \"840D9E030BF0\",\n    \"ssid\": \"\",\n    \"ip\": \"10.147.1.16\",\n    \"mask\": \"255.255.255.0\",\n    \"gateway\": \"10.147.1.1\",\n    \"dns\": \"1.1.1.1\",\n    \"static\": false,\n    \"connected\": true\n}"
+						},
+						{
+							"name": "General information",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{ip}}/api/v1/info",
+									"host": [
+										"{{ip}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"info"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Pragma",
+									"value": "no-cache"
+								},
+								{
+									"key": "Cache-Control",
+									"value": "no-store, no-cache"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Content-Length",
+									"value": "125"
+								},
+								{
+									"key": "Connection",
+									"value": "close"
+								},
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": "*"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"version\": \"3.14.36\",\n    \"mac\": \"840D8E030BF0\",\n    \"ssid\": \"\",\n    \"ip\": \"\",\n    \"mask\": \"\",\n    \"gateway\": \"\",\n    \"dns\": \"\",\n    \"static\": false,\n    \"connected\": false\n}"
+						}
+					]
+				},
+				{
+					"name": "Get (room) temperature",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "e34d4fa1-3ba6-4cc9-a3f3-c25051a1d2a4",
+								"exec": [
+									"pm.environment.set('temperature', parseFloat(pm.environment.get(\"temperature\")) + (Math.random() - 0.5)/5);",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{ip}}/api/v1/temp",
+							"host": [
+								"{{ip}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"temp"
+							]
+						},
+						"description": "Returns a JSON object with two fields:\n\n- `success`: Wether or not the request succeeded\n- `temperature`: The current (room) temperature"
+					},
+					"response": [
+						{
+							"name": "Get (room) temperature",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{ip}}/api/v1/temp",
+									"host": [
+										"{{ip}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"temp"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Pragma",
+									"value": "no-cache"
+								},
+								{
+									"key": "Cache-Control",
+									"value": "no-store, no-cache"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Content-Length",
+									"value": "49"
+								},
+								{
+									"key": "Connection",
+									"value": "close"
+								},
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": "*"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"temperature\": {{temperature}}\n}"
+						}
+					]
+				},
+				{
+					"name": "Get motion sensor value",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{ip}}/api/v1/motion",
+							"host": [
+								"{{ip}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"motion"
+							]
+						},
+						"description": "Returns JSON object with 2 fiels:\n- `success`: Wether or not the request has succeeded\n- `motion`: Wether or noth the motion sensor has recognized motion (for dingz one it will always be `false`)"
+					},
+					"response": [
+						{
+							"name": "Get motion sensor value",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{ip}}/api/v1/motion",
+									"host": [
+										"{{ip}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"motion"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Pragma",
+									"value": "no-cache"
+								},
+								{
+									"key": "Cache-Control",
+									"value": "no-store, no-cache"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Content-Length",
+									"value": "31"
+								},
+								{
+									"key": "Connection",
+									"value": "close"
+								},
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": "*"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"motion\": false\n}"
+						}
+					]
+				},
+				{
+					"name": "Get device specific information",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{ip}}/api/v1/device/",
+							"host": [
+								"{{ip}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"device",
+								""
+							]
+						},
+						"description": "Returns a json object which has one field namely the mac address of the dingz device without any delimiters. In this field there is the following information:\n\n- `type`: Device type\n- `battery`: Wether or not the devices is using batteries\n- `reachable`: Wether or not the device is reachable from the dingz cloud.\n- `meshroot`: Wether or not the dingz device is part of a mesh\n- `fw_version`: The current firmware version of the front\n- `fw_version_puck`: The current firmware version of the circular back\n- `bl_version_puck`: The current bootloader version of the circular back\n- `dip_config`: Value corresponding to dip switch configuration of puck\n- `has_pir`: Wether or not the device has a pir\n- `hk_activation_code`: The homekit activation code"
+					},
+					"response": [
+						{
+							"name": "Get device specific information",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{ip}}/api/v1/device/",
+									"host": [
+										"{{ip}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"device",
+										""
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Pragma",
+									"value": "no-cache"
+								},
+								{
+									"key": "Cache-Control",
+									"value": "no-store, no-cache"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Content-Length",
+									"value": "222"
+								},
+								{
+									"key": "Connection",
+									"value": "close"
+								},
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": "*"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"840D8E030BF0\": {\n        \"type\": \"dingz\",\n        \"battery\": false,\n        \"reachable\": true,\n        \"meshroot\": true,\n        \"fw_version\": \"3.14.36\",\n        \"fw_version_puck\": \"0.6.1\",\n        \"bl_version_puck\": \"0.0.0\",\n        \"dip_config\": 3,\n        \"has_pir\": true,\n        \"hk_activation_code\": \"443-85-511\"\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Get log",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{ip}}/log",
+							"host": [
+								"{{ip}}"
+							],
+							"path": [
+								"log"
+							]
+						},
+						"description": "Gets a log of everything that has happened. Returned as a raw string."
+					},
+					"response": [
+						{
+							"name": "Get log",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{ip}}/log",
+									"host": [
+										"{{ip}}"
+									],
+									"path": [
+										"log"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "plain",
+							"header": [
+								{
+									"key": "Pragma",
+									"value": "no-cache"
+								},
+								{
+									"key": "Cache-Control",
+									"value": "no-store, no-cache"
+								},
+								{
+									"key": "Content-Type",
+									"value": "text/plain"
+								},
+								{
+									"key": "Content-Length",
+									"value": "1174"
+								},
+								{
+									"key": "Connection",
+									"value": "close"
+								},
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": "*"
+								}
+							],
+							"cookie": [],
+							"body": "\r\nTIMESTAMP\tMODULE\tLEVEL\tCODE\tVALUE\r\n5C1276D4\t1\t4\t19\r\n5C1276D4\t1\t4\t18\t3\r\n5C1276D4\t1\t4\t18\t2\r\n5C1276D4\t1\t4\t18\t13\r\n5C1276DB\t1\t3\t11\r\n5C1276DB\t1\t4\t8\r\n5C1276DB\t1\t4\t18\t3\r\n5C1276DB\t1\t4\t18\t14\r\n5C1276DB\t1\t3\t15\r\n5C1276DB\t1\t4\t28\r\n5C1276DB\t1\t4\t18\t2\r\n5C1276DB\t1\t4\t10\r\n5C127753\t1\t4\t18\t11\r\n5C127754\t1\t3\t5\r\n5C127754\t1\t3\t7\r\n5C127754\t1\t4\t18\t3\r\n5C127754\t1\t4\t18\t2\r\n5C127754\t1\t4\t18\t13\r\n5C127812\t1\t4\t18\t15\r\n5C12781B\t1\t4\t18\t17\r\n5C1278B6\t1\t3\t11\r\n5C1278B6\t1\t4\t8\r\n5C1278B6\t1\t4\t18\t3\r\n5C1278B6\t1\t4\t18\t16\r\n5C1278B6\t1\t4\t18\t14\r\n5C1278B6\t1\t3\t15\r\n5C1278B6\t1\t4\t28\r\n5C1278B6\t1\t4\t18\t2\r\n5C1278B6\t1\t4\t10\r\n5C1278C9\t1\t4\t18\t5\r\n5C1278CA\t1\t4\t18\t9\r\n5C1278CA\t1\t4\t16\r\n5C1278CB\t1\t4\t11\r\n5C1278CB\t1\t4\t3\r\n5C1278CB\t1\t4\t18\t3\r\n5C1278CB\t1\t3\t13\r\n5C1278CB\t1\t4\t26\r\n5C1278CB\t1\t4\t18\t2\r\n5C1278CC\t1\t4\t18\t4\r\n5C1278CC\t1\t4\t18\t7\r\n5C1278CC\t1\t4\t12\r\n5C1278CD\t1\t4\t18\t19\r\n5C1278CD\t1\t4\t14\r\n5C1278CD\t1\t4\t1\r\n5C1278CD\t2\t4\t34\r\n5C1278E2\t1\t4\t18\t19\r\n5C1278E5\t2\t4\t27\r\n5C1278E5\t2\t4\t28\r\n5C1278E5\t2\t4\t30\r\n5C1278E5\t2\t4\t31\r\n5C1278E6\t2\t4\t32\r\n5C1278E6\t2\t4\t22\r\n5C1278E6\t2\t4\t23\r\n5C1278E6\t2\t4\t24\r\n5C1278E6\t2\t4\t5\r\n5C1278E6\t2\t4\t2\t30\r\n5C1278E6\t2\t4\t1\t60\r\n5C1278E7\t2\t4\t4\r\n5C127904\t2\t4\t4\r\n5C127922\t2\t4\t24\r\n5C127922\t2\t4\t7\r\n5C127922\t2\t4\t4\r\n5C127940\t2\t4\t4\r\n5C12795E\t2\t4\t4\r\n"
+						}
+					]
+				}
+			],
+			"description": "Requests used to get general information from dingz.",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "17fddc35-c00c-4469-8d9e-44637bbf5bb6",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "62f2cfd1-2c4d-4952-a210-6361050fbcb3",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "dingz Wifi",
+			"item": [
+				{
+					"name": "Scan Wifi",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "def6437f-2629-46e6-9e60-dba2a5fe7df5",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{ip}}/api/v1/scan",
+							"host": [
+								"{{ip}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"scan"
+							]
+						},
+						"description": "Scans for nearby wifi networks. Will return a JSON array consisting alternatingly of a wifi name and its signal strength"
+					},
+					"response": [
+						{
+							"name": "Scan wifi",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{ip}}/api/v1/scan",
+									"host": [
+										"{{ip}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"scan"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Pragma",
+									"value": "no-cache"
+								},
+								{
+									"key": "Cache-Control",
+									"value": "no-store, no-cache"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Content-Length",
+									"value": "212"
+								},
+								{
+									"key": "Connection",
+									"value": "close"
+								},
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": "*"
+								}
+							],
+							"cookie": [],
+							"body": "[\n    \"UPC42A3283\",\n    -49,\n    \"FRITZ!Box 7490\",\n    -77,\n    \"UPC3B0283\",\n    -63,\n    \"UPC9CE144A\",\n    -69,\n    \"WN-C61328_2GEXT\",\n    -77\n]"
+						}
+					]
+				},
+				{
+					"name": "Scan Wifi (detailed)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{ip}}/networks",
+							"host": [
+								"{{ip}}"
+							],
+							"path": [
+								"networks"
+							]
+						},
+						"description": "Scans for nearby wifi networks in a detailed manner. Returns a JSON object where each detected wifi signal is a field. \nFor each detected Wifi it returns\n- `name`: indicating the name of the wifi\n- `signal`: indicating signal strength\n- `encryption-on`: wether or not the wifi signal is encrypted\n- `encryption`: The used encryption standard"
+					},
+					"response": [
+						{
+							"name": "Networks",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{ip}}/networks",
+									"host": [
+										"{{ip}}"
+									],
+									"path": [
+										"networks"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Pragma",
+									"value": "no-cache"
+								},
+								{
+									"key": "Cache-Control",
+									"value": "no-store, no-cache"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Content-Length",
+									"value": "973"
+								},
+								{
+									"key": "Connection",
+									"value": "close"
+								},
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": "*"
+								}
+							],
+							"cookie": [],
+							"body": "{\n\n    \"UPC42A3283\": {\n        \"name\": \"UPC42A3283\",\n        \"signal\": 94,\n        \"encryption-on\": true,\n        \"encryption\": \"WPA_WPA2_PSK\"\n    },\n\n    \"FRITZ!Box 7490\": {\n        \"name\": \"FRITZ!Box 7490\",\n        \"signal\": 62,\n        \"encryption-on\": true,\n        \"encryption\": \"WPA2_PSK\"\n    },\n\n    \"WN-43A58D\": {\n        \"name\": \"WN-43A58D\",\n        \"signal\": 24,\n        \"encryption-on\": true,\n        \"encryption\": \"WPA2_PSK\"\n    },\n    \"UPCBF1B9C2\": {\n        \"name\": \"UPCBF1B9C2\",\n        \"signal\": 22,\n        \"encryption-on\": true,\n        \"encryption\": \"WPA_WPA2_PSK\"\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Activate WPS",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {}
+						},
+						"url": {
+							"raw": "{{setupIP}}/api/v1/wps",
+							"host": [
+								"{{setupIP}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"wps"
+							]
+						},
+						"description": "Activates WPS on your dingz."
+					},
+					"response": []
+				},
+				{
+					"name": "Connect to Wifi",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"ssid\": \"ABEO\",\n    \"passwd\": \"PASSWORD\"\n}",
+							"options": {}
+						},
+						"url": {
+							"raw": "{{setupIP}}/api/v1/connect",
+							"host": [
+								"{{setupIP}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"connect"
+							]
+						},
+						"description": "Connects the device to wifi\n\nPostman somehow has problems with this request so we write it here as you would use it for curl. DISREGARD THE POSTMAN EXAMPLE\n\nIn order for this command to work you must first exectue the \"Scan Wifi\" or \"Scan Wifi (detailed)\"\n\nThe fields you can enter in the JSON object are:\n- `ssid`: The ssid of the network you want your dingz to connect to\n- `passwd`: The password of the network you want your dingz to connect to\n- `ip`: The static ip address you whish you dingz to have (optional, only needed when using static ips and not using dhcp)\n- `mask`: The mask of the network (optional, only needed when using static ips and not using dhcp)\n- `gateway`: The gateway of the network (optional, only needed when using static ips and not using dhcp)\n- `dns`: The dns server of you network (optional, only needed when using static ips and not using dhcp)\n\n\n curl -d '{\"ssid\":\"WIFI\", \"passwd\":\"PASSWORD\"}' http://192.168.254.1/api/v1/connect"
+					},
+					"response": []
+				}
+			],
+			"description": "Requests for setting or detecting wifi networks.",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "3446388a-bcb2-4d1a-b684-7937feb3b972",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "11e0f02f-50b3-4432-b969-2c8e009ad554",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "dingz Setting",
+			"item": [
+				{
+					"name": "Enable/Disable REST API",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{ip}}/rest?enable=true",
+							"host": [
+								"{{ip}}"
+							],
+							"path": [
+								"rest"
+							],
+							"query": [
+								{
+									"key": "enable",
+									"value": "true"
+								}
+							]
+						},
+						"description": "Disables or enables the rest api. Does not return anything.\n\nBy disableing the rest api one also disables any kind of interaction with the device besides the standalone mode. Needs to be reset after usage to get the device back in working condition.\n\nAlso disables the webui."
+					},
+					"response": []
+				},
+				{
+					"name": "Enable/Disable Web UI",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{ip}}/panel?enable=true",
+							"host": [
+								"{{ip}}"
+							],
+							"path": [
+								"panel"
+							],
+							"query": [
+								{
+									"key": "enable",
+									"value": "true"
+								}
+							]
+						},
+						"description": "Enables or disables the Web interface. Does not return anything\n\n"
+					},
+					"response": []
+				},
+				{
+					"name": "Get settings information",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{ip}}/api/v1/settings",
+							"host": [
+								"{{ip}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"settings"
+							]
+						},
+						"description": "Returns a json objects listing wether or not some dingz settings are enabled or not. The fields included in this object are:\n\n- `rest`: Wether or not the rest api is enabled\n- `panel`: Wether or not the web ui is enabled\n- `referer`: Wether or not we accept requests that have no referrer or do not originate from myStrom server or the dingz device itself \n- `token`: API access token (disable by default)\n- `hap_disable`: Wether or not homekit is enabled"
+					},
+					"response": [
+						{
+							"name": "Get settings information",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{ip}}/api/v1/settings",
+									"host": [
+										"{{ip}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"settings"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Pragma",
+									"value": "no-cache"
+								},
+								{
+									"key": "Cache-Control",
+									"value": "no-store, no-cache"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Content-Length",
+									"value": "71"
+								},
+								{
+									"key": "Connection",
+									"value": "close"
+								},
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": "*"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"rest\": true,\n    \"panel\": true,\n    \"referer\": true,\n    \"token\": \"\",\n    \"hap_disable\": true\n}"
+						}
+					]
+				},
+				{
+					"name": "Manual firmware upgrade",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"value": "@[FILE ON DISK]",
+									"type": "text"
+								}
+							],
+							"options": {}
+						},
+						"url": {
+							"raw": "{{ip}}/load",
+							"host": [
+								"{{ip}}"
+							],
+							"path": [
+								"load"
+							]
+						},
+						"description": "Upgrade the firmware of the device to the firmwarefile provided. \n\nMake sure that the firmware (.bin file) corresponds to your device type before uploading.\n\nReturns an empty body."
+					},
+					"response": []
+				}
+			],
+			"description": "Change settings saved on your dingz.",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "18db8eef-6315-4707-8745-eef0e50070e7",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "c6869be2-4f2d-4c80-8ed3-770ca137c2d8",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "dingz Actions",
+			"item": [
+				{
+					"name": "Get button actions",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{ip}}/api/v1/action",
+							"host": [
+								"{{ip}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"action"
+							]
+						},
+						"description": "Returns a JSON object with the specified web request that should be executed for every interaction. \n\nWe get this for every button, pir and a generic field. Each of those then again has 4 interaction types (`single`, `double`, `long` and `generic`). Some fields may be deprecated (e.g. pir with `single` action). They will simply be ignored. "
+					},
+					"response": [
+						{
+							"name": "Get button web actions",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{ip}}/api/v1/action",
+									"host": [
+										"{{ip}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"action"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Pragma",
+									"value": "no-cache"
+								},
+								{
+									"key": "Cache-Control",
+									"value": "no-store, no-cache"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Content-Length",
+									"value": "726"
+								},
+								{
+									"key": "Connection",
+									"value": "close"
+								},
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": "*"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"generic\": {\n        \"generic\": \"\",\n        \"single\": \"\",\n        \"double\": \"\",\n        \"long\": \"\",\n        \"press_release\": false\n    },\n    \"btn1\": {\n        \"generic\": \"\",\n        \"single\": \"\",\n        \"double\": \"\",\n        \"long\": \"\",\n        \"press_release\": false\n    },\n    \"btn2\": {\n        \"generic\": \"\",\n        \"single\": \"\",\n        \"double\": \"\",\n        \"long\": \"\",\n        \"press_release\": false\n    },\n    \"btn3\": {\n        \"generic\": \"\",\n        \"single\": \"\",\n        \"double\": \"\",\n        \"long\": \"\",\n        \"press_release\": false\n    },\n    \"btn4\": {\n        \"generic\": \"\",\n        \"single\": \"\",\n        \"double\": \"\",\n        \"long\": \"\",\n        \"press_release\": false\n    },\n    \"pir\": {\n        \"generic\": \"\",\n        \"single\": \"\",\n        \"double\": \"\",\n        \"long\": \"\",\n        \"press_release\": false\n    },\n    \"input\": {\n        \"generic\": \"\",\n        \"single\": \"\",\n        \"double\": \"\",\n        \"long\": \"\",\n        \"press_release\": false\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Get specific button actions",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{ip}}/api/v1/action/btn1",
+							"host": [
+								"{{ip}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"action",
+								"btn1"
+							]
+						},
+						"description": "Returns a JSON object with one field, namely the `btn` number we just requested. This field again lists every web request for each interaction."
+					},
+					"response": [
+						{
+							"name": "Get the actions for a specific button",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{ip}}/api/v1/action/btn1",
+									"host": [
+										"{{ip}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"action",
+										"btn1"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Pragma",
+									"value": "no-cache"
+								},
+								{
+									"key": "Cache-Control",
+									"value": "no-store, no-cache"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Content-Length",
+									"value": "105"
+								},
+								{
+									"key": "Connection",
+									"value": "close"
+								},
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": "*"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"btn1\": {\n        \"generic\": \"\",\n        \"single\": \"\",\n        \"double\": \"\",\n        \"long\": \"\",\n        \"press_release\": false\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Get actions for specific button and interaction type",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{ip}}/api/v1/action/btn1/single",
+							"host": [
+								"{{ip}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"action",
+								"btn1",
+								"single"
+							]
+						},
+						"description": "Gets the url executed when using the specified button in the certain way.\n\nURL is of form `/api/v1/action/<ENUM generic|btn1|btn2|btn3|btn4|pir>/<ENUM generic|single|double|long>`"
+					},
+					"response": []
+				},
+				{
+					"name": "Set button action",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/x-www-form-urlencoded",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [],
+							"options": {}
+						},
+						"url": {
+							"raw": "{{ip}}/api/v1/action/btn1/single",
+							"host": [
+								"{{ip}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"action",
+								"btn1",
+								"single"
+							]
+						},
+						"description": "### General Actions\nThe URL has the form `/api/v1/action/<ENUM generic|btn1|btn2|btn3|btn4|pir>/<ENUM generic|single|double|long>`\n\nWe set each button action by simply providing the button number (generic, btn1, btn2, btn3, btn4, pir), interaction type (single, double, long) and what kind of request we want to happen upon that interaction.\n\nWe introduce an unconventional way to specify what kind of request the button should execute. \nA url of form `post://` will execute a post request and one of form `get://` will execute a get request. Requests of form `put://` and `delete://` can also be used for PUT and DELETE requests respectively.\n\nIn the first postman example we set the double click action to send a get request to 192.168.1.153 on port 9090\n\nIn the second postman example we set the single click action to send a post request to 192.168.1.153 on port 9090 with data \"key=value\" and \"key2=value2\"\n\nWe will not get a return value.\n\n### Advanced Feautres\n\nImplemented in Firmware version: 2.74.10\n#### Multiple actions \nThe buttons can execute multiple actions after each other. Between every two actions we put \"||\" to show the end of the first action and the start of a new one.\nThe number of actions we can set is limited! The number of characters of the entire string that we write to a specific action (i.e. the length of all actions including vertical delimiters) has to be smaller than 800 characters.\n\nExample: post://192.168.1.42?key=value||get://192.168.1.173\n\n### Generic Action\nGeneric URL are called for all actions, the callback appends some additional parameters to the request URL which describe the action that just occured.\n\n|Name        | Type      |Range|Given|Comments|\n| :------------- | :------------- |:------------- | :------------- |:------------- |\n|mac   |MAC   |   | yes  |   |\n|action   | ENUM  |SINGLE = 1 <br> DOUBLE=2 <br> LONG=3<br>   |   yes|   |\n\n\n**Example:**\n\nIf the generic field on the Button is set to:\n`get://192.168.1.144:8787/gen`\n\nthen the HTTP server running on 192.168.1.144:8787 will receive GET requests that looks similar to\n\n`/gen?mac=18FE34CD9201&action=3"
+					},
+					"response": [
+						{
+							"name": "Set button action",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"value": "application/x-www-form-urlencoded",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "get://google.com",
+											"value": "",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{ip}}/api/v1/action/btn1/single",
+									"host": [
+										"{{ip}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"action",
+										"btn1",
+										"single"
+									]
+								}
+							},
+							"_postman_previewlanguage": "Text",
+							"header": [],
+							"cookie": [],
+							"body": ""
+						},
+						{
+							"name": "Set button action",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"value": "application/x-www-form-urlencoded",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "post://google.com?value",
+											"value": "100",
+											"type": "text"
+										},
+										{
+											"key": "enabled",
+											"value": "true",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{ip}}/api/v1/action/btn1/single",
+									"host": [
+										"{{ip}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"action",
+										"btn1",
+										"single"
+									]
+								}
+							},
+							"_postman_previewlanguage": "Text",
+							"header": [],
+							"cookie": [],
+							"body": ""
+						}
+					]
+				}
+			],
+			"description": "A User can manually specify webrequests that should be executed whenever we click a button or the pir is triggered. \n\nFor each of the 4 buttons we have 3 interaction modes namely `single`, `double` and `press`. The requests listed there will be executed when the user interacts with the corresponding button in the corresponding manner. \n\nSee \"Set button actions\" to find out more about the strucute of the urls.\n\n",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "0fb6f00a-9725-4bfc-84a3-5be5e1a5c74e",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "26bf4753-ed1f-4fc7-881f-6a14af50a299",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "dingz Dimmers",
+			"item": [
+				{
+					"name": "Set dimmer values",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {}
+						},
+						"url": {
+							"raw": "{{ip}}/api/v1/dimmer/0/on/?value=33&ramp=0",
+							"host": [
+								"{{ip}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"dimmer",
+								"0",
+								"on",
+								""
+							],
+							"query": [
+								{
+									"key": "value",
+									"value": "33",
+									"description": " To which value the corresponding dimmer is set to. Values from [0, 100]"
+								},
+								{
+									"key": "ramp",
+									"value": "0",
+									"description": "How quickly the values change. Values from [0, 255]"
+								}
+							]
+						},
+						"description": "The URL is of the form `/api/v1/dimmer/<UINT 0..3>/<ENUM off|on>`\n\n<UINT 0...3> specifies which of the 4 outputs we are changing.\n\nIf no post data is specified the corresponding dimmer will be set to either on or off.\n\nHowever we can use post data to set `value` & `ramp`, in this case the `<ENUM off|on>` value is disregarded.\n\nNothing is returned"
+					},
+					"response": [
+						{
+							"name": "Set dimmer values",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "",
+									"options": {}
+								},
+								"url": {
+									"raw": "{{ip}}/api/v1/dimmer/0/on/?value=33&ramp=0",
+									"host": [
+										"{{ip}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"dimmer",
+										"0",
+										"on",
+										""
+									],
+									"query": [
+										{
+											"key": "value",
+											"value": "33",
+											"description": " To which value the corresponding dimmer is set to. Values from [0, 100]"
+										},
+										{
+											"key": "ramp",
+											"value": "0",
+											"description": "How quickly the values change. Values from [0, 255]"
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": "*"
+								},
+								{
+									"key": "Content-Encoding",
+									"value": "gzip"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 09 May 2020 08:21:30 GMT"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"96-S/5iQ2y1qqIInh5BwoPc+chvDJU\""
+								},
+								{
+									"key": "Server",
+									"value": "nginx"
+								},
+								{
+									"key": "Vary",
+									"value": "Accept-Encoding"
+								},
+								{
+									"key": "X-RateLimit-Limit",
+									"value": "120"
+								},
+								{
+									"key": "X-RateLimit-Remaining",
+									"value": "119"
+								},
+								{
+									"key": "X-RateLimit-Reset",
+									"value": "1589012550"
+								},
+								{
+									"key": "x-srv-span",
+									"value": "v=1;s=94e780dd7262dbb8"
+								},
+								{
+									"key": "x-srv-trace",
+									"value": "v=1;t=9a4ba0b20c82caf7"
+								},
+								{
+									"key": "Content-Length",
+									"value": "135"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								}
+							],
+							"cookie": [],
+							"body": ""
+						}
+					]
+				},
+				{
+					"name": "Get dimmer status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{ip}}/api/v1/dimmer",
+							"host": [
+								"{{ip}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"dimmer"
+							]
+						},
+						"description": "Returns a JSON object consisting of one field per dimmer output which in turn consists of 3 values namely \n\n- `on`: Wether or not the dimmer output is currently on\n- `value`:  To which value the corresponding dimmer is set to. Values from [0, 100]\n- `ramp`: How quickly the values change. Values from [0, 255]"
+					},
+					"response": [
+						{
+							"name": "Get dimmer status",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{ip}}/api/v1/dimmer",
+									"host": [
+										"{{ip}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"dimmer"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Pragma",
+									"value": "no-cache"
+								},
+								{
+									"key": "Cache-Control",
+									"value": "no-store, no-cache"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Content-Length",
+									"value": "146"
+								},
+								{
+									"key": "Connection",
+									"value": "close"
+								},
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": "*"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"0\": {\n        \"on\": true,\n        \"value\": 100,\n        \"ramp\": 0\n    },\n    \"1\": {\n        \"on\": true,\n        \"value\": 39,\n        \"ramp\": 0\n    },\n    \"2\": {\n        \"on\": false,\n        \"value\": 0,\n        \"ramp\": 0\n    },\n    \"3\": {\n        \"on\": false,\n        \"value\": 0,\n        \"ramp\": 0\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Get specific dimmer status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{ip}}/api/v1/dimmer/3",
+							"host": [
+								"{{ip}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"dimmer",
+								"3"
+							]
+						},
+						"description": "URL is of form `/api/v1/dimmer/<UINT 0..3>`\r\n\r\nReturns a JSON object consisting of one field per dimmer output which in turn consists of 3 values namely \r\n\r\n- `on`: Wether or not the dimmer output is currently on\r\n- `value`:  To which value the corresponding dimmer is set to. Values from [0, 100]\r\n- `ramp`: How quickly the values change. Values from [0, 255]"
+					},
+					"response": [
+						{
+							"name": "Get specific dimmer status",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{ip}}/api/v1/dimmer/3",
+									"host": [
+										"{{ip}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"dimmer",
+										"3"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": "*"
+								},
+								{
+									"key": "Cache-Control",
+									"value": "no-store, no-cache"
+								},
+								{
+									"key": "Content-Encoding",
+									"value": "gzip"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Date",
+									"value": "Fri, 08 May 2020 14:48:29 GMT"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"137-YGp24wlGmA2KVj/aVMZ74AZK3Gc\""
+								},
+								{
+									"key": "Pragma",
+									"value": "no-cache"
+								},
+								{
+									"key": "Server",
+									"value": "nginx"
+								},
+								{
+									"key": "Vary",
+									"value": "Accept-Encoding"
+								},
+								{
+									"key": "X-RateLimit-Limit",
+									"value": "120"
+								},
+								{
+									"key": "X-RateLimit-Remaining",
+									"value": "118"
+								},
+								{
+									"key": "X-RateLimit-Reset",
+									"value": "1588949344"
+								},
+								{
+									"key": "x-srv-span",
+									"value": "v=1;s=b8a85e3755e29d75"
+								},
+								{
+									"key": "x-srv-trace",
+									"value": "v=1;t=eff7072bac79842f"
+								},
+								{
+									"key": "Content-Length",
+									"value": "95"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"on\": true,\n    \"value\": 25,\n    \"ramp\": 0\n}"
+						},
+						{
+							"name": "Get specific dimmer status",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{ip}}/api/v1/dimmer/0",
+									"host": [
+										"{{ip}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"dimmer",
+										"0"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Pragma",
+									"value": "no-cache"
+								},
+								{
+									"key": "Cache-Control",
+									"value": "no-store, no-cache"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Content-Length",
+									"value": "32"
+								},
+								{
+									"key": "Connection",
+									"value": "close"
+								},
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": "*"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"on\": true,\n    \"value\": 100,\n    \"ramp\": 0\n}"
+						},
+						{
+							"name": "Get specific dimmer status",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{ip}}/api/v1/dimmer/1",
+									"host": [
+										"{{ip}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"dimmer",
+										"1"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": "*"
+								},
+								{
+									"key": "Cache-Control",
+									"value": "no-store, no-cache"
+								},
+								{
+									"key": "Content-Encoding",
+									"value": "gzip"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Date",
+									"value": "Fri, 08 May 2020 14:47:33 GMT"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"137-YGp24wlGmA2KVj/aVMZ74AZK3Gc\""
+								},
+								{
+									"key": "Pragma",
+									"value": "no-cache"
+								},
+								{
+									"key": "Server",
+									"value": "nginx"
+								},
+								{
+									"key": "Vary",
+									"value": "Accept-Encoding"
+								},
+								{
+									"key": "X-RateLimit-Limit",
+									"value": "120"
+								},
+								{
+									"key": "X-RateLimit-Remaining",
+									"value": "111"
+								},
+								{
+									"key": "X-RateLimit-Reset",
+									"value": "1588949256"
+								},
+								{
+									"key": "x-srv-span",
+									"value": "v=1;s=9648e96142071e88"
+								},
+								{
+									"key": "x-srv-trace",
+									"value": "v=1;t=ae586c5212383ef5"
+								},
+								{
+									"key": "Content-Length",
+									"value": "95"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"on\": false,\n    \"value\": 50,\n    \"ramp\": 0\n}"
+						},
+						{
+							"name": "Get specific dimmer status",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{ip}}/api/v1/dimmer/2",
+									"host": [
+										"{{ip}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"dimmer",
+										"2"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": "*"
+								},
+								{
+									"key": "Cache-Control",
+									"value": "no-store, no-cache"
+								},
+								{
+									"key": "Content-Encoding",
+									"value": "gzip"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Date",
+									"value": "Fri, 08 May 2020 14:48:05 GMT"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"137-YGp24wlGmA2KVj/aVMZ74AZK3Gc\""
+								},
+								{
+									"key": "Pragma",
+									"value": "no-cache"
+								},
+								{
+									"key": "Server",
+									"value": "nginx"
+								},
+								{
+									"key": "Vary",
+									"value": "Accept-Encoding"
+								},
+								{
+									"key": "X-RateLimit-Limit",
+									"value": "120"
+								},
+								{
+									"key": "X-RateLimit-Remaining",
+									"value": "119"
+								},
+								{
+									"key": "X-RateLimit-Reset",
+									"value": "1588949344"
+								},
+								{
+									"key": "x-srv-span",
+									"value": "v=1;s=fd6d8e8ebbd5e57e"
+								},
+								{
+									"key": "x-srv-trace",
+									"value": "v=1;t=639a6ade31f321c4"
+								},
+								{
+									"key": "Content-Length",
+									"value": "95"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"on\": false,\n    \"value\": 0,\n    \"ramp\": 0\n}"
+						}
+					]
+				}
+			],
+			"description": "Getting or setting the dingz output dimmers.",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "7bed2afc-90ff-4f18-8f7f-c9234fff80a8",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "afa6292d-e7df-462c-b99f-b532be04ae01",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "dingz Front LED",
+			"item": [
+				{
+					"name": "Get current front LED information",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{ip}}/api/v1/led/get",
+							"host": [
+								"{{ip}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"led",
+								"get"
+							]
+						},
+						"description": "Returns a JSON object with 4 fields, namely:\n\n- `on`: Wether or not the led is on\n- `hsv`: Color in hsv mode has format `<UINT 0..360>;<UINT 0..100>;<UINT 0..100>`\n- `rgb`: Color in rgb mode format is 6 hex numbers\n- `mode`: To which mode we are currently set to format `<ENUM hsv|rgb>`"
+					},
+					"response": [
+						{
+							"name": "Get current front LED",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{ip}}/api/v1/led/get",
+									"host": [
+										"{{ip}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"led",
+										"get"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Pragma",
+									"value": "no-cache"
+								},
+								{
+									"key": "Cache-Control",
+									"value": "no-store, no-cache"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Content-Length",
+									"value": "56"
+								},
+								{
+									"key": "Connection",
+									"value": "close"
+								},
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": "*"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"on\": false,\n    \"hsv\": \"0;0;100\",\n    \"rgb\": \"FFFFFF\",\n    \"mode\": \"hsv\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Set RGB channel values for front led",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {}
+						},
+						"url": {
+							"raw": "{{ip}}/api/v1/led/red?value=0",
+							"host": [
+								"{{ip}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"led",
+								"red"
+							],
+							"query": [
+								{
+									"key": "value",
+									"value": "0"
+								},
+								{
+									"key": "ramp",
+									"value": "3000",
+									"disabled": true
+								}
+							]
+						},
+						"description": "URL has form `/api/v1/led/<ENUM red|green|blue>` for each channel.\nNothing is returned.\n\nWe can the set the values for the specified channeld by posting:\n\n- `value`: <UINT 0..255> \n\nOptionally we can also specify how quickly this we should change the to the new value by using:\n\n- `ramp`: <UINT 1..4095> "
+					},
+					"response": [
+						{
+							"name": "Set RGB channel values for front led",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{ip}}/api/v1/led/red?value=200",
+									"host": [
+										"{{ip}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"led",
+										"red"
+									],
+									"query": [
+										{
+											"key": "value",
+											"value": "200"
+										},
+										{
+											"key": "ramp",
+											"value": "4095",
+											"disabled": true
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "plain",
+							"header": [
+								{
+									"key": "Pragma",
+									"value": "no-cache"
+								},
+								{
+									"key": "Cache-Control",
+									"value": "no-store, no-cache"
+								},
+								{
+									"key": "Content-Type",
+									"value": "text/plain"
+								},
+								{
+									"key": "Content-Length",
+									"value": "0"
+								},
+								{
+									"key": "Connection",
+									"value": "close"
+								},
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": "*"
+								}
+							],
+							"cookie": [],
+							"body": ""
+						},
+						{
+							"name": "Set RGB channel values for front led",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{ip}}/api/v1/led/red?value=200&ramp=3000",
+									"host": [
+										"{{ip}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"led",
+										"red"
+									],
+									"query": [
+										{
+											"key": "value",
+											"value": "200"
+										},
+										{
+											"key": "ramp",
+											"value": "3000"
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "plain",
+							"header": [
+								{
+									"key": "Pragma",
+									"value": "no-cache"
+								},
+								{
+									"key": "Cache-Control",
+									"value": "no-store, no-cache"
+								},
+								{
+									"key": "Content-Type",
+									"value": "text/plain"
+								},
+								{
+									"key": "Content-Length",
+									"value": "0"
+								},
+								{
+									"key": "Connection",
+									"value": "close"
+								},
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": "*"
+								}
+							],
+							"cookie": [],
+							"body": ""
+						}
+					]
+				}
+			],
+			"description": "Getting or setting the front LED data.",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "608fd8cd-dc57-49b2-9435-b16fb200b673",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "5ecdda43-7154-4229-960a-ca287c47efd2",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "dingz Shades/Blinds",
+			"item": [
+				{
+					"name": "Get shade information",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{ip}}/api/v1/shade",
+							"host": [
+								"{{ip}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"shade"
+							]
+						},
+						"description": "Contains a field for every dingz output that is set to \"blinds\" mode (at most two fields one named `0` and the other `1`). To do this, remove the front cover of your dingz and set the DIP/toggle switches accordingly.\n\n- `target`: Target state of the shades\n- `current`: Current state of the shades\n\nEach of those again have two fields, namely\n\n- `blind`: Position of the blind [0..100]\n- `lamella`: Angle of the lamella [0..90]"
+					},
+					"response": [
+						{
+							"name": "Get shade information",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{ip}}/api/v1/shade",
+									"host": [
+										"{{ip}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"shade"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Pragma",
+									"value": "no-cache"
+								},
+								{
+									"key": "Cache-Control",
+									"value": "no-store, no-cache"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Content-Length",
+									"value": "79"
+								},
+								{
+									"key": "Connection",
+									"value": "close"
+								},
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": "*"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"0\": {\n        \"target\": {\n            \"blind\": 50,\n            \"lamella\": 100\n        },\n        \"current\": {\n            \"blind\": 0,\n            \"lamella\": 100\n        }\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Get specific shade information",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{ip}}/api/v1/shade/0",
+							"host": [
+								"{{ip}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"shade",
+								"0"
+							]
+						},
+						"description": "URL is of form `/api/v1/shade/<UINT 0..1>`\n\nGet the shade information of the specified shade configuration.\n\n- `target`: Target state of the shades\n- `current`: Current state of the shades\n\nEach of those again have two fields, namely\n\n- `blind`: Position of the blind [0..100]\n- `lamella`: Angle of the lamella [0..90]"
+					},
+					"response": [
+						{
+							"name": "{{ip}}/api/v1/shade/0",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{ip}}/api/v1/shade/0",
+									"host": [
+										"{{ip}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"shade",
+										"0"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Pragma",
+									"value": "no-cache"
+								},
+								{
+									"key": "Cache-Control",
+									"value": "no-store, no-cache"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Content-Length",
+									"value": "73"
+								},
+								{
+									"key": "Connection",
+									"value": "close"
+								},
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": "*"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"target\": {\n        \"blind\": 50,\n        \"lamella\": 100\n    },\n    \"current\": {\n        \"blind\": 0,\n        \"lamella\": 100\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Set shade values",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{ip}}/api/v1/shade/0?blind=50&lamella=80",
+							"host": [
+								"{{ip}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"shade",
+								"0"
+							],
+							"query": [
+								{
+									"key": "blind",
+									"value": "50"
+								},
+								{
+									"key": "lamella",
+									"value": "80"
+								}
+							]
+						},
+						"description": "Sets the current shade values. \n\nURL is of form `/api/v1/shade/<UINT 0..1>`\n\nNothing is returned.\n\nAs data we send two field\n\n- `blind`: Position of the blind (in percent)\n- `lamella`: Angle of the lamella (in percent)"
+					},
+					"response": [
+						{
+							"name": "Set shade values",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{ip}}/api/v1/shade/0?blind=50&lamella=80",
+									"host": [
+										"{{ip}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"shade",
+										"0"
+									],
+									"query": [
+										{
+											"key": "blind",
+											"value": "50"
+										},
+										{
+											"key": "lamella",
+											"value": "80"
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": "*"
+								},
+								{
+									"key": "Content-Encoding",
+									"value": "gzip"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Date",
+									"value": "Fri, 08 May 2020 14:44:39 GMT"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"96-S/5iQ2y1qqIInh5BwoPc+chvDJU\""
+								},
+								{
+									"key": "Server",
+									"value": "nginx"
+								},
+								{
+									"key": "Vary",
+									"value": "Accept-Encoding"
+								},
+								{
+									"key": "X-RateLimit-Limit",
+									"value": "120"
+								},
+								{
+									"key": "X-RateLimit-Remaining",
+									"value": "116"
+								},
+								{
+									"key": "X-RateLimit-Reset",
+									"value": "1588949126"
+								},
+								{
+									"key": "x-srv-span",
+									"value": "v=1;s=7a9b28d0b698b27e"
+								},
+								{
+									"key": "x-srv-trace",
+									"value": "v=1;t=7e762885bee3ad5b"
+								},
+								{
+									"key": "Content-Length",
+									"value": "135"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								}
+							],
+							"cookie": [],
+							"body": ""
+						}
+					]
+				}
+			],
+			"description": "Control shades/blinds with your dingz.",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "ebe13d96-eb30-4d68-bdcb-257206d23325",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "2d269b03-053b-4719-a766-fd15b4877370",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Motion Sensor (PIR)",
+			"item": [
+				{
+					"name": "Get PIR configuration",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{ip}}/api/v1/pir_config",
+							"host": [
+								"{{ip}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"pir_config"
+							]
+						},
+						"description": "Gets general information about the motion sensor (PIR). \n\nWhen not specified otherwise, time is always in seconds [s].\n\nWill return a JSON object with:\n\n- `pir_output`: Which output of your dingz will be toggled when motion is detected\n- `pir_feedback`: With which color the front led should light up when motion is detected\n- `feedback_intensity`: Brightness of the feedback blinking\n- `dark_threshold`: lux threshold for which pir output will be turn on if motion occurred\n- `bright_threshold`: lux threshold for which pir output  will be turn off\n- `timer`: How long the output should be set to on (legacy)\n- `on_time`: How long the output should be set to on \n- `off_time`: How long the pir should temporarily be disabled\n- `dim_value`: The target output dimmer value in percentage set if output is turn on\n- `backoff`: Time after a pir trigger until we reset the motion state to \"off\",\n- `feedback_time`: How long the front led will light up once the pir is triggered,\n- `fade_in_time`: Time in which the output will be set to the target value (unit 0.1s)\n- `fade_out_time`: Time in which the output will be turned off (unit 0.1s)\n- `enabled`: wether or not the pir is enabled"
+					},
+					"response": [
+						{
+							"name": "Get PIR information",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{ip}}/api/v1/pir_config",
+									"host": [
+										"{{ip}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"pir_config"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Pragma",
+									"value": "no-cache"
+								},
+								{
+									"key": "Cache-Control",
+									"value": "no-store, no-cache"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Content-Length",
+									"value": "240"
+								},
+								{
+									"key": "Connection",
+									"value": "close"
+								},
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": "*"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"pir_output\": 1,\n    \"pir_feedback\": \"green\",\n    \"feedback_intensity\": 100,\n    \"threshold\": 200,\n    \"timer\": 15,\n    \"on_time\": 15,\n    \"off_time\": 600,\n    \"min_dim_value\": 0,\n    \"max_dim_value\": 100,\n    \"smart_dimmer\": false,\n    \"backoff\": 1,\n    \"inhibit_time\": 1,\n    \"feedback_time\": 1,\n    \"enabled\": true\n}"
+						}
+					]
+				},
+				{
+					"name": "Get PIR light sensor",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{ip}}/api/v1/light",
+							"host": [
+								"{{ip}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"light"
+							]
+						},
+						"description": "Returns a JSON object with 3 fields:\n\n- `success`: Wether or not the request has succeeded\n- `intensity`: The current brightness value [lux]\n- `day`: Wether or not the dingz thinks its currently daytime based on the brighness it receives"
+					},
+					"response": [
+						{
+							"name": "Get light sensor",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{ip}}/api/v1/light",
+									"host": [
+										"{{ip}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"light"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Pragma",
+									"value": "no-cache"
+								},
+								{
+									"key": "Cache-Control",
+									"value": "no-store, no-cache"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Content-Length",
+									"value": "59"
+								},
+								{
+									"key": "Connection",
+									"value": "close"
+								},
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": "*"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"intensity\": 13.399999618530273,\n    \"day\": false\n}"
+						}
+					]
+				},
+				{
+					"name": "Set PIR configuration",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {}
+						},
+						"url": {
+							"raw": "{{ip}}/api/v1/pir_config",
+							"host": [
+								"{{ip}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"pir_config"
+							]
+						},
+						"description": "Request accepts body as JSON with bellow fields\n- `pir_output`: Which output of your dingz will be toggled when motion is detected. null to disable, or int value of 1..4 to enable. \n- `pir_feedback`: With which color the front led should light up when motion is detected. null to disable, string value of white|reg|green|blue to enable\n- `feedback_intensity`: Brightness of the feedback blinking. int value in range 0..100\n- `dark_threshold`: lux threshold for which pir output will be turn on if motion occurred. int value > 0, should be smaller than `bright_threshold`\n- `bright_threshold`: lux threshold for which pir output will be turn off. int value > 0, should be bigger than `dark_threshold`\n- `timer`: How long the output should be set to on (legacy)\n- `on_time`: How long the output should be set to on. int value > 0\n- `off_time`: How long the pir should temporarily be disabled. int value > 0\n- `dim_value`: The target output dimmer value in percentage set if output is turn on, int value in range 0..100\n- `backoff`: Time after a pir trigger until we reset the motion state to \"off\", int value > 0\n- `feedback_time`: How long the front led will light up once the pir is triggered, int value > 0\n- `fade_in_time`: Time in which the output will be set to the target value (unit 0.1s), int value > 0\n- `fade_out_time`: Time in which the output will be turned off (unit 0.1s), int value > 0\n- `enabled`: wether or not the pir is enabled, bool value"
+					},
+					"response": []
+				}
+			],
+			"description": "Getting or setting motion sensor data.",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "db5116b9-8330-4fc0-850d-0e25d92d9346",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "aaec0a15-2be6-4706-b1d3-5af60f126e1e",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Not working requests",
+			"item": [
+				{
+					"name": "Misc not working functions",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "See Description",
+							"host": [
+								"See Description"
+							]
+						},
+						"description": "Currently due to a bug we are unable to control the dingz output with another dingz (even if its the same one), or via a myStrom Button.\n\nKeep in mind that this is only the case if you set the web request of a dingz/myStrom Button to call the api of a dingz and change the output of it. Otherwise, by e.g. using the myStrom app or the dingz web interface you can control the dingz outputs just fine."
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Front LED",
+			"item": [
+				{
+					"name": "Set front led",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {}
+						},
+						"url": {
+							"raw": "{{ip}}/api/v1/led/set?action=on&color=0;100;100&mode=hsv&ramp=0",
+							"host": [
+								"{{ip}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"led",
+								"set"
+							],
+							"query": [
+								{
+									"key": "action",
+									"value": "on"
+								},
+								{
+									"key": "color",
+									"value": "0;100;100"
+								},
+								{
+									"key": "mode",
+									"value": "hsv"
+								},
+								{
+									"key": "ramp",
+									"value": "0"
+								}
+							]
+						},
+						"description": "Set the color of the led of the dingz."
+					},
+					"response": [
+						{
+							"name": "Set front led",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "",
+									"options": {}
+								},
+								"url": {
+									"raw": "{{ip}}/api/v1/led/set?action=on&color=0;100;100&mode=hsv&ramp=0",
+									"host": [
+										"{{ip}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"led",
+										"set"
+									],
+									"query": [
+										{
+											"key": "action",
+											"value": "on"
+										},
+										{
+											"key": "color",
+											"value": "0;100;100"
+										},
+										{
+											"key": "mode",
+											"value": "hsv"
+										},
+										{
+											"key": "ramp",
+											"value": "0"
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": "*"
+								},
+								{
+									"key": "Content-Encoding",
+									"value": "gzip"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Date",
+									"value": "Fri, 08 May 2020 14:46:11 GMT"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"96-S/5iQ2y1qqIInh5BwoPc+chvDJU\""
+								},
+								{
+									"key": "Server",
+									"value": "nginx"
+								},
+								{
+									"key": "Vary",
+									"value": "Accept-Encoding"
+								},
+								{
+									"key": "X-RateLimit-Limit",
+									"value": "120"
+								},
+								{
+									"key": "X-RateLimit-Remaining",
+									"value": "111"
+								},
+								{
+									"key": "X-RateLimit-Reset",
+									"value": "1588949189"
+								},
+								{
+									"key": "x-srv-span",
+									"value": "v=1;s=de7d1019f2625e58"
+								},
+								{
+									"key": "x-srv-trace",
+									"value": "v=1;t=81fbd0f47efe3ebc"
+								},
+								{
+									"key": "Content-Length",
+									"value": "135"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								}
+							],
+							"cookie": [],
+							"body": ""
+						}
+					]
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Thermostat",
+			"item": [
+				{
+					"name": "Get thermostat configuration",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{ip}}/api/v1/thermostat_config",
+							"host": [
+								"{{ip}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"thermostat_config"
+							]
+						},
+						"description": "Will return a JSON object with:\n* `active` _bool_: if the thermostat function is active\n* `output` _uint_: output on which thermostat function will be present\n* `on` _bool_: describe current status of thermostat output, true if output is on\n* `min_temp` _int_: temperature below which the output will be turned on\n* `max_temp` _int_: temperature below which the output will be turned off\n* `reverse` _bool_: reverse polarity of output, on is off, off is on\n* `enable` _bool_: if thermostat output is controled"
+					},
+					"response": [
+						{
+							"name": "Get thermostat configuration",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{ip}}/api/v1/thermostat_config",
+									"host": [
+										"{{ip}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"thermostat_config"
+									]
+								}
+							},
+							"_postman_previewlanguage": "json",
+							"header": [],
+							"cookie": [],
+							"body": "{\"active\":false,\"output\":1,\"on\":false,\"min_temp\":20,\"max_temp\":22,\"reverse\":false}"
+						}
+					]
+				},
+				{
+					"name": "Set thermostat configuration",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"active\": <true|false>,\n\t\"output\": <0..3>,\n\t\"min_temp\": <-100..99>,\n\t\"max_temp\": <-99..100>,\n\t\"reverse\": <true|false>\n\t\"enable\": <true|false>\n}",
+							"options": {}
+						},
+						"url": {
+							"raw": "{{ip}}/api/v1/thermostat_config",
+							"host": [
+								"{{ip}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"thermostat_config"
+							]
+						},
+						"description": "Body should be JSON with fields bellow:\n* `active` _bool_: if the thermostat function is active on given output\n* `output` _uint_: output on which thermostat function will be present\n* `min_temp` _int_: temperature below which the output will be turned on\n* `max_temp` _int_: temperature below which the output will be turned off\n* `reverse` _bool_: reverse polarity of output, on is off, off is on\n* `enable` _bool_: if thermostat enabled/disabled"
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Input",
+			"item": [
+				{
+					"name": "Get input configutaion",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{ip}}/api/v1/input_config",
+							"host": [
+								"{{ip}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"input_config"
+							]
+						},
+						"description": "Return collection of inputs settings in JSON format:\n* `output`: output which will be triggered by input, null if function is disabled, 1..4 if function is enabled\n* `feedback`: if input event will be cause LED feedback, null if no, white|reg|green|blue describe LED feedback color\n* `feedback_intensify`: intensity of LED feedback, 0..100\n* `active`: if input function is enabled, boolean value"
+					},
+					"response": [
+						{
+							"name": "Get input configutaion",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{ip}}/api/v1/input_config",
+									"host": [
+										"{{ip}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"input_config"
+									]
+								}
+							},
+							"_postman_previewlanguage": "json",
+							"header": [],
+							"cookie": [],
+							"body": "{\n    \"inputs\": [\n        {\n            \"output\": null,\n            \"feedback\": \"white\",\n            \"feedback_intensity\": 100,\n            \"active\": false\n        }\n    ]\n}"
+						}
+					]
+				},
+				{
+					"name": "Set input configuration",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {}
+						},
+						"url": {
+							"raw": "{{ip}}/api/v1/input_config",
+							"host": [
+								"{{ip}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"input_config"
+							]
+						},
+						"description": "require JSON as body:\n* `output`: output which will be triggered by input, null if function is disabled, 1..4 if function is enabled\n* `feedback`: if input event will be cause LED feedback, null if no, white|reg|green|blue describe LED feedback color\n* `feedback_intensify`: intensity of LED feedback, 0..100\n* `active`: if input function is enabled, boolean value"
+					},
+					"response": [
+						{
+							"name": "Set input configuration",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{ip}}/api/v1/input_config",
+									"host": [
+										"{{ip}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"input_config"
+									]
+								}
+							},
+							"_postman_previewlanguage": "json",
+							"header": [],
+							"cookie": [],
+							"body": "{\n    \"inputs\": [\n        {\n            \"output\": 1,\n            \"feedback\": \"white\",\n            \"feedback_intensity\": 100,\n            \"active\": false\n        }\n    ]\n}"
+						}
+					]
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Timer",
+			"item": [
+				{
+					"name": "Get active timers",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{ip}}/api/v1/timer",
+							"host": [
+								"{{ip}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"timer"
+							]
+						},
+						"description": "Return list of active timers.\r\n\r\nThis request return array of JSON objects in format as described in POST request.\r\n\r\nExample of returned object:\r\n\r\n```json\r\n[{\r\n    \"ref\":  \"dimmer\",\r\n    \"index\":        0,\r\n    \"time\": 10,\r\n    \"reverse\":      false,\r\n    \"at_night\":     false,\r\n    \"value\":        50,\r\n    \"ramp\": 10\r\n}]\r\n```\r\n\r\nThis example show one active timer.\r\n\r\nIf the timer execution was completed timer instance is automaticly deleted."
+					},
+					"response": [
+						{
+							"name": "Get active timmers",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{ip}}/api/v1/timer",
+									"host": [
+										"{{ip}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"timer"
+									]
+								}
+							},
+							"_postman_previewlanguage": "Text",
+							"header": [],
+							"cookie": [],
+							"body": ""
+						}
+					]
+				},
+				{
+					"name": "Create and activate timer",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"ref\": \"dimmer\",\r\n    \"index\": 0,\r\n    \"time\": 10,\r\n    \"reverse\": false,\r\n    \"at_night\": false,\r\n    \"value\": 50,\r\n    \"ramp\": 10\r\n}",
+							"options": {}
+						},
+						"url": {
+							"raw": "{{ip}}/api/v1/timer",
+							"host": [
+								"{{ip}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"timer"
+							]
+						},
+						"description": "Allow create timer.\r\n\r\nThis request require JSON object with fields described bellow as body:\r\n\r\n| Name     | Type   | Range                  | Required | Target | Remarks           |\r\n| -------- | ------ | ---------------------- | -------- | ------ | ----------------- |\r\n| ref      | enum   | dimmer \\| shade \\| led | yes      | all    |                   |\r\n| index    | uint   | 0-3 \\| 0-1 \\| 0        | yes      | all    | index is relative |\r\n| time     | uint   | 0-0xFFFFFFFF           | yes      | all    | unit 1s           |\r\n| reverse  | bool   |                        | no       | all    | count down        |\r\n| at_night | bool   |                        | no       | all    | executed at night |\r\n| value    | uint   | 0-100                  | yes      | dimmer | unit %            |\r\n| ramp     | uint   | 0-100                  | yes      | dimmer | unit 0.1s         |\r\n| blind    | uint   | 0-100                  | yes      | shade  | unit %            |\r\n| lamella  | uint   | 0-100                  | yes      | shade  | unit %            |\r\n| on       | bool   |                        | yes      | LED    |                   |\r\n| color    | string | H;S;V                  | yes      | LED    |                   |\r\n\r\nExample of request body:\r\n\r\n```json\r\n{\r\n\t\"ref\": \"dimmer\",\r\n\t\"index\": 0,\r\n\t\"time\": 10,\r\n\t\"reverse\": false,\r\n\t\"at_night\": false,\r\n\t\"value\": 50,\r\n\t\"ramp\": 10\r\n}\r\n```\r\n\r\nThis request object set timer for 10s on dimmer 0 (1), dimmer value will be set to 50% with ramp 1s. Dimmer output will be change to required value immediately and back to previous value after required time.\r\n\r\nref and index firlds range depends on dingz output configuration.\r\n\r\nCannot create multiple timer instances with same ref and index."
+					},
+					"response": []
+				},
+				{
+					"name": "Stop timer",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"ref\": \"dimmer\",\r\n    \"index\": 0\r\n}",
+							"options": {}
+						},
+						"url": {
+							"raw": "{{ip}}/api/v1/timer/stop",
+							"host": [
+								"{{ip}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"timer",
+								"stop"
+							]
+						},
+						"description": "Allow stop/destroy timer previously created.\r\n\r\nThis request require JSON object with two first fields (ref and index) of timer start request\r\n\r\n| Name  | Type | Range                  | Required | Target | Remarks           |\r\n| ----- | ---- | ---------------------- | -------- | ------ | ----------------- |\r\n| ref   | enum | dimmer \\| shade \\| led | yes      | all    |                   |\r\n| index | uint | 0-3 \\| 0-1 \\| 0        | yes      | all    | index is relative |\r\n\r\nExample:\r\n\r\n```json\r\n{\r\n\t\"ref\": \"dimmer\",\r\n\t\"index\": 0\r\n}\r\n```\r\n\r\nStop timer for dimmer with index 0"
+					},
+					"response": []
+				}
+			],
+			"description": "This feature allows control outputs by time. Timers allows set target values on particular module: dimmer, shade and LED indicated by ref field in JSON object. Timers can work in two modes: set target values immediately and after set time back to previous values (before timer activated) or set values after set time (reverse field in JSON object). Timers also allow delay action execution to night (light sensor) event (at_night field in JSON object)",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "22ce2398-611f-458d-bae5-38df7fd17cc0",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "757a24a4-7eb6-47c8-be28-cb18ea8deea9",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Scheduler",
+			"item": [
+				{
+					"name": "Set schedule",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "[\r\n    {\r\n        \"hour\": 13,\r\n        \"minute\": 15,\r\n        \"days\": 127,\r\n        \"dimmers\": 1,\r\n        \"value\": 25,\r\n        \"ramp\": 50\r\n    },\r\n    {\r\n        \"hour\": 13,\r\n        \"minute\": 20,\r\n        \"days\": 127,\r\n        \"dimmers\": 1,\r\n        \"value\": 0,\r\n        \"ramp\": 50\r\n    }\r\n]",
+							"options": {}
+						},
+						"url": {
+							"raw": "{{ip}}/api/v1/schedule",
+							"host": [
+								"{{ip}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"schedule"
+							]
+						},
+						"description": "Allow set schedule on dimmers outputs.\r\n\r\nThis method accepts array of JSON object as request body. The single object are described bellow:\r\n\r\n| Name    | Type   | Range | Required | Remarks   |\r\n| ------- | ------ | ----- | -------- | --------- |\r\n| hour    | uint   | 0-23  | yes      |           |\r\n| minute  | uint   | 0-59  | yes      |           |\r\n| days    | uint   | 1-127 | yes      | bitfields |\r\n| dimmers | uint   | 1-15  | yes      | bitfields |\r\n| value   | uint   | 0-100 | yes      | unit %    |\r\n| ramp    | uint   | 0-100 | yes      | unit 0.1s |\r\n| id      | string | 0-8   | no       |           |\r\n\r\nLimit of schedule objects is 100.\r\n\r\nDays field is binary number with selected days converted to decimal format. Least significant bit (0) responds to Sunday most significant bit (6) responds to Saturday.\r\n\r\nBinary example:\r\n\r\n01111111 -> 127, item active all days in week,\r\n\r\n00111110 -> 62, item active from Monday to Friday,\r\n\r\n01000001 -> 65, item active in Saturday and Sunday.\r\n\r\n\r\n\r\nDimmers field is binary number with bit 0 corresponds to dimmer 0 (1) and bit 3 corresponds to dimmer 3 (4).\r\n\r\nBinary example:\r\n\r\n1111 -> 15, all dimmers,\r\n\r\n0001 -> 1, dimmer 0 (1),\r\n\r\n1000 -> 8, dimmer 3 (4)\r\n\r\n\r\n\r\nExample:\r\n\r\n```json\r\n[\r\n    {\r\n        \"hour\": 13,\r\n        \"minute\": 15,\r\n        \"days\": 127,\r\n        \"dimmers\": 1,\r\n        \"value\": 25,\r\n        \"ramp\": 50\r\n    },\r\n    {\r\n        \"hour\": 13,\r\n        \"minute\": 20,\r\n        \"days\": 127,\r\n        \"dimmers\": 1,\r\n        \"value\": 0,\r\n        \"ramp\": 50\r\n    }\r\n]\r\n```\r\n\r\nThis example set schedule on dimmer 0 (1), the dimmer value will be set to 25% with ramp 5s about 13:15 every day and set to 0% with ramp 5s about 13:20."
+					},
+					"response": []
+				},
+				{
+					"name": "Get schedule",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{ip}}/api/v1/schedule",
+							"host": [
+								"{{ip}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"schedule"
+							]
+						},
+						"description": "Return defined schedule items.\r\n\r\nThis method return array of JSON object as response body.\r\n\r\nExample:\r\n\r\n```json\r\n[{\r\n    \"hour\": 13,\r\n    \"minute\":       15,\r\n    \"days\": 127,\r\n    \"dimmers\":      1,\r\n    \"value\":        25,\r\n    \"ramp\": 50,\r\n    \"id\": \"\"\r\n}, {\r\n    \"hour\": 13,\r\n    \"minute\":       20,\r\n    \"days\": 127,\r\n    \"dimmers\":      1,\r\n    \"value\":        0,\r\n    \"ramp\": 50,\r\n    \"id\": \"\"\r\n}]\r\n```"
+					},
+					"response": []
+				},
+				{
+					"name": "Add schedule item",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"hour\": 13,\r\n    \"minute\": 15,\r\n    \"days\": 127,\r\n    \"dimmers\": 1,\r\n    \"value\": 25,\r\n    \"ramp\": 50,\r\n    \"id\": \"test\"\r\n}",
+							"options": {}
+						},
+						"url": {
+							"raw": "{{ip}}/api/v1/schedule/add",
+							"host": [
+								"{{ip}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"schedule",
+								"add"
+							]
+						},
+						"description": "Require single JSON object same as in set schedule request"
+					},
+					"response": []
+				},
+				{
+					"name": "Remove schedule item",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"id\": \"test\"\n}",
+							"options": {}
+						},
+						"url": {
+							"raw": "{{ip}}/api/v1/schedule/remove",
+							"host": [
+								"{{ip}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"schedule",
+								"remove"
+							]
+						},
+						"description": "This method accept JSON object as request body. The object fields are described bellow:\r\n\r\n| Name    | Type   | Range | Required | Remarks   |\r\n| ------- | ------ | ----- | -------- | --------- |\r\n| id      | string | 1-8   | no       |           |\r\n| index   | uint   | 0-99  | no       |           |\r\n\r\nThe schedule item can by removed by id or by index, id or index should be given else bad request will be returned."
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"id": "2fce17f7-98d1-46e7-afdf-29c0e1d3f0b9",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"id": "b6861549-6cbc-424e-a702-f1e8f58ae1b8",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"protocolProfileBehavior": {}
+}
