@@ -45,16 +45,7 @@ export class MyStromSwitchAccessory {
     // Set Base URL
     this.device = this.accessory.context.device;
     this.mystromDeviceInfo = this.device.hwInfo as MyStromDeviceInfo;
-    this.baseUrl = 'http://' + this.device.address;
-    /*
-     * ID Gneration for the various Accessories in the myStrom / Dingz Universe:
-     * DINGZ Dimmer: [MAC]-D[0-3] for Dimmer 1-4
-     * DINGZ PIR: [MAC]-PIR
-     * DINGZ Temperature: [MAC]-T
-     * DINGZ Motion Sensor: [MAC]-M
-     * DINGZ Blinds/Shades: [MAC]-BD[0-1] for Blinds 1/2
-     * DINGZ Button: [MAC]-BT[0-3] for Button 1/4
-     */
+    this.baseUrl = `http://${this.device.address}`;
 
     this.platform.log.debug(
       'Setting informationService Characteristics ->',

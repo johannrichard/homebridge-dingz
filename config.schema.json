@@ -30,7 +30,7 @@
               "oneOf": [
                 { "title": "Dingz", "enum": ["Dingz"] },
                 { "title": "myStrom Switch", "enum": ["myStromSwitch"] },
-                { "title": "myStrom Lightbulb (Not implemented)", "enum": ["myStromBulb"] },
+                { "title": "myStrom Lightbulb", "enum": ["myStromBulb"] },
                 { "title": "myStrom LED Strip (Not implemented)", "enum": ["myStromLED"] },
                 { "title": "myStrom Motion Sensor (Not implemented)", "enum": ["myStromPIR"] }
               ],

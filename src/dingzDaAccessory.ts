@@ -60,6 +60,18 @@ interface Error {
 }
 
 /**
+  Implemented Characteristics:
+  [x] Dimmer (Lightbulb)
+  [x] Blinds (WindowCovering)
+  [x] Temperature (CurrentTemperature)
+  [x] PIR (MotionSensor)
+  [] Buttons (StatelessProgrammableButton or so)
+  [] LED (ColorLightbulb)
+  [] Light Level (LightSensor/AmbientLightLevel)
+*/
+
+
+/**
  * Platform Accessory
  * An instance of this class is created for each accessory your platform registers
  * Each accessory may expose multiple services of different service types.
@@ -111,20 +123,10 @@ export class DingzDaAccessory implements Disposable {
            // Set Base URL
            this.device = this.accessory.context.device;
            this.dingzDeviceInfo = this.device.hwInfo as DingzDeviceInfo;
-           this.baseUrl = 'http://' + this.device.address;
-           /*
-            * ID Gneration for the various Accessories in the myStrom / Dingz Universe:
-            * DINGZ Dimmer: [MAC]-D[0-3] for Dimmer 1-4
-            * DINGZ PIR: [MAC]-PIR
-            * DINGZ Temperature: [MAC]-T
-            * DINGZ Motion Sensor: [MAC]-M
-            * DINGZ Blinds/Shades: [MAC]-BD[0-1] for Blinds 1/2
-            * DINGZ Button: [MAC]-BT[0-3] for Button 1/4
-            */
+           this.baseUrl = `http://${this.device.address}`;
 
            this.platform.log.debug(
-             'Setting informationService Characteristics ->',
-             this.device.model,
+             'Setting informationService Characteristics ->', this.device.model,
            );
            this.accessory
              .getService(this.platform.Service.AccessoryInformation)!
@@ -159,8 +161,7 @@ export class DingzDaAccessory implements Disposable {
              .execute(() => this.getDeviceInputConfig())
              .then((data) => {
                this.platform.log.debug(
-                 'Got DeviceInputConfig ->',
-                 JSON.stringify(data),
+                 'Got DeviceInputConfig ->',data,
                );
                if (data.inputs) {
                  this.device.dingzInputInfo = data.inputs;
@@ -173,8 +174,7 @@ export class DingzDaAccessory implements Disposable {
                    if (typeof state !== 'undefined') {
                      // push the new value to HomeKit
                      this.platform.log.debug(
-                       'Retrieval of new state data successful ->',
-                       state,
+                       'Retrieval of new state data successful ->', state,
                      );
                      this.dingzStates.Dimmers = state;
                    }
@@ -190,7 +190,7 @@ export class DingzDaAccessory implements Disposable {
              this.addMotionService();
            } else {
              this.platform.log.info(
-               'Your Dingz ',
+               'Your Dingz',
                this.accessory.displayName,
                'has no Motion sensor.',
              );
@@ -368,7 +368,7 @@ export class DingzDaAccessory implements Disposable {
              ) ??
              this.accessory.addService(
                this.platform.Service.Lightbulb,
-               `${name} D${id}`,
+               `${name} D${id+1}`, // Name Dimmers according to WebUI, not API info
                id.toString(),
              );
            // each service must implement at-minimum the "required characteristics" for the given service type
@@ -906,8 +906,7 @@ export class DingzDaAccessory implements Disposable {
            const dingzDevices:
              | DingzDevices
              | unknown = await this.platform.getDingzDeviceInfo(
-               this.device.address,
-               this.device.token,
+               { address: this.device.address, token: this.device.token },
              );
            try {
              const dingzDeviceInfo: DingzDeviceInfo = (dingzDevices as DingzDevices)[

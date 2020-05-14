@@ -3,6 +3,7 @@
 
 import { DingzDaAccessory } from '../dingzDaAccessory';
 import { MyStromSwitchAccessory } from '../myStromSwitchAccessory';
+import { MyStromLightbulbAccessory } from '../myStromLightbulbAccessory';
 
 export interface DingzTemperatureData {
   success: boolean;
@@ -14,15 +15,15 @@ export interface DingzMotionData {
   motion: boolean;
 }
 
-export enum DeviceTypes {
-  MYSTROM_SWITCH_CHV1 = 0xA01,
-  MYSTROM_BULB = 0xA02,
-  MYSTROM_BUTTON_PLUS = 0xA03,
-  MYSTROM_BUTTON = 0xA04,
-  MYSTROM_LEDSTRIP = 0xA05,
-  MYSTROM_SWITCH_CHV2 = 0xA06,
-  MYSTROM_SWITCH_EU = 0xA07,
-  DINGZ = 0xA08,
+export enum DeviceTypes { 
+  MYSTROM_SWITCH_CHV1 = 101,
+  MYSTROM_BULB =        102,
+  MYSTROM_BUTTON_PLUS = 103,
+  MYSTROM_BUTTON =      104,
+  MYSTROM_LEDSTRIP =    105,
+  MYSTROM_SWITCH_CHV2 = 106,
+  MYSTROM_SWITCH_EU =   107,
+  DINGZ =               108,
 }
 
 type DeviceTypesStrings = keyof typeof DeviceTypes;
@@ -73,6 +74,16 @@ export interface MyStromSwitchReport {
   temperature: number;
   Ws?: number;
 }
+
+export interface MyStromLightbulbReport {
+  hue: number;
+  saturation: number;
+  value: number;
+  on: boolean;
+  color: string;
+  mode: 'hsv' | 'rgb';
+  power: number;
+}
 export interface DingzInputInfo {
   inputs: DingzInputInfoItem[];
 }
@@ -92,11 +103,11 @@ export interface DeviceInfo {
   hwInfo?: DingzDeviceInfo | MyStromDeviceInfo;
   dingzInputInfo?: DingzInputInfoItem[];
   lastUpdate?: Date;
-  accessoryClass?: 'DingzDaAccessory' | 'MyStromSwitchAccessory';
+  accessoryClass?: 'DingzDaAccessory' | 'MyStromSwitchAccessory' | 'MyStromLightbulbAccessory';
 }
 
 export interface DingzAccessories {
-  [key: string]: DingzDaAccessory | MyStromSwitchAccessory;
+  [key: string]: DingzDaAccessory | MyStromSwitchAccessory | MyStromLightbulbAccessory;
 }
 
 // Internal representation of Dimmer in Plugin
