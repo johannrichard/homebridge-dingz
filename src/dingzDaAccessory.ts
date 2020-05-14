@@ -488,6 +488,7 @@ export class DingzDaAccessory implements Disposable {
            // implement your own code to set the brightness
            const isOn: boolean = value > 0 ? true : false;
            this.dingzStates.Dimmers[id].value = value as number;
+           this.dingzStates.Dimmers[id].on = isOn;
 
            this.platform.log.debug('Set Characteristic Brightness -> ', value);
            // Call setDimmerValue()
