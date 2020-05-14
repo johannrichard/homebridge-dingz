@@ -96,4 +96,4 @@ __A__: There are a number of scenarios where using HomeBridge and this plugin wi
 
 **Disclaimer**: No warranties whatsoever, use this plugin entirely at your own risk. Dingz may only be installed by qualified professionals. 
 
-**Full discolsure**: The author of thus plugin is not associated in any way with Iolo AG or MyStrom AG. [Iolo AG](https://iolo.ch), the producer of Dingz', was so kind to provide me with one test device. I'm very grateful for this and hope this little plugin can contribute a little bit to help Dingz spread its wings.
+**Full disclosure**: The author of this plugin is not associated in any way with Iolo AG or MyStrom AG. [Iolo AG](https://iolo.ch), the producer of Dingz', was so kind to provide me with one test device. I'm very grateful for this and hope this little plugin can contribute a little bit to help Dingz spread its wings.
