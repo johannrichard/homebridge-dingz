@@ -308,7 +308,7 @@ export class DingzDaAccessory implements Disposable {
              .dingzInputInfo;
            const baseName: string = this.accessory.displayName;
            switch (this.dingzDeviceInfo.dip_config) {
-             case 0:
+             case 3:
                // DIP = 0: D0, D1, D2, D3; (Subtypes) (Unless Input, then D1, D2, D3)
                if (inputConfig && !inputConfig[0].active) {
                  // D0
@@ -319,7 +319,7 @@ export class DingzDaAccessory implements Disposable {
                dimmerServices.push(this.addDimmerService(baseName, 2));
                dimmerServices.push(this.addDimmerService(baseName, 3));
                break;
-             case 1:
+             case 2:
                // DIP = 1: M0, D2, D3;
                windowCoverServices.push(
                  this.addWindowCoveringService(baseName, 0),
@@ -327,7 +327,7 @@ export class DingzDaAccessory implements Disposable {
                dimmerServices.push(this.addDimmerService(baseName, 2));
                dimmerServices.push(this.addDimmerService(baseName, 3));
                break;
-             case 2:
+             case 1:
                // DIP = 2: D0, D1, M1; (Unless Input, then D1, M1);
                if (inputConfig && !inputConfig[0].active) {
                  // D0
@@ -338,13 +338,13 @@ export class DingzDaAccessory implements Disposable {
                  this.addWindowCoveringService(baseName, 0),
                );
                break;
-             case 3:
+             case 0:
                // DIP = 3: M0, M1;
                windowCoverServices.push(
                  this.addWindowCoveringService(baseName, 0),
                );
                windowCoverServices.push(
-                 this.addWindowCoveringService(baseName, 0),
+                 this.addWindowCoveringService(baseName, 1),
                );
                break;
              default:
@@ -859,8 +859,8 @@ export class DingzDaAccessory implements Disposable {
                if (currentDingzInputInfo.active) {
                  this.removeDimmerService(0);
                } else if (
-                 updatedDingzDeviceInfo.dip_config === 0 ||
-                   updatedDingzDeviceInfo.dip_config === 2
+                 updatedDingzDeviceInfo.dip_config === 1 ||
+                   updatedDingzDeviceInfo.dip_config === 3
                ) {
                  // Only add Dimmer 0 if we're not in "WindowCover" mode
                  this.addDimmerService(this.accessory.displayName, 0);
