@@ -1,6 +1,8 @@
 # Ignore compiled code
 dist
 
+# Ignore API (for the time being)
+api
 # ------------- Defaults ------------- #
 
 # Logs
