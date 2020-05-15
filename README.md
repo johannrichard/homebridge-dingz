@@ -24,6 +24,17 @@ Not (yet) implemented:
 - Thermostat (Temperature)
 - Motion sensor webhook (push mode instead of polling)
 
+## MyStrom Devices
+
+My original [homebridge-mystrom](https://github.com/johannrichard/homebridge-mystrom) plugin was written a while ago. HomeKit, Homebridge and the JavaScript/TypeScript world have all come a long way since then. Since the [Dingz](https://dingz.ch) devices share a similar approach to auto-dsicovery and API with [MyStrom Devices](https://mystrom.ch), it is in fact quite simple to implement basic support for MyStrom Devices. 
+
+Currently, the following MyStrom Devices are implemented in this plugin:
+
+- MyStrom WiFi Switch CH V1 (tested, must be manually added)
+- MyStrom WiFi Switch CH V2 (tested, w/ auto-discovery)
+- MyStrom WiFi Switch EU (not tested, should work with auto-discovery too)
+- MyStrom WiFi Lightbulb (untested, developed against API)
+
 ## Usage
 
 Easy: Install and configure the plugin via [Config UI X](https://www.npmjs.com/package/homebridge-config-ui-x) 
@@ -67,16 +78,6 @@ If your Dingz Devices reside on a separate subnet than your Homebridge installat
     }
   ]
 ```
-
-## MyStrom Devices
-
-My original [homebridge-mystrom](https://github.com/johannrichard/homebridge-mystrom) plugin was written a while ago. HomeKit, Homebridge and the JavaScript/TypeScript world have all come a long way since then. Since the [Dingz](https://dingz.ch) devices share a similar approach to auto-dsicovery and API with [MyStrom Devices](https://mystrom.ch), it was in fact quite simple to implement basic support for MyStrom Devices. 
-
-Currently, the following MyStrom Devices are implemented in this plugin:
-
-- MyStrom WiFi Switch CH V1 (tested, must be manually added)
-- MyStrom WiFi Switch CH V2 (tested, w/ auto-discovery)
-- MyStrom WiFi Switch EU (not tested, should work with auto-discovery too)
 
 ## Rationale
 

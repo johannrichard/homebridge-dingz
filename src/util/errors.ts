@@ -3,7 +3,7 @@ export class InvalidTypeError extends Error {
     super(message);
     // see: typescriptlang.org/docs/handbook/release-notes/typescript-2-2.html
     Object.setPrototypeOf(this, new.target.prototype); // restore prototype chain
-    this.name = InvalidTypeError.name; // stack traces display correctly now 
+    this.name = InvalidTypeError.name; // stack traces display correctly now
   }
 }
 
@@ -12,7 +12,7 @@ export class MethodNotImplementedError extends Error {
     super(message);
     // see: typescriptlang.org/docs/handbook/release-notes/typescript-2-2.html
     Object.setPrototypeOf(this, new.target.prototype); // restore prototype chain
-    this.name = MethodNotImplementedError.name; // stack traces display correctly now 
+    this.name = MethodNotImplementedError.name; // stack traces display correctly now
   }
 }
 
@@ -21,7 +21,7 @@ export class DeviceNotImplementedError extends Error {
     super(message);
     // see: typescriptlang.org/docs/handbook/release-notes/typescript-2-2.html
     Object.setPrototypeOf(this, new.target.prototype); // restore prototype chain
-    this.name = DeviceNotImplementedError.name; // stack traces display correctly now 
+    this.name = DeviceNotImplementedError.name; // stack traces display correctly now
   }
 }
 

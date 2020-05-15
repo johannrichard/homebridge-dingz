@@ -15,16 +15,23 @@ export interface DingzMotionData {
   motion: boolean;
 }
 
-export enum DeviceTypes { 
+export enum DeviceTypes {
   MYSTROM_SWITCH_CHV1 = 101,
-  MYSTROM_BULB =        102,
+  MYSTROM_BULB = 102,
   MYSTROM_BUTTON_PLUS = 103,
-  MYSTROM_BUTTON =      104,
-  MYSTROM_LEDSTRIP =    105,
+  MYSTROM_BUTTON = 104,
+  MYSTROM_LEDSTRIP = 105,
   MYSTROM_SWITCH_CHV2 = 106,
-  MYSTROM_SWITCH_EU =   107,
-  DINGZ =               108,
+  MYSTROM_SWITCH_EU = 107,
+  DINGZ = 108,
 }
+
+export const MYSTROM_SWITCH_TYPES = {
+  WS2: 'CH v2',
+  '106': 'CH v2',
+  WSEU: 'EU',
+  '107': 'EU',
+};
 
 type DeviceTypesStrings = keyof typeof DeviceTypes;
 
@@ -49,7 +56,7 @@ export interface DingzDeviceInfo {
   fw_version: string;
   fw_version_puck: string;
   bl_version_puck: string;
-  dip_config: 0 | 1 | 2 | 3; // Config 0-3 
+  dip_config: 0 | 1 | 2 | 3; // Config 0-3
   has_pir: boolean;
   hk_activation_code: string;
 }
@@ -88,7 +95,7 @@ export interface DingzInputInfo {
   inputs: DingzInputInfoItem[];
 }
 export interface DingzInputInfoItem {
-  output: | 1 | 2 | 3 | 4 | null;
+  output: 1 | 2 | 3 | 4 | null;
   feedback: 'white' | 'red' | 'green' | 'blue';
   feedback_intensity: number;
   active: boolean;
@@ -103,11 +110,17 @@ export interface DeviceInfo {
   hwInfo?: DingzDeviceInfo | MyStromDeviceInfo;
   dingzInputInfo?: DingzInputInfoItem[];
   lastUpdate?: Date;
-  accessoryClass?: 'DingzDaAccessory' | 'MyStromSwitchAccessory' | 'MyStromLightbulbAccessory';
+  accessoryClass?:
+    | 'DingzDaAccessory'
+    | 'MyStromSwitchAccessory'
+    | 'MyStromLightbulbAccessory';
 }
 
 export interface DingzAccessories {
-  [key: string]: DingzDaAccessory | MyStromSwitchAccessory | MyStromLightbulbAccessory;
+  [key: string]:
+    | DingzDaAccessory
+    | MyStromSwitchAccessory
+    | MyStromLightbulbAccessory;
 }
 
 // Internal representation of Dimmer in Plugin
@@ -121,17 +134,17 @@ export interface DimmerState {
 }
 export type DimmerProps = Record<DimmerId, DimmerState>;
 
-export type WindowCoveringId = 0 | 1 ;
+export type WindowCoveringId = 0 | 1;
 export interface WindowCoveringPositon {
   blind: number;
   lamella: number;
 }
 export interface WindowCoveringState {
-  target:   WindowCoveringPositon;
-  current:  WindowCoveringPositon;
+  target: WindowCoveringPositon;
+  current: WindowCoveringPositon;
 }
 export type WindowCoveringProps = Record<WindowCoveringId, WindowCoveringState>;
 
 export interface Disposable {
-    dispose(): void;
+  dispose(): void;
 }

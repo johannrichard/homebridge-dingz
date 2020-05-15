@@ -105,18 +105,17 @@ export class MyStromSwitchAccessory {
       //      .on(CharacteristicEventTypes.SET, this.setOutletInUse.bind(this)) // SET - bind to the `setOn` method below
       .on(CharacteristicEventTypes.GET, this.getOutletInUse.bind(this)); // GET - bind to the `getOn` method below
 
-    if(this.device.hwInfo?.type !== undefined) {
-
+    if (this.device.hwInfo?.type !== undefined) {
       // Dingz has a temperature sensor, make it available here
       // create a new Temperature Sensor service
       this.temperatureService =
-            this.accessory.getService(this.platform.Service.TemperatureSensor) ??
-            this.accessory.addService(this.platform.Service.TemperatureSensor);
+        this.accessory.getService(this.platform.Service.TemperatureSensor) ??
+        this.accessory.addService(this.platform.Service.TemperatureSensor);
       this.temperatureService.setCharacteristic(
         this.platform.Characteristic.Name,
         'Temperature',
       );
-      
+
       // create handlers for required characteristics
       this.temperatureService
         .getCharacteristic(this.platform.Characteristic.CurrentTemperature)
@@ -141,10 +140,10 @@ export class MyStromSwitchAccessory {
             )
             .updateCharacteristic(
               this.platform.Characteristic.OutletInUse,
-              (this.outletState.power > 0),
+              this.outletState.power > 0,
             );
 
-          if(this.temperatureService) {
+          if (this.temperatureService) {
             this.temperatureService.updateCharacteristic(
               this.platform.Characteristic.CurrentTemperature,
               this.outletState.temperature,
@@ -152,7 +151,8 @@ export class MyStromSwitchAccessory {
           }
 
           this.platform.log.debug(
-            'Pushed updated current Outlet state to HomeKit ->', this.outletState,
+            'Pushed updated current Outlet state to HomeKit ->',
+            this.outletState,
           );
         })
         .catch((e) => {
@@ -181,7 +181,7 @@ export class MyStromSwitchAccessory {
     this.platform.log.debug('Set Characteristic On ->', value);
     this.outletState.relay = value as boolean;
     this.setDeviceState(this.outletState.relay);
-    
+
     /*
          .catch((e) => {
            this.platform.log.debug('Error updating Device ->', e.name);

@@ -8,4 +8,4 @@ import { DingzDaHomebridgePlatform } from './platform';
  */
 export = (api: API) => {
   api.registerPlatform(PLATFORM_NAME, DingzDaHomebridgePlatform);
-}
+};
