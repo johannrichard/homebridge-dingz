@@ -7,4 +7,4 @@ export const DINGZ_DISCOVERY_PORT = 7979;
 /**
  * This must match the name of your plugin as defined the package.json
  */
-export const PLUGIN_NAME = 'homebridge-dingz-da';
+export const PLUGIN_NAME = 'homebridge-dingz';
