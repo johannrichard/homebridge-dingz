@@ -137,15 +137,15 @@ export class DingzDaAccessory implements Disposable {
       )
       .setCharacteristic(
         this.platform.Characteristic.FirmwareRevision,
-        this.dingzDeviceInfo.fw_version,
-      )
-      .setCharacteristic(
-        this.platform.Characteristic.HardwareRevision,
         this.dingzDeviceInfo.fw_version_puck,
       )
       .setCharacteristic(
+        this.platform.Characteristic.HardwareRevision,
+        this.dingzDeviceInfo.hw_version_puck,
+      )
+      .setCharacteristic(
         this.platform.Characteristic.SerialNumber,
-        this.device.mac,
+        this.dingzDeviceInfo.puck_sn,
       );
     /****
      * How to discover Accessories:
