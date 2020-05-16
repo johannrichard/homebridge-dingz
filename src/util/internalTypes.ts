@@ -49,16 +49,18 @@ export interface DingzDevices {
 }
 
 export interface DingzDeviceInfo {
+  // Only those values we need
   type: 'dingz';
-  battery: boolean;
-  reachable: boolean;
-  meshroot: boolean;
   fw_version: string;
+  hw_version: string;
   fw_version_puck: string;
-  bl_version_puck: string;
+  hw_version_puck: string;
   dip_config: 0 | 1 | 2 | 3; // Config 0-3
   has_pir: boolean;
-  hk_activation_code: string;
+  puck_hw_model: string;
+  front_hw_model: string;
+  puck_sn: string;
+  front_sn: string;
 }
 export interface MyStromDeviceInfo {
   version: string;
@@ -131,6 +133,7 @@ export interface DimmerState {
   on: boolean;
   value: number;
   ramp: number;
+  disabled: boolean;
 }
 export type DimmerProps = Record<DimmerId, DimmerState>;
 
