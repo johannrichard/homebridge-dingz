@@ -77,7 +77,10 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
       this.log.debug('Executed didFinishLaunching callback');
       // run the method to discover / register your devices as accessories
       this.addDevices(); // Adds decvices from Config
-      this.setupDeviceDiscovery(); // Discovers devices from UDP
+      if (this.config.autoDiscover) {
+        // Discovers devices from UDP
+        this.setupDeviceDiscovery();
+      }
     });
   }
 
@@ -213,7 +216,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
           address: address,
           mac: mac,
           token: token,
-          model: info.has_pir ? 'Dingz+' : 'Dingz',
+          model: info.puck_hw_model,
           hwInfo: info,
           accessoryClass: 'DingzDaAccessory',
         };

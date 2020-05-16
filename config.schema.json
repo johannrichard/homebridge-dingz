@@ -16,9 +16,16 @@
         "type": "string",
         "description": "Set a global authentication token. This will be used for auto-discovery on the local network and as default token for manually specified devices."
       },
+      "autoDiscover": {
+        "title": "Auto Discovery of Devices",
+        "type": "boolean",
+        "description": "Set this to 'off' if you want auto-discovery to be turned off.",
+        "default": true
+      },
       "devices": {
         "title": "Dingz Devices",
         "type": "array",
+        "required": true,
         "items": {
           "title": "Dingz",
           "type": "object",
