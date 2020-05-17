@@ -807,6 +807,7 @@ export class DingzDaAccessory implements Disposable {
       this._updatedDeviceInputConfig ?? currentDingzInputInfo;
 
     try {
+      // FIXME: Crashes occasionally
       if (currentDingzDeviceInfo.has_pir !== updatedDingzDeviceInfo.has_pir) {
         // Update PIR Service
         this.platform.log.warn('Update accessory -> PIR config changed.');
