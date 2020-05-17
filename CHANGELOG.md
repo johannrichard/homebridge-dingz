@@ -4,15 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog][Keep a Changelog] and this project adheres to [Semantic Versioning][Semantic Versioning].
 
 ## [Unreleased]
+---
+## [1.2.0] - 2020-05-17
 ### Added
-* Support for Front LED
+* Support for DingZ Front LED
 
 ### Changed
 * Replace popsicle library with axios for better POST handling
 
 ### Fixes
 * Fixes for myStrom WiFi Lightbulb support
----
 ## [Released]
 ## [1.1.3] - 2020-05-17
 ### Added
@@ -92,6 +93,7 @@ Not (yet) implemented:
 <!-- Versions -->
 [Unreleased]: https://github.com/johannrichard/homebridge-dingz/compare/v1.1.3...HEAD
 [Released]: https://github.com/johannrichard/homebridge-dingz/releases
+[1.2.0]: https://github.com/johannrichard/homebridge-dingz/compare/v1.1.3..v1.2.0
 [1.1.3]: https://github.com/johannrichard/homebridge-dingz/compare/v1.1.1..v1.1.3
 [1.1.2]: https://github.com/johannrichard/homebridge-dingz/compare/v1.1.1..v1.1.2
 [1.1.1]: http://github.com/johannrichard/homebridge-dingz/compare/v1.1.0..v1.1.1
