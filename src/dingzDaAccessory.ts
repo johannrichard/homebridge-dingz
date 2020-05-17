@@ -740,11 +740,10 @@ export class DingzDaAccessory implements Disposable {
     this.services.push(service);
     // Only check for motion if we have a PIR and set the Interval
     const motionInterval: NodeJS.Timer = setInterval(() => {
-      let isMotion: boolean;
       try {
         this.getDeviceMotion().then((data) => {
           if (data.success) {
-            isMotion = data.motion;
+            const isMotion: boolean = data.motion;
 
             // Only update if motionService exists *and* if there's a change in motion'
             if (service && this.dingzStates.Motion !== isMotion) {
