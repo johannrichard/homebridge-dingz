@@ -4,12 +4,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog][Keep a Changelog] and this project adheres to [Semantic Versioning][Semantic Versioning].
 
 ## [Unreleased]
-071c7e2 Housekeeping
-cb13f9b Exponential decay for accessory config check
 ---
 ## [Released]
-## [1.1.2] - 2020-05-16
+## [1.1.3] - 2020-05-17
+### Added
+cb13f9b Exponential decay for accessory config check
 
+### Changed
+071c7e2 Housekeeping
+8ebe4e4 Add Changelog
+
+## [1.1.2] - 2020-05-16
 ### Added
 48bd118 Add support for a setting to turn off auto-discovery
 
@@ -79,7 +84,8 @@ Not (yet) implemented:
 <!-- Versions -->
 [Unreleased]: https://github.com/johannrichard/homebridge-dingz/compare/v1.0.0...HEAD
 [Released]: https://github.com/johannrichard/homebridge-dingz/releases
-[1.1.1]: https://github.com/johannrichard/homebridge-dingz/compare/v1.1.0..v1.1.1
+[1.1.2]]: https://github.com/johannrichard/homebridge-dingz/compare/v1.1.1..v1.1.2]
+[1.1.1]: htt:johannrichardgithub.com/johannrichard/homebridge-dingz/compare/v1.1.0..v1.1.1
 [1.1.0]: https://github.com/johannrichard/homebridge-dingz/compare/v1.0.1..v1.1.0
 [1.0.1]: https://github.com/johannrichard/homebridge-dingz/compare/v1.0.1..v1.0.1
 [1.0.0]: https://github.com/johannrichard/homebridge-dingz/releases/v1.0.0
