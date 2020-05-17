@@ -25,7 +25,6 @@
       "devices": {
         "title": "Dingz Devices",
         "type": "array",
-        "required": true,
         "items": {
           "title": "Dingz",
           "type": "object",
