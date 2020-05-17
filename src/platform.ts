@@ -6,9 +6,9 @@ import type {
   PlatformAccessory,
   PlatformConfig,
 } from 'homebridge';
-import { fetch, Headers, AbortController } from 'popsicle/dist/node';
-
 import { Policy, ConsecutiveBreaker } from 'cockatiel';
+import { createSocket, Socket, RemoteInfo } from 'dgram';
+import axios, { AxiosRequestConfig } from 'axios';
 
 // Internal Types
 import {
@@ -28,7 +28,6 @@ import {
 } from './util/errors';
 
 import { PLATFORM_NAME, PLUGIN_NAME, DINGZ_DISCOVERY_PORT } from './settings';
-import { createSocket, Socket, RemoteInfo } from 'dgram';
 
 // TODO: Some refactoring for beter event handling, cleanup of the code and separation of concerns
 import { DingzDaAccessory } from './dingzDaAccessory';
@@ -78,7 +77,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
       // run the method to discover / register your devices as accessories
       this.addDevices(); // Adds decvices from Config
       if (this.config.autoDiscover) {
-        // Discovers devices from UDP
+      // Discovers devices from UDP
         this.setupDeviceDiscovery();
       }
     });
@@ -569,7 +568,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
 
   async fetch({
     url,
-    method = 'GET',
+    method = 'get',
     returnBody = false,
     token,
     body,
@@ -578,25 +577,20 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
     method?: string;
     returnBody?: boolean;
     token?: string;
-    body?: string;
+    body?: object | string;
   }) {
-    const controller = new AbortController();
-    setTimeout(() => controller.abort(), 2000);
-    const headers: Headers = new Headers();
-    if (token) {
-      headers.set('Token', token);
-    }
-
-    this.log.debug('Fetching ', url);
-    const data = await fetch(url, {
+    this.log.debug('Fetching ', url, 'with body', body ?? '');
+    const data = await axios({
+      url: url,
       method: method,
-      headers: headers,
-      signal: controller.signal,
-      body: body,
-    })
+      headers: {
+        Token: token ?? '',
+      },
+      data: body,
+    } as AxiosRequestConfig)
       .then((response) => {
         if (returnBody) {
-          return response.json();
+          return response.data;
         } else {
           return response.status;
         }

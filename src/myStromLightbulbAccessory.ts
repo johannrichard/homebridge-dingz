@@ -8,13 +8,13 @@ import type {
 } from 'homebridge';
 
 import { DingzDaHomebridgePlatform } from './platform';
-import formurlencoded from 'form-urlencoded';
 import {
   DeviceInfo,
   MyStromDeviceInfo,
   MyStromLightbulbReport,
 } from './util/internalTypes';
 import simpleColorConverter from 'simple-color-converter';
+import qs from 'qs';
 
 /**
  * Platform Accessory
@@ -258,7 +258,7 @@ export class MyStromLightbulbAccessory {
       url: setDimmerUrl,
       method: 'POST',
       token: this.device.token,
-      body: formurlencoded({
+      body: qs.stringify({
         on: isOn,
         color: color,
         mode: 'hsv',
