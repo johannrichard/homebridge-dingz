@@ -46,6 +46,12 @@ const circuitBreaker = Policy.handleAll().circuitBreaker(
   new ConsecutiveBreaker(5),
 );
 const retryWithBreaker = Policy.wrap(retry, circuitBreaker);
+
+// Policy for long running tasks, retry every hour
+const retrySlow = Policy.handleAll()
+  .orWhenResult((retry) => retry === true)
+  .retry()
+  .exponential({ initialDelay: 10000, maxDelay: 60 * 60 * 1000 });
 /**
  * Interfaces
  */
@@ -217,10 +223,13 @@ export class DingzDaAccessory implements Disposable {
       );
     });
 
-    const updateInterval: NodeJS.Timer = setInterval(() => {
-      // Update Device Config (TODO: Eventually only every few hours or so)
+    // Retry at least every day once
+    retrySlow.execute(() => {
       this.updateAccessory();
+      return true;
+    });
 
+    const updateInterval: NodeJS.Timer = setInterval(() => {
       // Get temperature value from Device
       let currentTemperature: number;
       this.getDeviceTemperature().then((data) => {
@@ -770,7 +779,7 @@ export class DingzDaAccessory implements Disposable {
   }
 
   // Updates the Accessory (e.g. if the config has changed)
-  private async updateAccessory() {
+  private async updateAccessory(): Promise<void> {
     this.platform.log.warn('Update accessory -> Check for changed config.');
 
     retryWithBreaker
