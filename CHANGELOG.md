@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog][Keep a Changelog] and this project adheres to [Semantic Versioning][Semantic Versioning].
 
 ## [Unreleased]
+### Added
+* Support for Dingz LightSensor 
+### Fixes
+* Small refactorings
 ---
 ## [1.2.0] - 2020-05-17
 ### Added
