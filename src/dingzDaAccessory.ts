@@ -9,6 +9,8 @@ import {
 
 import { Policy, ConsecutiveBreaker } from 'cockatiel';
 import { Mutex } from 'async-mutex';
+import simpleColorConverter from 'simple-color-converter';
+import qs from 'qs';
 
 // Internal types
 import {
@@ -24,7 +26,8 @@ import {
   DimmerId,
   DimmerProps,
   WindowCoveringProps,
-  DimmerState,
+  DingzDimmerState,
+  DingzLEDState,
   WindowCoveringId,
   WindowCoveringState,
   WindowCoveringTimer,
@@ -72,8 +75,8 @@ interface Error {
   [x] Blinds (WindowCovering)
   [x] Temperature (CurrentTemperature)
   [x] PIR (MotionSensor)
+  [x] LED (ColorLightbulb)
   [] Buttons (StatelessProgrammableButton or so)
-  [] LED (ColorLightbulb)
   [] Light Level (LightSensor/AmbientLightLevel)
 */
 
@@ -116,6 +119,12 @@ export class DingzDaAccessory implements Disposable {
       } as WindowCoveringState,
     } as WindowCoveringProps,
     Motion: false,
+    LED: {
+      on: false,
+      hsv: '0;0;100',
+      rgb: 'FFFFFF',
+      mode: 'hsv',
+    } as DingzLEDState,
   };
 
   // Take stock of intervals to dispose at the end of the life of the Accessory
@@ -200,21 +209,10 @@ export class DingzDaAccessory implements Disposable {
         'has no Motion sensor.',
       );
     }
-    // Dingz has a temperature sensor, make it available here
-    // create a new Temperature Sensor service
-    const temperatureService: Service =
-      this.accessory.getService(this.platform.Service.TemperatureSensor) ??
-      this.accessory.addService(this.platform.Service.TemperatureSensor);
-    temperatureService.setCharacteristic(
-      this.platform.Characteristic.Name,
-      `${this.device.name} Temperature`,
-    );
-
-    // create handlers for required characteristics
-    temperatureService
-      .getCharacteristic(this.platform.Characteristic.CurrentTemperature)
-      .on(CharacteristicEventTypes.GET, this.getTemperature.bind(this));
-    this.services.push(temperatureService);
+    // Dingz has a temperature sensor and an LED,
+    // make these available here
+    this.addTemperatureService();
+    this.addLEDService();
 
     this.services.forEach((service) => {
       this.platform.log.info(
@@ -223,11 +221,27 @@ export class DingzDaAccessory implements Disposable {
       );
     });
 
-    // Retry at least every day once
+    // Retry at least once every day
     retrySlow.execute(() => {
       this.updateAccessory();
       return true;
     });
+  }
+
+  private addTemperatureService() {
+    const temperatureService: Service =
+      this.accessory.getService(this.platform.Service.TemperatureSensor) ??
+      this.accessory.addService(this.platform.Service.TemperatureSensor);
+    temperatureService.setCharacteristic(
+      this.platform.Characteristic.Name,
+      'Temperature',
+    );
+
+    // create handlers for required characteristics
+    temperatureService
+      .getCharacteristic(this.platform.Characteristic.CurrentTemperature)
+      .on(CharacteristicEventTypes.GET, this.getTemperature.bind(this));
+    this.services.push(temperatureService);
 
     const updateInterval: NodeJS.Timer = setInterval(() => {
       // Get temperature value from Device
@@ -722,10 +736,7 @@ export class DingzDaAccessory implements Disposable {
     service =
       this.accessory.getService(this.platform.Service.MotionSensor) ??
       this.accessory.addService(this.platform.Service.MotionSensor);
-    service.setCharacteristic(
-      this.platform.Characteristic.Name,
-      this.accessory.displayName + ' Funky Commotion',
-    );
+    service.setCharacteristic(this.platform.Characteristic.Name, 'Motion');
     this.services.push(service);
     // Only check for motion if we have a PIR and set the Interval
     const motionInterval: NodeJS.Timer = setInterval(() => {
@@ -808,7 +819,10 @@ export class DingzDaAccessory implements Disposable {
 
     try {
       // FIXME: Crashes occasionally
-      if (currentDingzDeviceInfo.has_pir !== updatedDingzDeviceInfo.has_pir) {
+      if (
+        currentDingzDeviceInfo &&
+        currentDingzDeviceInfo.has_pir !== updatedDingzDeviceInfo.has_pir
+      ) {
         // Update PIR Service
         this.platform.log.warn('Update accessory -> PIR config changed.');
         if (updatedDingzDeviceInfo.has_pir) {
@@ -846,6 +860,7 @@ export class DingzDaAccessory implements Disposable {
       }
       // DIP overrides Input
       if (
+        currentDingzDeviceInfo &&
         currentDingzDeviceInfo.dip_config !== updatedDingzDeviceInfo.dip_config
       ) {
         // Update Dimmer & Blinds Services
@@ -858,7 +873,176 @@ export class DingzDaAccessory implements Disposable {
     } finally {
       this.accessory.context.device.dingzDeviceInfo = updatedDingzDeviceInfo;
       this.accessory.context.device.dingzInputInfo = [updatedDingzInputInfo];
+      this.platform.log.warn(
+        'DingZ Device Info: ',
+        JSON.stringify(updatedDingzDeviceInfo),
+      );
     }
+  }
+
+  private addLEDService() {
+    // get the LightBulb service if it exists, otherwise create a new LightBulb service
+    // you can create multiple services for each accessory
+    const ledService =
+      this.accessory.getServiceById(this.platform.Service.Lightbulb, 'LED') ??
+      this.accessory.addService(this.platform.Service.Lightbulb, 'LED', 'LED');
+
+    // set the service name, this is what is displayed as the default name on the Home app
+    // in this example we are using the name we stored in the `accessory.context` in the `discoverDevices` method.
+    ledService.setCharacteristic(this.platform.Characteristic.Name, 'LED');
+
+    // each service must implement at-minimum the "required characteristics" for the given service type
+    // see https://developers.homebridge.io/#/service/Lightbulb
+
+    // register handlers for the On/Off Characteristic
+    ledService
+      .getCharacteristic(this.platform.Characteristic.On)
+      .on(CharacteristicEventTypes.SET, this.setLEDOn.bind(this)) // SET - bind to the `setOn` method below
+      .on(CharacteristicEventTypes.GET, this.getLEDOn.bind(this)); // GET - bind to the `getOn` method below
+
+    // register handlers for the Brightness Characteristic
+    ledService
+      .getCharacteristic(this.platform.Characteristic.Brightness)
+      .on(CharacteristicEventTypes.SET, this.setLEDBrightness.bind(this)); // SET - bind to the 'setBrightness` method below
+
+    // register handlers for the Brightness Characteristic
+    ledService
+      .getCharacteristic(this.platform.Characteristic.Hue)
+      .on(CharacteristicEventTypes.SET, this.setLEDHue.bind(this)); // SET - bind to the 'setBrightness` method below
+
+    // register handlers for the Brightness Characteristic
+    ledService
+      .getCharacteristic(this.platform.Characteristic.Saturation)
+      .on(CharacteristicEventTypes.SET, this.setLEDSaturation.bind(this)); // SET - bind to the 'setBrightness` method below
+
+    this.services.push(ledService);
+    // Here we change update the brightness to a random value every 5 seconds using
+    // the `updateCharacteristic` method.
+    setInterval(() => {
+      this.getDeviceLED()
+        .then((state) => {
+          // push the new value to HomeKit
+          this.dingzStates.LED = state;
+          if (state.mode === 'hsv') {
+            const hsv = state.hsv.split(';');
+            this.dingzStates.LED.hue = parseInt(hsv[0]);
+            this.dingzStates.LED.saturation = parseInt(hsv[1]);
+            this.dingzStates.LED.value = parseInt(hsv[2]);
+          } else {
+            // rgbw
+            const hsv = new simpleColorConverter({
+              color: `hex #${state.rgb}`, // Should be the most compatible form
+              to: 'hsv',
+            });
+            this.dingzStates.LED.hue = hsv.c;
+            this.dingzStates.LED.saturation = hsv.s;
+            this.dingzStates.LED.value = hsv.i;
+          }
+
+          ledService
+            .getCharacteristic(this.platform.Characteristic.Hue)
+            .setValue(this.dingzStates.LED.hue);
+          ledService
+            .getCharacteristic(this.platform.Characteristic.Saturation)
+            .setValue(this.dingzStates.LED.saturation);
+          ledService
+            .getCharacteristic(this.platform.Characteristic.Brightness)
+            .setValue(this.dingzStates.LED.value);
+          ledService
+            .getCharacteristic(this.platform.Characteristic.On)
+            .setValue(this.dingzStates.LED.on);
+          this.platform.log.debug(
+            'Pushed updated current LED state to HomeKit ->',
+            this.dingzStates.LED,
+          );
+        })
+        .catch((e) => {
+          this.platform.log.debug(
+            'Error while retrieving LED Device Report ->',
+            e,
+          );
+        });
+    }, 10000);
+  }
+
+  /**
+   * Handle "SET" requests from HomeKit
+   * These are sent when the user changes the state of an accessory, for example, turning on a Light bulb.
+   */
+  private setLEDOn(
+    value: CharacteristicValue,
+    callback: CharacteristicSetCallback,
+  ) {
+    // implement your own code to turn your device on/off
+    this.platform.log.debug('Set LED Characteristic On ->', value);
+    this.dingzStates.LED.on = value as boolean;
+    const state = this.dingzStates.LED;
+    this.setDeviceLED({ isOn: state.on });
+    // you must call the callback function
+    callback(null);
+  }
+
+  /**
+   * Handle the "GET" requests from HomeKit
+   */
+  private getLEDOn(callback: CharacteristicGetCallback) {
+    // implement your own code to check if the device is on
+    const isOn = this.dingzStates.LED.on;
+    this.platform.log.debug('Get LED Characteristic On ->', isOn);
+
+    callback(null, isOn);
+  }
+
+  private setLEDHue(
+    value: CharacteristicValue,
+    callback: CharacteristicSetCallback,
+  ) {
+    // implement your own code to set the brightness    const isOn: boolean = value > 0 ? true : false;
+    this.dingzStates.LED.hue = value as number;
+
+    this.platform.log.debug('Set LED Characteristic Hue -> ', value);
+    const state: DingzLEDState = this.dingzStates.LED;
+    const color = `${state.hue};${state.saturation};${state.value}`;
+    this.setDeviceLED({
+      isOn: state.on,
+      color: color,
+    });
+    callback(null);
+  }
+
+  private setLEDSaturation(
+    value: CharacteristicValue,
+    callback: CharacteristicSetCallback,
+  ) {
+    // implement your own code to set the brightness
+    this.dingzStates.LED.saturation = value as number;
+
+    this.platform.log.debug('Set LED Characteristic Saturation -> ', value);
+    const state: DingzLEDState = this.dingzStates.LED;
+    const color = `${state.hue};${state.saturation};${state.value}`;
+    this.setDeviceLED({
+      isOn: state.on,
+      color: color,
+    });
+    callback(null);
+  }
+
+  private setLEDBrightness(
+    value: CharacteristicValue,
+    callback: CharacteristicSetCallback,
+  ) {
+    // implement your own code to set the brightness
+    this.dingzStates.LED.value = value as number;
+
+    this.platform.log.debug('Set LED Characteristic Brightness -> ', value);
+    // Call setDimmerValue()
+    const state: DingzLEDState = this.dingzStates.LED;
+    const color = `${state.hue};${state.saturation};${state.value}`;
+    this.setDeviceLED({
+      isOn: state.on,
+      color: color,
+    });
+    callback(null);
   }
 
   // Disposes the Accessory
@@ -943,7 +1127,7 @@ export class DingzDaAccessory implements Disposable {
 
   private async getDeviceDimmer(
     id: DimmerId,
-  ): Promise<DimmerState | undefined> {
+  ): Promise<DingzDimmerState | undefined> {
     const getDimmerUrl = `${this.baseUrl}/api/v1/dimmer/${id}`;
     return await this.platform.fetch({
       url: getDimmerUrl,
@@ -999,6 +1183,37 @@ export class DingzDaAccessory implements Disposable {
     const getWindowCoveringUrl = `${this.baseUrl}/api/v1/shade/`;
     return await this.platform.fetch({
       url: getWindowCoveringUrl,
+      returnBody: true,
+      token: this.device.token,
+    });
+  }
+
+  // TODO: Feedback on API doc
+  private async setDeviceLED({
+    isOn,
+    color,
+  }: {
+    isOn: boolean;
+    color?: string;
+  }): Promise<void> {
+    const setDimmerUrl = `${this.baseUrl}/api/v1/led/set`;
+    await this.platform.fetch({
+      url: setDimmerUrl,
+      method: 'POST',
+      token: this.device.token,
+      body: qs.stringify({
+        action: isOn ? 'on' : 'off',
+        color: color ?? undefined,
+        mode: color ? 'hsv' : undefined,
+        ramp: 150,
+      }),
+    });
+  }
+
+  private async getDeviceLED(): Promise<DingzLEDState> {
+    const reportUrl = `${this.baseUrl}/api/v1/led/get`;
+    return await this.platform.fetch({
+      url: reportUrl,
       returnBody: true,
       token: this.device.token,
     });

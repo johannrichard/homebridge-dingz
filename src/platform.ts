@@ -80,7 +80,6 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
       }
       // Discovers devices from UDP
       if (this.config.autoDiscover) {
-      // Discovers devices from UDP
         this.setupDeviceDiscovery();
       }
     });

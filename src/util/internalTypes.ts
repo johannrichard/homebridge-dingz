@@ -129,13 +129,23 @@ export interface DingzAccessories {
 export type DimmerId = 0 | 1 | 2 | 3;
 
 // Representation of dimmer in Dingz
-export interface DimmerState {
+export interface DingzDimmerState {
   on: boolean;
   value: number;
   ramp: number;
   disabled: boolean;
 }
-export type DimmerProps = Record<DimmerId, DimmerState>;
+export type DimmerProps = Record<DimmerId, DingzDimmerState>;
+
+export interface DingzLEDState {
+  on: boolean;
+  hsv: string;
+  rgb: string;
+  mode: 'rgb' | 'hsv';
+  hue: number;
+  saturation: number;
+  value: number;
+}
 
 export type WindowCoveringId = 0 | 1;
 export interface WindowCoveringPositon {
