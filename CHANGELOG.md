@@ -4,27 +4,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog][Keep a Changelog] and this project adheres to [Semantic Versioning][Semantic Versioning].
 
 ## [Unreleased]
+### Added
+* Support for Front LED
+
+### Changed
+* Replace popsicle library with axios for better POST handling
+
+### Fixes
+* Fixes for myStrom WiFi Lightbulb support
 ---
 ## [Released]
 ## [1.1.3] - 2020-05-17
 ### Added
-cb13f9b Exponential decay for accessory config check
+* cb13f9b Exponential decay for accessory config check
 
 ### Changed
-071c7e2 Housekeeping
-8ebe4e4 Add Changelog
+* 071c7e2 Housekeeping
+* 8ebe4e4 Add Changelog
 
 ## [1.1.2] - 2020-05-16
 ### Added
-48bd118 Add support for a setting to turn off auto-discovery
+* 48bd118 Add support for a setting to turn off auto-discovery
 
 ### Changed
-75fbabb Update metadata in HomeKit info: use undocumented fields
-8caf6b4 Update metadata in HomeKit info: use undocumented fields
+* 75fbabb Update metadata in HomeKit info: use undocumented fields
+* 8caf6b4 Update metadata in HomeKit info: use undocumented fields
 
 ### Fixed 
 Fixes for a number of "long-standing" (3 days :-)) bugs
-b414f80 Fix for Dimmer 1 (Input/Output) config. Fixes #2
+* b414f80 Fix for Dimmer 1 (Input/Output) config. Fixes #2
 
 ## [1.1.1] - 2020-05-15
 ### Added
