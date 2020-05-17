@@ -1,7 +1,7 @@
 {
   "displayName": "Homebridge Dingz Plugin",
   "name": "homebridge-dingz",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "author": "johannrichard",
   "description": "Homebridge Plugin for Dingz & myStrom Devices. Implements some (but not all, due to API limitations) functions of a [dingz](https://dingz.ch) Smart Home Device.",
   "license": "Apache-2.0",
