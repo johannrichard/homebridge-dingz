@@ -139,10 +139,10 @@ export class MyStromLightbulbAccessory {
             .getCharacteristic(this.platform.Characteristic.Hue)
             .setValue(this.lightbulbState.hue);
           this.lightbulbService
-            .getCharacteristic(this.platform.Characteristic.Hue)
+            .getCharacteristic(this.platform.Characteristic.Saturation)
             .setValue(this.lightbulbState.saturation);
           this.lightbulbService
-            .getCharacteristic(this.platform.Characteristic.Hue)
+            .getCharacteristic(this.platform.Characteristic.Brightness)
             .setValue(this.lightbulbState.value);
 
           this.platform.log.debug(
