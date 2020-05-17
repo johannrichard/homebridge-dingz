@@ -20,6 +20,7 @@ import {
   DingzDeviceInfo,
   DingzInputInfoItem,
   DingzInputInfo,
+  DingzLightData,
   DeviceInfo,
   Disposable,
   DimmerTimer,
@@ -125,6 +126,7 @@ export class DingzDaAccessory implements Disposable {
       rgb: 'FFFFFF',
       mode: 'hsv',
     } as DingzLEDState,
+    intensity: 0,
   };
 
   // Take stock of intervals to dispose at the end of the life of the Accessory
@@ -213,6 +215,7 @@ export class DingzDaAccessory implements Disposable {
     // make these available here
     this.addTemperatureService();
     this.addLEDService();
+    this.addLightSensorService();
 
     this.services.forEach((service) => {
       this.platform.log.info(
@@ -312,6 +315,52 @@ export class DingzDaAccessory implements Disposable {
       'Identify! -> Who am I? I am',
       this.accessory.displayName,
     );
+  }
+
+  private addLightSensorService() {
+    // Add the LightSensor that's integrated in the DingZ
+    // API: /api/v1/light
+
+    const service =
+      this.accessory.getService(this.platform.Service.LightSensor) ??
+      this.accessory.addService(this.platform.Service.LightSensor);
+
+    service.setCharacteristic(this.platform.Characteristic.Name, 'Light');
+    this.services.push(service);
+
+    setInterval(() => {
+      try {
+        this.getDeviceLight().then((data) => {
+          if (data.success) {
+            const intensity: number = data.intensity;
+
+            // Only update if motionService exists *and* if there's a change in motion'
+            if (service && this.dingzStates.intensity !== intensity) {
+              this.dingzStates.intensity = intensity;
+              service
+                .getCharacteristic(
+                  this.platform.Characteristic.CurrentAmbientLightLevel,
+                )
+                .updateValue(intensity);
+              this.platform.log.debug(
+                'Pushed updated current Light Intensity state of',
+                service.getCharacteristic(this.platform.Characteristic.Name)
+                  .value,
+                'to HomeKit:',
+                intensity,
+                'lux',
+              );
+            }
+          }
+        });
+      } catch (e) {
+        this.platform.log.error(
+          'Error ->',
+          e.name,
+          ', unable to fetch DeviceMotion data',
+        );
+      }
+    }, 10000);
   }
 
   private addOutputServices() {
@@ -1096,6 +1145,20 @@ export class DingzDaAccessory implements Disposable {
     try {
       return await this.platform.fetch({
         url: getMotionUrl,
+        returnBody: true,
+        token: this.device.token,
+      });
+    } finally {
+      release();
+    }
+  }
+
+  private async getDeviceLight(): Promise<DingzLightData> {
+    const getLightUrl = `${this.baseUrl}/api/v1/light`;
+    const release = await this.mutex.acquire();
+    try {
+      return await this.platform.fetch({
+        url: getLightUrl,
         returnBody: true,
         token: this.device.token,
       });

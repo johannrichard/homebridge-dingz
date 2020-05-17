@@ -15,6 +15,12 @@ export interface DingzMotionData {
   motion: boolean;
 }
 
+export interface DingzLightData {
+  success: boolean;
+  intensity: number;
+  state: 'night' | 'day';
+}
+
 export enum DeviceTypes {
   MYSTROM_SWITCH_CHV1 = 101,
   MYSTROM_BULB = 102,
