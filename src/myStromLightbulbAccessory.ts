@@ -120,7 +120,7 @@ export class MyStromLightbulbAccessory {
           // push the new value to HomeKit
           this.lightbulbState = report;
           if (report.mode === 'hsv') {
-            const hsv = report.mode.split(';');
+            const hsv = report.color.split(';');
             this.lightbulbState.hue = parseInt(hsv[0]);
             this.lightbulbState.saturation = parseInt(hsv[1]);
             this.lightbulbState.value = parseInt(hsv[2]);
@@ -226,7 +226,6 @@ export class MyStromLightbulbAccessory {
 
     this.platform.log.debug('Set Characteristic Saturation -> ', value);
     // Call setDimmerValue()
-    await this.setDeviceLightbulb({ isOn, color: value as string });
     const state: MyStromLightbulbReport = this.lightbulbState;
     await this.setDeviceLightbulb({
       isOn: state.on,
