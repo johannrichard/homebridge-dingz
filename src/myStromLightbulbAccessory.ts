@@ -202,15 +202,13 @@ export class MyStromLightbulbAccessory {
     callback: CharacteristicSetCallback,
   ) {
     // implement your own code to set the brightness
-    const isOn: boolean = value > 0 ? true : false;
     this.lightbulbState.hue = value as number;
-    this.lightbulbState.on = isOn;
 
     this.platform.log.debug('Set Characteristic Hue -> ', value);
     const state: MyStromLightbulbReport = this.lightbulbState;
     await this.setDeviceLightbulb({
       isOn: state.on,
-      color: `${state.hue};${state.value};${state.saturation}`,
+      color: `${state.hue};${state.saturation};${state.value}`,
     });
     callback(null);
   }
@@ -220,16 +218,14 @@ export class MyStromLightbulbAccessory {
     callback: CharacteristicSetCallback,
   ) {
     // implement your own code to set the brightness
-    const isOn: boolean = value > 0 ? true : false;
     this.lightbulbState.saturation = value as number;
-    this.lightbulbState.on = isOn;
 
     this.platform.log.debug('Set Characteristic Saturation -> ', value);
     // Call setDimmerValue()
     const state: MyStromLightbulbReport = this.lightbulbState;
     await this.setDeviceLightbulb({
       isOn: state.on,
-      color: `${state.hue};${state.value};${state.saturation}`,
+      color: `${state.hue};${state.saturation};${state.value}`,
     });
     callback(null);
   }
@@ -246,7 +242,7 @@ export class MyStromLightbulbAccessory {
     const state: MyStromLightbulbReport = this.lightbulbState;
     await this.setDeviceLightbulb({
       isOn: state.on,
-      color: `${state.hue};${state.value};${state.saturation}`,
+      color: `${state.hue};${state.saturation};${state.value}`,
     });
     callback(null);
   }
