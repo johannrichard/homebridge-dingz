@@ -82,7 +82,7 @@ Not (yet) implemented:
 [Semantic Versioning]: https://semver.org/
 
 <!-- Versions -->
-[Unreleased]: https://github.com/johannrichard/homebridge-dingz/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/johannrichard/homebridge-dingz/compare/v1.1.3...HEAD
 [Released]: https://github.com/johannrichard/homebridge-dingz/releases
 [1.1.3]: https://github.com/johannrichard/homebridge-dingz/compare/v1.1.1..v1.1.3
 [1.1.2]: https://github.com/johannrichard/homebridge-dingz/compare/v1.1.1..v1.1.2
