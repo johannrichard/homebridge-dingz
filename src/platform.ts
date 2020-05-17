@@ -18,6 +18,7 @@ import {
   DingzAccessories,
   DeviceTypes,
   MyStromDeviceInfo,
+  MYSTROM_SWITCH_TYPES,
 } from './util/internalTypes';
 
 import {
@@ -33,7 +34,6 @@ import { createSocket, Socket, RemoteInfo } from 'dgram';
 import { DingzDaAccessory } from './dingzDaAccessory';
 import { MyStromSwitchAccessory } from './myStromSwitchAccessory';
 import { MyStromLightbulbAccessory } from './myStromLightbulbAccessory';
-import { MYSTROM_SWITCH_TYPES } from './util/internalTypes';
 
 // Define a policy that will retry 20 times at most
 const retry = Policy.handleAll()
