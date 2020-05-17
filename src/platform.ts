@@ -74,8 +74,11 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
     // to start discovery of new accessories.
     this.api.on(APIEvent.DID_FINISH_LAUNCHING, () => {
       this.log.debug('Executed didFinishLaunching callback');
-      // run the method to discover / register your devices as accessories
-      this.addDevices(); // Adds decvices from Config
+      // Adds decvices from Config
+      if (this.config.devices) {
+        this.addDevices();
+      }
+      // Discovers devices from UDP
       if (this.config.autoDiscover) {
       // Discovers devices from UDP
         this.setupDeviceDiscovery();
