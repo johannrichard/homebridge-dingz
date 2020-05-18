@@ -285,6 +285,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
     const success = this.getMyStromDeviceInfo({
       address,
       token,
+      endpoint: 'info', // We use the old endpoint
     }).then((data) => {
       if (typeof data !== 'undefined') {
         const info = data as MyStromDeviceInfo;
@@ -462,13 +463,28 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
 
       const t: DeviceTypes = msg[6];
       switch (t) {
-        case DeviceTypes.MYSTROM_BULB:
         case DeviceTypes.MYSTROM_BUTTON_PLUS:
         case DeviceTypes.MYSTROM_BUTTON:
         case DeviceTypes.MYSTROM_LEDSTRIP:
           throw new DeviceNotImplementedError(
             `Device discovered at ${remoteInfo.address} of unsupported type ${DeviceTypes[t]}`,
           );
+          break;
+        case DeviceTypes.MYSTROM_BULB:
+          this.log.debug(
+            'Discovered MyStrom Lightbulb',
+            DeviceTypes[t],
+            'at',
+            remoteInfo.address,
+            '-> Attempting to identify and add.',
+          );
+          retryWithBreaker.execute(() => {
+            this.addMyStromLightbulbDevice({
+              address: remoteInfo.address,
+              name: 'Auto-Discovered MyStrom Lightbulb',
+              token: this.config.globalToken,
+            });
+          });
           break;
         case DeviceTypes.MYSTROM_SWITCH_CHV1:
         case DeviceTypes.MYSTROM_SWITCH_CHV2:
@@ -556,11 +572,13 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
   async getMyStromDeviceInfo({
     address,
     token,
+    endpoint = 'api/v1/info',
   }: {
     address: string;
     token?: string;
+    endpoint?: 'api/v1/info' | 'info';
   }): Promise<MyStromDeviceInfo> {
-    const deviceInfoUrl = `http://${address}/info`;
+    const deviceInfoUrl = `http://${address}/${endpoint}`;
     return await this.fetch({
       url: deviceInfoUrl,
       returnBody: true,

@@ -115,10 +115,11 @@ export class MyStromLightbulbAccessory {
     // Here we change update the brightness to a random value every 5 seconds using
     // the `updateCharacteristic` method.
     setInterval(() => {
-      this.getDeviceReport()
+      this.getDeviceReport(this.device.mac)
         .then((report) => {
           // push the new value to HomeKit
           this.lightbulbState = report;
+          // FIXME: Add 'mono' as well
           if (report.mode === 'hsv') {
             const hsv = report.color.split(';');
             this.lightbulbState.hue = parseInt(hsv[0]);
@@ -175,7 +176,7 @@ export class MyStromLightbulbAccessory {
     // implement your own code to turn your device on/off
     this.platform.log.debug('Set Characteristic On ->', value);
     this.lightbulbState.on = value as boolean;
-    this.setDeviceState(this.lightbulbState.on);
+    this.setDeviceLightbulb({ isOn: this.lightbulbState.on });
 
     /*
          .catch((e) => {
@@ -251,35 +252,49 @@ export class MyStromLightbulbAccessory {
   private async setDeviceLightbulb({
     isOn,
     color,
-  }: { isOn?: boolean; color?: string } = {}): Promise<void> {
+  }: {
+    isOn: boolean;
+    color?: string;
+  }): Promise<void> {
     // Weird URL :-)
     const setDimmerUrl = `${this.baseUrl}/api/v1/device/${this.device.mac}`;
+    this.platform.log.warn(
+      'Bulb: ',
+      qs.stringify(
+        {
+          action: isOn ? 'on' : 'off',
+          color: color ?? undefined,
+          mode: color ? 'hsv' : undefined,
+        },
+
+        { encode: false },
+      ),
+    );
     await this.platform.fetch({
       url: setDimmerUrl,
       method: 'POST',
       token: this.device.token,
-      body: qs.stringify({
-        on: isOn,
-        color: color,
-        mode: 'hsv',
-      }),
+      body: qs.stringify(
+        {
+          action: isOn ? 'on' : 'off',
+          color: color ?? undefined,
+          mode: color ? 'hsv' : undefined,
+        },
+        { encode: false },
+      ),
     });
   }
 
-  private setDeviceState(isOn: boolean) {
-    const relayUrl = `${this.baseUrl}/relay?state=${isOn ? '1' : '0'}`;
-    this.platform.fetch({
-      url: relayUrl,
-      token: this.device.token,
-    });
-  }
-
-  private async getDeviceReport(): Promise<MyStromLightbulbReport> {
-    const reportUrl = `${this.baseUrl}/report`;
-    return await this.platform.fetch({
-      url: reportUrl,
-      returnBody: true,
-      token: this.device.token,
-    });
+  private async getDeviceReport(mac: string): Promise<MyStromLightbulbReport> {
+    const reportUrl = `${this.baseUrl}/api/v1/device/`;
+    return await this.platform
+      .fetch({
+        url: reportUrl,
+        returnBody: true,
+        token: this.device.token,
+      })
+      .then((response) => {
+        return response[mac];
+      });
   }
 }
