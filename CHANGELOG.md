@@ -4,10 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog][Keep a Changelog] and this project adheres to [Semantic Versioning][Semantic Versioning].
 
 ## [Unreleased]
-### Added
-* Support for WiFi Lightbulb (tested)
-
 ---
+## [1.3.0] - 2020-05-18
+### Added
+* Support for WiFi Lightbulb
+
+### Fixed
+* Dimmer & Shade fixes (Mismatch between API doc and real-life implementation)
+
 ## [1.2.1] - 2020-05-17
 **Breaking change**: This release breaks existing configs. 
 
