@@ -455,26 +455,38 @@ export class DingzDaAccessory implements Disposable {
       .on(CharacteristicEventTypes.SET, this.setBrightness.bind(this, id)); // SET - bind to the 'setBrightness` method below
 
     const updateInterval: NodeJS.Timer = setInterval(() => {
-      // assign the current brightness a random value between 0 and 100
-
       if (id) {
         // Id set
         const state = this.dingzStates.Dimmers[id];
-        newService
-          .getCharacteristic(this.platform.Characteristic.Brightness)
-          .updateValue(state.value);
-        newService
-          .getCharacteristic(this.platform.Characteristic.On)
-          .updateValue(state.on);
 
-        this.platform.log.debug(
-          'Pushed updated current Brightness and On state of',
-          newService.getCharacteristic(this.platform.Characteristic.Name).value,
-          'to HomeKit:',
-          state.value,
-          '->',
-          state.on,
-        );
+        // FIXME: Something's amiss in certain installs.
+        // Check that "state" is valid
+        if (state) {
+          newService
+            .getCharacteristic(this.platform.Characteristic.Brightness)
+            .updateValue(state.value);
+          newService
+            .getCharacteristic(this.platform.Characteristic.On)
+            .updateValue(state.on);
+
+          this.platform.log.debug(
+            'Pushed updated current Brightness and On state of',
+            newService.getCharacteristic(this.platform.Characteristic.Name)
+              .value,
+            'to HomeKit:',
+            state.value,
+            '->',
+            state.on,
+          );
+        } else {
+          this.platform.log.warn(
+            'We have an issue here: state should be non-empty but is undefined. Stop here, killing myself.',
+          );
+          throw new Error(
+            'State was empty. Dumping dingzDimmerStates @derBurch :-) ' +
+              JSON.stringify(this.dingzStates),
+          );
+        }
       }
     }, 10000);
 
