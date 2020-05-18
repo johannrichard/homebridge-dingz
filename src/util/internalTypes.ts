@@ -157,6 +157,35 @@ export interface DingzLEDState {
   value: number;
 }
 
+type DingzDimmerConfigValue =
+  | 'non_dimmable'
+  | 'linear'
+  | 'incandescent'
+  | 'halogen'
+  | 'led'
+  | 'pulse'
+  | 'ohmic';
+export interface DingzDimmerConfig {
+  dimmers: [
+    {
+      output: DingzDimmerConfigValue;
+      name: string;
+    },
+    {
+      output: DingzDimmerConfigValue;
+      name: string;
+    },
+    {
+      output: DingzDimmerConfigValue;
+      name: string;
+    },
+    {
+      output: DingzDimmerConfigValue;
+      name: string;
+    },
+  ];
+}
+
 export type WindowCoveringId = 0 | 1;
 export interface WindowCoveringPositon {
   blind: number;
