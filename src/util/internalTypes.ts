@@ -42,7 +42,7 @@ export const MYSTROM_SWITCH_TYPES = {
 type DeviceTypesStrings = keyof typeof DeviceTypes;
 
 export interface DimmerTimer {
-  [id: number]: NodeJS.Timer;
+  [id: string]: NodeJS.Timer;
 }
 
 export interface WindowCoveringTimer {
@@ -140,6 +140,10 @@ export interface DingzDimmerState {
   value: number;
   ramp: number;
   disabled: boolean;
+  index?: {
+    relative: number;
+    absolute: number;
+  };
 }
 export type DimmerProps = Record<DimmerId, DingzDimmerState>;
 

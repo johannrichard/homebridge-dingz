@@ -6,9 +6,14 @@ The format is based on [Keep a Changelog][Keep a Changelog] and this project adh
 ## [Unreleased]
 ---
 ## [1.2.1] - 2020-05-17
+**Breaking change**: This release breaks existing configs. 
+
+After upgrading to this version, you have to remove the plugin config block from your config, restart Homebridge, add the plugin config again and restart Homebridge once more to apply the fix. Otherwise you will end up with spurious old Lightbulbs in your setup. 
+
 ### Added
 * Support for Dingz LightSensor 
-### Fixes
+### Fixed
+* Fix for Dimmer index issues (Thanks [Michael Burch](https://twitter.com/derBurch) for reporting/debugging.)
 * Small refactorings
 
 ## [1.2.0] - 2020-05-17
@@ -18,8 +23,9 @@ The format is based on [Keep a Changelog][Keep a Changelog] and this project adh
 ### Changed
 * Replace popsicle library with axios for better POST handling
 
-### Fixes
+### Fixed
 * Fixes for myStrom WiFi Lightbulb support
+
 ## [Released]
 ## [1.1.3] - 2020-05-17
 ### Added
