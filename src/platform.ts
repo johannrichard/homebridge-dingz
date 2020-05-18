@@ -97,6 +97,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
       accessory.context.device.accessoryClass,
     );
 
+    // TODO: Remove the device if it has vanished for too long (i.e. restore was not possible for a long time)
     const context = accessory.context;
     let platformAccessory:
       | DingzDaAccessory

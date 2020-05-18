@@ -16,10 +16,10 @@ The following Dingz services are implemented:
 - Shades (Blinds)
 - Room temperature
 - Motion sensor status (polling only, only for Dingz+ models)
+- Front LED (LightBulb)
 
 Not (yet) implemented:
 
-- Front LED (LightBulb)
 - Buttons (StatefulProgrammableSwitch)
 - Thermostat (Temperature)
 - Motion sensor webhook (push mode instead of polling)
@@ -33,7 +33,7 @@ Currently, the following MyStrom Devices are implemented in this plugin:
 - MyStrom WiFi Switch CH V1 (tested, must be manually added)
 - MyStrom WiFi Switch CH V2 (tested, w/ auto-discovery)
 - MyStrom WiFi Switch EU (not tested, should work with auto-discovery too)
-- MyStrom WiFi Lightbulb (untested, developed against API)
+- MyStrom WiFi Lightbulb (tested, w/ auto-discovery)
 
 ## Usage
 
