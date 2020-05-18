@@ -1259,13 +1259,18 @@ export class DingzDaAccessory implements Disposable {
     lamella?: number,
   ): Promise<void> {
     // {{ip}}/api/v1/shade/0?blind=<value>&lamella=<value>
-    const setWindowCoveringUrl = `${this.baseUrl}/api/v1/shade/${id}/?${
-      blind ? '&blind=' + blind : ''
-    }${lamella ? '&lamella=' + lamella : ''}`;
+    const setWindowCoveringUrl = `${this.baseUrl}/api/v1/shade/${id}/`;
     await this.platform.fetch({
       url: setWindowCoveringUrl,
       method: 'POST',
       token: this.device.token,
+      body: qs.stringify(
+        {
+          blind: blind ?? undefined,
+          lamella: lamella ?? undefined,
+        },
+        { encode: false },
+      ),
     });
   }
 
@@ -1302,12 +1307,15 @@ export class DingzDaAccessory implements Disposable {
       url: setLEDUrl,
       method: 'POST',
       token: this.device.token,
-      body: qs.stringify({
-        action: isOn ? 'on' : 'off',
-        color: color ?? undefined,
-        mode: color ? 'hsv' : undefined,
-        ramp: 150,
-      }),
+      body: qs.stringify(
+        {
+          action: isOn ? 'on' : 'off',
+          color: color ?? undefined,
+          mode: color ? 'hsv' : undefined,
+          ramp: 150,
+        },
+        { encode: false },
+      ),
     });
   }
 
