@@ -59,8 +59,6 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
   // this is used to track restored cached accessories
   public accessories: DingzAccessories = {};
 
-  private readonly discoverySocket: Socket = createSocket('udp4');
-
   constructor(
     public readonly log: Logger,
     public readonly config: PlatformConfig,
@@ -536,11 +534,13 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
   // Steup device discovery. This will run for 10 minutes and then stop
   // If you want tore-discover, just restart Homebridge
   private setupDeviceDiscovery() {
-    this.discoverySocket.on('message', this.datagramMessageHandler.bind(this));
-    this.discoverySocket.bind(DINGZ_DISCOVERY_PORT);
+    const discoverySocket: Socket = createSocket('udp4');
+
+    discoverySocket.on('message', this.datagramMessageHandler.bind(this));
+    discoverySocket.bind(DINGZ_DISCOVERY_PORT);
     setTimeout(() => {
       this.log.warn('Stopping discovery');
-      this.discoverySocket.close();
+      discoverySocket.close();
     }, 600000); // Discover for 10 min then stop
     return true;
   }
