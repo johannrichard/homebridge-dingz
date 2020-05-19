@@ -258,18 +258,6 @@ export class MyStromLightbulbAccessory {
   }): Promise<void> {
     // Weird URL :-)
     const setDimmerUrl = `${this.baseUrl}/api/v1/device/${this.device.mac}`;
-    this.platform.log.warn(
-      'Bulb: ',
-      qs.stringify(
-        {
-          action: isOn ? 'on' : 'off',
-          color: color ?? undefined,
-          mode: color ? 'hsv' : undefined,
-        },
-
-        { encode: false },
-      ),
-    );
     await this.platform.fetch({
       url: setDimmerUrl,
       method: 'POST',
