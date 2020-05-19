@@ -32,6 +32,8 @@ import {
   WindowCoveringId,
   WindowCoveringState,
   WindowCoveringTimer,
+  DeviceDingzDimmerConfig,
+  DingzDimmerConfigValue,
 } from './util/internalTypes';
 
 import { MethodNotImplementedError } from './util/errors';
@@ -102,6 +104,7 @@ export class DingzDaAccessory implements Disposable {
 
   // Todo: Make proper internal representation
   private dingzStates = {
+    // FIXME: Make structure less hardware-like
     Temperature: 0,
     Dimmers: {
       0: { on: false, value: 0, ramp: 0 },
@@ -174,6 +177,7 @@ export class DingzDaAccessory implements Disposable {
 
     // Add Dimmers, Blinds etc.
     this.platform.log.debug('Adding output devices -> [...]');
+    // FIXME: axios already does retries
     retryWithBreaker
       .execute(() => this.getDeviceInputConfig())
       .then((data) => {
@@ -181,6 +185,15 @@ export class DingzDaAccessory implements Disposable {
         if (data.inputs) {
           this.device.dingzInputInfo = data.inputs;
         }
+        return this.getDingzDeviceDimmerConfig();
+      })
+      .then((data) => {
+        this.platform.log.debug('Got Dimmer Config ->', data);
+        if (data.dimmers && data.dimmers.length === 4) {
+          this.device.dimmerConfig = data;
+        }
+
+        // Now we have what we need and can create the services …
         this.addOutputServices();
         setInterval(() => {
           // TODO: Set rechability if call times out too many times
@@ -370,8 +383,8 @@ export class DingzDaAccessory implements Disposable {
 
     const inputConfig: DingzInputInfoItem[] | undefined = this.device
       .dingzInputInfo;
-    const dimmerName = 'Dimmer';
-    const blindName = 'Blind';
+    const dimmerConfig: DeviceDingzDimmerConfig | undefined = this.device
+      .dimmerConfig;
 
     /** DIP Switch
      * 0			M1& M2		(2 blinds)
@@ -386,31 +399,61 @@ export class DingzDaAccessory implements Disposable {
         if (inputConfig && !inputConfig[0].active) {
           // D0
           dimmerServices.push(
-            this.addDimmerService({ name: dimmerName, id: 'D1', index: 0 }),
+            this.addDimmerService({
+              name: dimmerConfig?.dimmers[0].name,
+              output: dimmerConfig?.dimmers[0].output,
+              id: 'D1',
+              index: 0,
+            }),
           );
         }
         // D1, D2, D3
         dimmerServices.push(
-          this.addDimmerService({ name: dimmerName, id: 'D2', index: 1 }),
+          this.addDimmerService({
+            name: dimmerConfig?.dimmers[1].name,
+            output: dimmerConfig?.dimmers[1].output,
+            id: 'D2',
+            index: 1,
+          }),
         );
         dimmerServices.push(
-          this.addDimmerService({ name: dimmerName, id: 'D3', index: 2 }),
+          this.addDimmerService({
+            name: dimmerConfig?.dimmers[2].name,
+            output: dimmerConfig?.dimmers[2].output,
+            id: 'D3',
+            index: 2,
+          }),
         );
         dimmerServices.push(
-          this.addDimmerService({ name: dimmerName, id: 'D4', index: 3 }),
+          this.addDimmerService({
+            name: dimmerConfig?.dimmers[3].name,
+            output: dimmerConfig?.dimmers[3].output,
+            id: 'D4',
+            index: 3,
+          }),
         );
         break;
       case 2:
         // DIP = 1: M0, D2, D3;
-        windowCoverServices.push(this.addWindowCoveringService(blindName, 0));
+        windowCoverServices.push(this.addWindowCoveringService('Blind', 0));
         // Dimmers are always 0 based
         // i.e. if outputs 1 / 2 are for blinds, outputs 3/4 will be dimmer 0/1
         // We use the "index" value of the DingZ to determine what to use
         dimmerServices.push(
-          this.addDimmerService({ name: dimmerName, id: 'D1', index: 0 }),
+          this.addDimmerService({
+            name: dimmerConfig?.dimmers[0].name,
+            output: dimmerConfig?.dimmers[0].output,
+            id: 'D3',
+            index: 0,
+          }),
         );
         dimmerServices.push(
-          this.addDimmerService({ name: dimmerName, id: 'D2', index: 1 }),
+          this.addDimmerService({
+            name: dimmerConfig?.dimmers[1].name,
+            output: dimmerConfig?.dimmers[1].output,
+            id: 'D4',
+            index: 1,
+          }),
         );
         break;
       case 1:
@@ -418,18 +461,28 @@ export class DingzDaAccessory implements Disposable {
         if (inputConfig && !inputConfig[0].active) {
           // D0
           dimmerServices.push(
-            this.addDimmerService({ name: dimmerName, id: 'D1', index: 0 }),
+            this.addDimmerService({
+              name: dimmerConfig?.dimmers[0].name,
+              output: dimmerConfig?.dimmers[0].output,
+              id: 'D1',
+              index: 0,
+            }),
           );
         }
         dimmerServices.push(
-          this.addDimmerService({ name: dimmerName, id: 'D2', index: 1 }),
+          this.addDimmerService({
+            name: dimmerConfig?.dimmers[1].name,
+            output: dimmerConfig?.dimmers[1].output,
+            id: 'D2',
+            index: 1,
+          }),
         );
-        windowCoverServices.push(this.addWindowCoveringService(blindName, 0));
+        windowCoverServices.push(this.addWindowCoveringService('Blind', 0));
         break;
       case 0:
         // DIP = 3: M0, M1;
-        windowCoverServices.push(this.addWindowCoveringService(blindName, 0));
-        windowCoverServices.push(this.addWindowCoveringService(blindName, 1));
+        windowCoverServices.push(this.addWindowCoveringService('Blind', 0));
+        windowCoverServices.push(this.addWindowCoveringService('Blind', 1));
         break;
       default:
         break;
@@ -446,20 +499,23 @@ export class DingzDaAccessory implements Disposable {
 
   private addDimmerService({
     name,
+    output,
     id,
     index,
   }: {
-    name: string;
+    name?: string;
+    output?: DingzDimmerConfigValue;
     id: 'D1' | 'D2' | 'D3' | 'D4';
     index: DimmerId;
   }) {
+    this.platform.log.debug('Adding Dimmer Service ->', name ?? `Dimmer ${id}`);
     // Service doesn't yet exist, create new one
     // FIXME can be done more beautifully I guess
     const newService =
       this.accessory.getServiceById(this.platform.Service.Lightbulb, id) ??
       this.accessory.addService(
         this.platform.Service.Lightbulb,
-        `${name} ${id}`, // Name Dimmers according to WebUI, not API info
+        name ?? `Dimmer ${id}`, // Name Dimmers according to WebUI, not API info
         id,
       );
     // each service must implement at-minimum the "required characteristics" for the given service type
@@ -471,10 +527,12 @@ export class DingzDaAccessory implements Disposable {
       .on(CharacteristicEventTypes.SET, this.setOn.bind(this, index)) // SET - bind to the `setOn` method below
       .on(CharacteristicEventTypes.GET, this.getOn.bind(this, index)); // GET - bind to the `getOn` method below
 
-    // register handlers for the Brightness Characteristic
-    newService
-      .getCharacteristic(this.platform.Characteristic.Brightness)
-      .on(CharacteristicEventTypes.SET, this.setBrightness.bind(this, index)); // SET - bind to the 'setBrightness` method below
+    // register handlers for the Brightness Characteristic but only if not dimmable
+    if (output && output !== 'non_dimmable') {
+      newService
+        .getCharacteristic(this.platform.Characteristic.Brightness)
+        .on(CharacteristicEventTypes.SET, this.setBrightness.bind(this, index)); // SET - bind to the 'setBrightness` method below
+    }
 
     const updateInterval: NodeJS.Timer = setInterval(() => {
       if (index) {
@@ -482,9 +540,11 @@ export class DingzDaAccessory implements Disposable {
         const state = this.dingzStates.Dimmers[index];
         // Check that "state" is valid
         if (state) {
-          newService
-            .getCharacteristic(this.platform.Characteristic.Brightness)
-            .updateValue(state.value);
+          if (output && output !== 'non_dimmable') {
+            newService
+              .getCharacteristic(this.platform.Characteristic.Brightness)
+              .updateValue(state.value);
+          }
           newService
             .getCharacteristic(this.platform.Characteristic.On)
             .updateValue(state.on);
@@ -558,10 +618,6 @@ export class DingzDaAccessory implements Disposable {
    * Handle the "GET" requests from HomeKit
    */
   private getOn(index: DimmerId, callback: CharacteristicGetCallback) {
-    this.platform.log.debug(
-      'Dimmers: ',
-      JSON.stringify(this.dingzStates.Dimmers),
-    );
     const isOn: boolean = this.dingzStates.Dimmers[index].on;
 
     this.platform.log.debug(
@@ -865,28 +921,28 @@ export class DingzDaAccessory implements Disposable {
       this.platform.Service.MotionSensor,
     );
     if (service) {
-      this.platform.log.warn('Removing Motion service ->', service.displayName);
+      this.platform.log.info('Removing Motion service ->', service.displayName);
       this.accessory.removeService(service);
     }
   }
 
   // Updates the Accessory (e.g. if the config has changed)
   private async updateAccessory(): Promise<void> {
-    this.platform.log.warn('Update accessory -> Check for changed config.');
+    this.platform.log.info('Update accessory -> Check for changed config.');
 
-    retryWithBreaker
-      .execute(() => this.getDeviceInputConfig())
-      .then((inputConfig) => {
-        if (inputConfig && inputConfig.inputs[0]) {
-          this._updatedDeviceInputConfig = inputConfig.inputs[0];
-        }
-      });
+    this.getDeviceInputConfig().then((inputConfig) => {
+      if (inputConfig && inputConfig.inputs[0]) {
+        this._updatedDeviceInputConfig = inputConfig.inputs[0];
+      }
+    });
 
-    retryWithBreaker
-      .execute(() => this.getDingzDeviceInfo())
-      .then((deviceInfo) => {
-        this._updatedDeviceInfo = deviceInfo;
-      });
+    this.getDingzDeviceInfo().then((deviceInfo) => {
+      this._updatedDeviceInfo = deviceInfo;
+    });
+
+    this.getDingzDeviceDimmerConfig().then((dimmerConfig) => {
+      this.device.dimmerConfig = dimmerConfig;
+    });
 
     const currentDingzDeviceInfo: DingzDeviceInfo = this.accessory.context
       .device.dingzDeviceInfo;
@@ -897,6 +953,9 @@ export class DingzDaAccessory implements Disposable {
       .device.dingzInputInfo[0];
     const updatedDingzInputInfo: DingzInputInfoItem =
       this._updatedDeviceInputConfig ?? currentDingzInputInfo;
+
+    const dimmerConfig: DeviceDingzDimmerConfig | undefined = this.device
+      .dimmerConfig;
 
     try {
       // FIXME: Crashes occasionally
@@ -938,7 +997,8 @@ export class DingzDaAccessory implements Disposable {
           'No Input defined. Attempting to add Dimmer Service D1.',
         );
         this.addDimmerService({
-          name: this.accessory.displayName,
+          name: dimmerConfig?.dimmers[0].name,
+          output: dimmerConfig?.dimmers[0].output,
           id: 'D1',
           index: 0,
         });
@@ -954,13 +1014,63 @@ export class DingzDaAccessory implements Disposable {
             this.accessory.displayName,
         );
       }
+
+      this.platform.log.debug('Update Dimmer Service');
+      this.updateDimmerServices();
     } finally {
       this.accessory.context.device.dingzDeviceInfo = updatedDingzDeviceInfo;
       this.accessory.context.device.dingzInputInfo = [updatedDingzInputInfo];
-      this.platform.log.warn(
+      this.platform.log.debug(
         'DingZ Device Info: ',
         JSON.stringify(updatedDingzDeviceInfo),
       );
+    }
+  }
+
+  // Updates the Dimemr Services with their correct name
+  private updateDimmerServices() {
+    // Figure out what we have here
+    switch (this.dingzDeviceInfo.dip_config) {
+      case 3:
+        this.setDimmerConfig('D1', 0);
+        this.setDimmerConfig('D2', 1);
+        this.setDimmerConfig('D3', 2);
+        this.setDimmerConfig('D4', 3);
+        break;
+      case 2:
+      case 1:
+        this.setDimmerConfig('D1', 0);
+        this.setDimmerConfig('D2', 1);
+        break;
+      case 0:
+      default:
+        break;
+    }
+  }
+
+  private setDimmerConfig(id: 'D1' | 'D2' | 'D3' | 'D4', index: DimmerId) {
+    const service: Service | undefined = this.accessory.getServiceById(
+      this.platform.Service.Lightbulb,
+      id,
+    );
+    if (service) {
+      const dimmerConfig = this.device.dimmerConfig;
+      service.setCharacteristic(
+        this.platform.Characteristic.Name,
+        dimmerConfig?.dimmers[index].name ?? `Dimmer ${id}`,
+      );
+      if (dimmerConfig?.dimmers[index].output === 'non_dimmable') {
+        service.removeCharacteristic(
+          service.getCharacteristic(this.platform.Characteristic.Brightness),
+        );
+      } else {
+        service
+          .getCharacteristic(this.platform.Characteristic.Brightness)
+          .on(
+            CharacteristicEventTypes.SET,
+            this.setBrightness.bind(this, index),
+          ); // SET - bind to the 'setBrightness` method below
+      }
     }
   }
 
@@ -1319,6 +1429,15 @@ export class DingzDaAccessory implements Disposable {
     const reportUrl = `${this.baseUrl}/api/v1/led/get`;
     return await this.platform.fetch({
       url: reportUrl,
+      returnBody: true,
+      token: this.device.token,
+    });
+  }
+
+  private async getDingzDeviceDimmerConfig(): Promise<DeviceDingzDimmerConfig> {
+    const getDimmerConfigUrl = `${this.baseUrl}/api/v1/dimmer_config`; // /api/v1/dimmer/<DIMMER>/on/?value=<value>
+    return await this.platform.fetch({
+      url: getDimmerConfigUrl,
       returnBody: true,
       token: this.device.token,
     });

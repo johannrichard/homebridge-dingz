@@ -116,6 +116,7 @@ export interface DeviceInfo {
   model?: string;
   token?: string;
   hwInfo?: DingzDeviceInfo | MyStromDeviceInfo;
+  dimmerConfig?: DeviceDingzDimmerConfig;
   dingzInputInfo?: DingzInputInfoItem[];
   lastUpdate?: Date;
   accessoryClass?:
@@ -157,7 +158,7 @@ export interface DingzLEDState {
   value: number;
 }
 
-type DingzDimmerConfigValue =
+export type DingzDimmerConfigValue =
   | 'non_dimmable'
   | 'linear'
   | 'incandescent'
@@ -165,7 +166,8 @@ type DingzDimmerConfigValue =
   | 'led'
   | 'pulse'
   | 'ohmic';
-export interface DingzDimmerConfig {
+
+export interface DeviceDingzDimmerConfig {
   dimmers: [
     {
       output: DingzDimmerConfigValue;

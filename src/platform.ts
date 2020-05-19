@@ -178,7 +178,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
         case 'myStromLED':
         case 'myStromPIR':
         default:
-          this.log.warn(
+          this.log.info(
             'Device type',
             device.deviceType,
             'is currently unsupported. Will skip',
@@ -254,6 +254,8 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
           return true;
         } else {
           this.log.warn('Accessory already initialized');
+
+          // FIXME: Update Names et al.
           this.accessories[uuid].identify();
           return true;
         }
@@ -536,13 +538,12 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
   private setupDeviceDiscovery() {
     const discoverySocket: Socket = createSocket({
       type: 'udp4',
-      reuseAddr: true,
     });
 
     discoverySocket.on('message', this.datagramMessageHandler.bind(this));
     discoverySocket.bind(DINGZ_DISCOVERY_PORT);
     setTimeout(() => {
-      this.log.warn('Stopping discovery');
+      this.log.info('Stopping discovery');
       discoverySocket.close();
     }, 600000); // Discover for 10 min then stop
     return true;

@@ -6,10 +6,13 @@ The format is based on [Keep a Changelog][Keep a Changelog] and this project adh
 **IMPORTANT**: There's currently an unidentified incompatibility between the [Hombridge Hue](https://github.com/ebaauw/homebridge-hue#readme) and this plugin which breaks the HomeKit integration. You can't use both at the same time right now. As a workaround, consider running two HomeBridge instances (e.g. with Docker, with the bridge on two different ports).
 
 ## [Unreleased]
+### Added
+* Names of Lightbulbs will be set to the name set in DingZ
+* Non-dimmable outputs will be created as simple Light Switches
 ---
 ## [1.3.1] - 2020-05-19
 ### Changed
-* Add notice about plugin incompatiblity/bug (Thanks to [@simonnelli(https://github.com/simonnelli)] for reporting it)
+* Add notice about plugin incompatiblity/bug (See #5 - thanks to @simonnelli for reporting and debugging it)
 ### Fixed
 * Remove log-noise 
 
