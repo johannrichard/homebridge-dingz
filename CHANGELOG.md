@@ -65,7 +65,7 @@ Fixes for a number of "long-standing" (3 days :-)) bugs
 * 71a14a5 – Fix plugin ID 
 * Some fixing and refactoring of the discovery code
 
-## [v1.1.0] - 2020-05-15
+## [1.1.0] - 2020-05-15
 ### Added
 * First tentative support for the myStrom WiFi Lightbulb
 
@@ -75,11 +75,11 @@ Fixes for a number of "long-standing" (3 days :-)) bugs
 ### Fixed
 * Some fixing and refactoring of the discovery code
 
-## [v1.0.1] - 2020-05-14
+## [1.0.1] - 2020-05-14
 ### Fixed
 Fixes presumably wrong association of DIP switches.
 
-## [v1.0.0] - 2020-05-14
+## [1.0.0] - 2020-05-14
 
 This plugin implements some (but not all) functions of [Dingz](https://dingz.ch) Smart Home Devices. The plugin also supports (some) myStrom Devices as they share much of the same API definitions and concepts with Dingz.
 
@@ -112,6 +112,7 @@ Not (yet) implemented:
 <!-- Versions -->
 [Unreleased]: https://github.com/johannrichard/homebridge-dingz/compare/v1.1.3...HEAD
 [Released]: https://github.com/johannrichard/homebridge-dingz/releases
+[1.3.0]: https://github.com/johannrichard/homebridge-dingz/compare/v1.2.1..v1.3.0
 [1.2.1]: https://github.com/johannrichard/homebridge-dingz/compare/v1.2.0..v1.2.1
 [1.2.0]: https://github.com/johannrichard/homebridge-dingz/compare/v1.1.3..v1.2.0
 [1.1.3]: https://github.com/johannrichard/homebridge-dingz/compare/v1.1.1..v1.1.3
