@@ -3,8 +3,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog][Keep a Changelog] and this project adheres to [Semantic Versioning][Semantic Versioning].
 
+**IMPORTANT**: There's currently an unidentified incompatibility between the [Hombridge Hue](https://github.com/ebaauw/homebridge-hue#readme) and this plugin which breaks the HomeKit integration. You can't use both at the same time right now. As a workaround, consider running two HomeBridge instances (e.g. with Docker, with the bridge on two different ports).
+
 ## [Unreleased]
 ---
+## [1.3.1] - 2020-05-19
+### Changed
+* Add notice about plugin incompatiblity/bug (Thanks to [@simonnelli(https://github.com/simonnelli)] for reporting it)
+### Fixed
+* Remove log-noise 
+
 ## [1.3.0] - 2020-05-18
 ### Added
 * Support for WiFi Lightbulb
@@ -112,6 +120,7 @@ Not (yet) implemented:
 <!-- Versions -->
 [Unreleased]: https://github.com/johannrichard/homebridge-dingz/compare/v1.1.3...HEAD
 [Released]: https://github.com/johannrichard/homebridge-dingz/releases
+[1.3.1]: https://github.com/johannrichard/homebridge-dingz/compare/v1.3.0..v1.3.1
 [1.3.0]: https://github.com/johannrichard/homebridge-dingz/compare/v1.2.1..v1.3.0
 [1.2.1]: https://github.com/johannrichard/homebridge-dingz/compare/v1.2.0..v1.2.1
 [1.2.0]: https://github.com/johannrichard/homebridge-dingz/compare/v1.1.3..v1.2.0
