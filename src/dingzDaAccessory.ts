@@ -188,10 +188,6 @@ export class DingzDaAccessory implements Disposable {
           this.getDeviceDimmers().then((state) => {
             if (typeof state !== 'undefined') {
               // push the new value to HomeKit
-              this.platform.log.debug(
-                'Retrieval of new state data successful ->',
-                state,
-              );
               this.dingzStates.Dimmers = state;
             }
           });
