@@ -3,7 +3,7 @@
 ![Build and Lint](https://github.com/johannrichard/homebridge-dingz/workflows/Build%20and%20Lint/badge.svg)
 ![Node.js Package](https://github.com/johannrichard/homebridge-dingz/workflows/Node.js%20Package/badge.svg)
 
-**IMPORTANT**: There's currently an unidentified incompatibility between the [Hombridge Hue](https://github.com/ebaauw/homebridge-hue#readme) and this plugin which breaks the HomeKit integration. You can't use both at the same time right now.
+**IMPORTANT**: There's currently an unidentified incompatibility between the [Hombridge Hue](https://github.com/ebaauw/homebridge-hue#readme) and this plugin which breaks the HomeKit integration. You can't use both at the same time right now. As a workaround, consider running two HomeBridge instances (e.g. with Docker, on different ports).
 
 This plugin implements some (but not all) functions of [Dingz](https://dingz.ch) Smart Home Devices. The plugin also supports (some) myStrom Devices as they share much of the same API definitions and concepts with Dingz.
 
