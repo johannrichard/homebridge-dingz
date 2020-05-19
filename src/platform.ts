@@ -534,7 +534,10 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
   // Steup device discovery. This will run for 10 minutes and then stop
   // If you want tore-discover, just restart Homebridge
   private setupDeviceDiscovery() {
-    const discoverySocket: Socket = createSocket('udp4');
+    const discoverySocket: Socket = createSocket({
+      type: 'udp4',
+      reuseAddr: true,
+    });
 
     discoverySocket.on('message', this.datagramMessageHandler.bind(this));
     discoverySocket.bind(DINGZ_DISCOVERY_PORT);
