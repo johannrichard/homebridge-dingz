@@ -19,6 +19,7 @@ The following Dingz services are implemented:
 - Room temperature
 - Motion sensor status (polling only, only for Dingz+ models)
 - Front LED (LightBulb)
+- Light Sensor
 
 Not (yet) implemented:
 
