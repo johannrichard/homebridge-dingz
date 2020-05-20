@@ -151,6 +151,15 @@ export class DingzDaAccessory implements Disposable {
       'Setting informationService Characteristics ->',
       this.device.model,
     );
+
+    // Sanity check for "empty" SerialNumber
+    this.platform.log.warn(
+      `Attempting to set SerialNumber (which can not be empty) -> puck_sn: <${this.dingzDeviceInfo.puck_sn}>`,
+    );
+    const serialNumber: string =
+      this.dingzDeviceInfo.puck_sn === ''
+        ? this.device.mac // MAC will always be defined for a correct device
+        : this.dingzDeviceInfo.puck_sn;
     this.accessory
       .getService(this.platform.Service.AccessoryInformation)!
       .setCharacteristic(this.platform.Characteristic.Manufacturer, 'Iolo AG')
@@ -168,7 +177,7 @@ export class DingzDaAccessory implements Disposable {
       )
       .setCharacteristic(
         this.platform.Characteristic.SerialNumber,
-        this.dingzDeviceInfo.puck_sn ?? '[MAC: ' + this.device.mac + ']',
+        serialNumber,
       );
     /****
      * How to discover Accessories:
