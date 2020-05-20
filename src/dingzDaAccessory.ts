@@ -160,15 +160,15 @@ export class DingzDaAccessory implements Disposable {
       )
       .setCharacteristic(
         this.platform.Characteristic.FirmwareRevision,
-        this.dingzDeviceInfo.fw_version_puck,
+        this.dingzDeviceInfo.fw_version_puck ?? 'Unknown',
       )
       .setCharacteristic(
         this.platform.Characteristic.HardwareRevision,
-        this.dingzDeviceInfo.hw_version_puck,
+        this.dingzDeviceInfo.hw_version_puck ?? 'Unknown',
       )
       .setCharacteristic(
         this.platform.Characteristic.SerialNumber,
-        this.dingzDeviceInfo.puck_sn,
+        this.dingzDeviceInfo.puck_sn ?? '[MAC: ' + this.device.mac + ']',
       );
     /****
      * How to discover Accessories:
@@ -681,8 +681,11 @@ export class DingzDaAccessory implements Disposable {
         CharacteristicEventTypes.SET,
         this.setPosition.bind(this, id as WindowCoveringId),
       );
+
+    // Set min/max Values
     service
       .getCharacteristic(this.platform.Characteristic.TargetHorizontalTiltAngle)
+      .setProps({ minValue: 0, maxValue: 90 }) // Dingz Maximum values
       .on(
         CharacteristicEventTypes.SET,
         this.setTiltAngle.bind(this, id as WindowCoveringId),
