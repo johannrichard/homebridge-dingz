@@ -3,12 +3,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog][Keep a Changelog] and this project adheres to [Semantic Versioning][Semantic Versioning].
 
-**IMPORTANT**: There's currently an unidentified incompatibility between the [Hombridge Hue](https://github.com/ebaauw/homebridge-hue#readme) and this plugin which breaks the HomeKit integration. You can't use both at the same time right now. As a workaround, consider running two HomeBridge instances (e.g. with Docker, with the bridge on two different ports).
-
 ## [Unreleased]
 ### Added
 * Names of Lightbulbs will be set to the name set in DingZ
 * Non-dimmable outputs will be created as simple Light Switches
+* Fix for blank puck S/N number (Upstream glitch/bug/feature in HomeKit, fixes #2. Thanks @simonnelli for the help with getting to the bottom of this issue!)
 ---
 ## [1.3.1] - 2020-05-19
 ### Changed
