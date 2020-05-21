@@ -5,11 +5,17 @@
 
 This plugin implements some (but not all) functions of [Dingz](https://dingz.ch) Smart Home Devices. The plugin also supports (some) myStrom Devices as they share much of the same API definitions and concepts with Dingz.
 
+Please have a look at the [Wiki](https://github.com/johannrichard/homebridge-dingz/wiki) for more details on the configuration options and the plugin's behavior _vis-à-vis_ the DingZ' settings for outputs and more.
+
+## Auto-discovery
 The plugin attempts to
 
 - auto-discover devices, and to
 - auto-identify dingz settings and thus accessories by using device type, dip switch settings and input configuration
 
+Older myStrom WiFi Switches don't support auto-discovery and must be added manually. Depending on your setup, you might want or have to add all your devices manually. Configuration settings will be read-out automatically in either case.
+
+## DingZ
 The following Dingz services are implemented:
 
 - Dimmers (LightBulb) & Non-Dimmable Lights
@@ -27,8 +33,6 @@ Not (yet) implemented:
 
 ## MyStrom Devices
 
-My original [homebridge-mystrom](https://github.com/johannrichard/homebridge-mystrom) plugin was written a while ago. HomeKit, Homebridge and the JavaScript/TypeScript world have all come a long way since then. Since the [Dingz](https://dingz.ch) devices share a similar approach to auto-dsicovery and API with [MyStrom Devices](https://mystrom.ch), it is in fact quite simple to implement basic support for MyStrom Devices. 
-
 Currently, the following MyStrom Devices are implemented in this plugin:
 
 - MyStrom WiFi Switch CH V1 (tested, must be manually added)
@@ -37,54 +41,9 @@ Currently, the following MyStrom Devices are implemented in this plugin:
 - MyStrom WiFi Lightbulb (tested, w/ auto-discovery)
 
 ## Usage
+Easy: Install and configure the plugin via [Config UI X](https://www.npmjs.com/package/homebridge-config-ui-x) in a working [HomeBridge](https://homebridge.io) environment. This is the recommended way.
 
-Easy: Install and configure the plugin via [Config UI X](https://www.npmjs.com/package/homebridge-config-ui-x) 
-
-Harder: Install the plugin manually and configure it directly via the Homebridge config file:
-
-```bash
-npm install -g homebridge-dingz
-```
-
-Add a "Dingz" platform block to your Homebridge config (under platforms)
-
-```json
-"platforms": [
-
-  {
-      "name": "Dingz SmartHome Devices",
-      "platform": "Dingz",
-      "globalToken": "74ccbf570f4b4be09d37b7ff4ea03954551f9263"
-  }
-]
-```
-
-_Note_: The `globalToken` is only required if you've set a REST API Token which is shared by all Dingz you own.
-
-If your Dingz Devices reside on a separate subnet than your Homebridge installation and/or use different REST API tokens each, then add the devices manually.
-
-```json
-  "platforms": [
-    {
-        "name": "Dingz SmartHome Devices",
-        "platform": "Dingz",
-        "globalToken": "74ccbf570f4b4be09d37b7ff4ea03954551f9263",
-        "devices": [
-            {
-              "name": "Dingz SmartHome Device #1",
-              "address": "ip or address",
-              "type": "Dingz"
-            }
-        ]
-    }
-  ]
-```
-
-## Rationale
-
-__Q__: myStrom devices and Dingz (eventually) support HomeKit directly, so why should I use that plugin?
-
-__A__: There are a number of scenarios where using HomeBridge and this plugin with your Smart Home devices might be advisable. For example, you might want to put all IoT devices on a separate VLAN, both securing them and your other devices in case of security issues. With HomeKit alone, this quickly becomes a multicast nightmare -- with this plugin, you simply make the smart devices accessible for your HomeBridge device. You could for example isolate all IoT Devices in their VLAN from each other and only allow trusted devices from other subnets to access the Dingz and myStrom REST API.
+Harder: See [the Wiki](https://github.com/johannrichard/homebridge-dingz/wiki) for instructions.
 
 ## Caveats
 
@@ -95,6 +54,8 @@ __A__: There are a number of scenarios where using HomeBridge and this plugin wi
 - Most of the features have been tested againts the [published version](https://api.dingz.ch) of the Dingz and a Mock Server that simulates the many different configuration options you get with your DingZ device (Dimmers, Dimmers & Blinds, Blinds, PIR/No PIR, Input/No Input etc.). While I have been careful to test with realistic data, there might be hard-to-catch mistakes coming from undocumented behaviour or glitches in my code. Feel free to open an [Issue](https://github.com/johannrichard/homebridge-dingz/issues) if you run into something.
 - I observed subtle differences between different Firmware versions for the V2 WiFi Switches (e.g. what's returned in the `type` field of the `/api/v1/info` endpoint). Newer Firmware versions seem to divert from the published API and the differences are undocumented -- which makes it trickier to discover the right type of a V1/V2/EU WiFi Switch
 - If you run into bigger problems, try to run Homebridge manually in "debug" mode: `homebridge -D`: You will receive lots of messages which should you help track down the problem (The REST tokens are never printed, but information like your device's IP address might be found in the debug logs. In case you're opening a bug report and add debug info, make sure you remove whatever information you consider sensitive)
+
+## Disclaimer 
 
 **Disclaimer**: No warranties whatsoever, use this plugin entirely at your own risk. Dingz may only be installed by qualified professionals. 
 
