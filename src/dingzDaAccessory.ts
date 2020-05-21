@@ -151,6 +151,15 @@ export class DingzDaAccessory implements Disposable {
       'Setting informationService Characteristics ->',
       this.device.model,
     );
+
+    // Sanity check for "empty" SerialNumber
+    this.platform.log.warn(
+      `Attempting to set SerialNumber (which can not be empty) -> puck_sn: <${this.dingzDeviceInfo.puck_sn}>`,
+    );
+    const serialNumber: string =
+      this.dingzDeviceInfo.puck_sn === ''
+        ? this.device.mac // MAC will always be defined for a correct device
+        : this.dingzDeviceInfo.puck_sn;
     this.accessory
       .getService(this.platform.Service.AccessoryInformation)!
       .setCharacteristic(this.platform.Characteristic.Manufacturer, 'Iolo AG')
@@ -160,15 +169,15 @@ export class DingzDaAccessory implements Disposable {
       )
       .setCharacteristic(
         this.platform.Characteristic.FirmwareRevision,
-        this.dingzDeviceInfo.fw_version_puck,
+        this.dingzDeviceInfo.fw_version_puck ?? 'Unknown',
       )
       .setCharacteristic(
         this.platform.Characteristic.HardwareRevision,
-        this.dingzDeviceInfo.hw_version_puck,
+        this.dingzDeviceInfo.hw_version_puck ?? 'Unknown',
       )
       .setCharacteristic(
         this.platform.Characteristic.SerialNumber,
-        this.dingzDeviceInfo.puck_sn,
+        serialNumber,
       );
     /****
      * How to discover Accessories:
@@ -681,8 +690,11 @@ export class DingzDaAccessory implements Disposable {
         CharacteristicEventTypes.SET,
         this.setPosition.bind(this, id as WindowCoveringId),
       );
+
+    // Set min/max Values
     service
       .getCharacteristic(this.platform.Characteristic.TargetHorizontalTiltAngle)
+      .setProps({ minValue: 0, maxValue: 90 }) // Dingz Maximum values
       .on(
         CharacteristicEventTypes.SET,
         this.setTiltAngle.bind(this, id as WindowCoveringId),

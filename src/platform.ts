@@ -200,10 +200,10 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
     const success = this.getDingzDeviceInfo({ address, token }).then((data) => {
       this.log.debug('Got Device ->', JSON.stringify(data as DingzDevices));
       if (typeof data !== 'undefined') {
-        const ddi = data as DingzDevices;
-        const keys = Object.keys(ddi);
+        const dingzDevices = data as DingzDevices;
+        const keys = Object.keys(dingzDevices);
         const mac = keys[0]; // keys[0]
-        const info: DingzDeviceInfo = ddi[mac];
+        const info: DingzDeviceInfo = dingzDevices[mac];
 
         if (info.type !== 'dingz') {
           throw new InvalidTypeError(
@@ -216,7 +216,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
           address: address,
           mac: mac,
           token: token,
-          model: info.puck_hw_model,
+          model: info.puck_hw_model ?? 'DingZ',
           hwInfo: info,
           accessoryClass: 'DingzDaAccessory',
         };
