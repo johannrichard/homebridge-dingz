@@ -7,7 +7,7 @@ The format is based on [Keep a Changelog][Keep a Changelog] and this project adh
 ### Added
 * Names of Lightbulbs will be set to the name set in DingZ
 * Non-dimmable outputs will be created as simple Light Switches
-* Fix for blank puck S/N number (Upstream glitch/bug/feature in HomeKit, fixes #2. Thanks @simonnelli for the help with getting to the bottom of this issue!)
+* Fix for blank puck S/N number (Upstream glitch/bug/feature in HomeKit, fixes #5. Thanks @simonnelli for the help with getting to the bottom of this issue!)
 ---
 ## [1.3.1] - 2020-05-19
 ### Changed
