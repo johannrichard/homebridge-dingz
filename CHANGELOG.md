@@ -9,12 +9,12 @@ All notable changes to this project will be documented in this file.
 * Non-dimmable outputs will be created as simple Light Switches
 
 ### Fixed
-* Fix for blank puck S/N number (Upstream glitch/bug/feature in HomeKit, fixes [#5](https://github.com/johannrichard/homebridge-dingz/issues/5). Thanks [@simonnelli](https://github.com/simonnelli) for the help with getting to the bottom of this issue!)
+* Fix for blank puck S/N number (Upstream edge-case/glitch/bug/feature in [HAP-NodeJS](https://github.com/homebridge/HAP-NodeJS/issues/824). This fixes [#5](https://github.com/johannrichard/homebridge-dingz/issues/5). Thanks [Simon Iannelli](https://twitter.com/simonnelli) for the help with getting to the bottom of this issue!)
 * Fix for DingZ lamella tilt-angle minima/maxima (Thanks [Michael Burch](https://twitter.com/derBurch) for reporting/debugging.)
 
 ## [1.3.1] - 2020-05-19
 ### Changed
-* Add notice about plugin incompatiblity/bug (See [#5](https://github.com/johannrichard/homebridge-dingz/issues/5) - thanks to [@simonnelli](https://github.com/simonnelli) for reporting and debugging it)
+* Add notice about plugin incompatiblity/bug 
 ### Fixed
 * Remove log-noise 
 
