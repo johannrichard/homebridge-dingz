@@ -88,7 +88,7 @@ export class MyStromSwitchAccessory {
     // in this example we are using the name we stored in the `accessory.context` in the `discoverDevices` method.
     this.outletService.setCharacteristic(
       this.platform.Characteristic.Name,
-      `${accessory.context.device.model} Outlet`,
+      this.device.name ?? `${accessory.context.device.model} Outlet`,
     );
 
     // each service must implement at-minimum the "required characteristics" for the given service type
