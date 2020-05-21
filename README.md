@@ -39,6 +39,7 @@ Currently, the following MyStrom Devices are implemented in this plugin:
 - MyStrom WiFi Switch CH V2 (tested, w/ auto-discovery)
 - MyStrom WiFi Switch EU (untested, should work with auto-discovery too)
 - MyStrom WiFi Lightbulb (tested, w/ auto-discovery)
+- MyStrom WiFi LED Strip (tested, w/ auto-discovery)
 
 ## Usage
 Easy: Install and configure the plugin via [Config UI X](https://www.npmjs.com/package/homebridge-config-ui-x) in a working [HomeBridge](https://homebridge.io) environment. This is the recommended way.
