@@ -25,7 +25,6 @@ export class MyStromLightbulbAccessory {
   private lightbulbService: Service;
 
   // Eventually replaced by:
-  private switchOn = false;
   private device: DeviceInfo;
   private mystromDeviceInfo: MyStromDeviceInfo;
   private baseUrl: string;
@@ -85,7 +84,7 @@ export class MyStromLightbulbAccessory {
     // in this example we are using the name we stored in the `accessory.context` in the `discoverDevices` method.
     this.lightbulbService.setCharacteristic(
       this.platform.Characteristic.Name,
-      `${accessory.context.device.model} Bulb`,
+      this.device.name ?? `${accessory.context.device.model} Bulb`,
     );
 
     // each service must implement at-minimum the "required characteristics" for the given service type
