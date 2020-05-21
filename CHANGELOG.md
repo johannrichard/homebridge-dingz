@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 ---
 ## [1.4.1] - 2020-05-21
-### Added
+### Added
 * Support for WiFi LED Strip
 
 ## [1.4.0] - 2020-05-21
