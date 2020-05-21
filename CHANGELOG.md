@@ -1,17 +1,20 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog][Keep a Changelog] and this project adheres to [Semantic Versioning][Semantic Versioning].
-
 ## [Unreleased]
-### Added
-* Names of Lightbulbs will be set to the name set in DingZ
-* Non-dimmable outputs will be created as simple Light Switches
-* Fix for blank puck S/N number (Upstream glitch/bug/feature in HomeKit, fixes #5. Thanks @simonnelli for the help with getting to the bottom of this issue!)
 ---
+## [1.4.0] - 2020-05-21
+### Added
+* Names of Lightbulbs will follow the naming set in DingZ
+* Non-dimmable outputs will be created as simple Light Switches
+
+### Fixed
+* Fix for blank puck S/N number (Upstream glitch/bug/feature in HomeKit, fixes [#5](https://github.com/johannrichard/homebridge-dingz/issues/5). Thanks [@simonnelli](https://github.com/simonnelli) for the help with getting to the bottom of this issue!)
+* Fix for DingZ lamella tilt-angle minima/maxima (Thanks [Michael Burch](https://twitter.com/derBurch) for reporting/debugging.)
+
 ## [1.3.1] - 2020-05-19
 ### Changed
-* Add notice about plugin incompatiblity/bug (See #5 - thanks to @simonnelli for reporting and debugging it)
+* Add notice about plugin incompatiblity/bug (See [#5](https://github.com/johannrichard/homebridge-dingz/issues/5) - thanks to [@simonnelli](https://github.com/simonnelli) for reporting and debugging it)
 ### Fixed
 * Remove log-noise 
 
@@ -115,6 +118,8 @@ Not (yet) implemented:
 
 ---
 
+The format is based on [Keep a Changelog][Keep a Changelog] and this project adheres to [Semantic Versioning][Semantic Versioning].
+
 <!-- Links -->
 [Keep a Changelog]: https://keepachangelog.com/
 [Semantic Versioning]: https://semver.org/
@@ -122,6 +127,7 @@ Not (yet) implemented:
 <!-- Versions -->
 [Unreleased]: https://github.com/johannrichard/homebridge-dingz/compare/v1.1.3...HEAD
 [Released]: https://github.com/johannrichard/homebridge-dingz/releases
+[1.4.0]: https://github.com/johannrichard/homebridge-dingz/compare/v1.3.1..v1.4.0
 [1.3.1]: https://github.com/johannrichard/homebridge-dingz/compare/v1.3.0..v1.3.1
 [1.3.0]: https://github.com/johannrichard/homebridge-dingz/compare/v1.2.1..v1.3.0
 [1.2.1]: https://github.com/johannrichard/homebridge-dingz/compare/v1.2.0..v1.2.1
