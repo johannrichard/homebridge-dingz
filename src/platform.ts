@@ -167,6 +167,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
           );
           break;
         case 'myStromBulb':
+        case 'myStromLED': // Share the same code
           await retryWithBreaker.execute(() =>
             this.addMyStromLightbulbDevice({
               address: device.address,
@@ -175,7 +176,6 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
             }),
           );
           break;
-        case 'myStromLED':
         case 'myStromPIR':
         default:
           this.log.info(
@@ -371,7 +371,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
   // Add one device based on address and name
   private addMyStromLightbulbDevice({
     address,
-    name = 'Unidentified myStrom Lightbulb',
+    name = 'Unidentified myStrom Lightbulb/LED',
     token,
   }: {
     address: string;
@@ -387,7 +387,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
       if (typeof data !== 'undefined') {
         const info = data as MyStromDeviceInfo;
 
-        if (info.type !== 102) {
+        if (info.type !== 102 && info.type !== 105 && info.type !== 'WRS') {
           throw new InvalidTypeError(
             `Device ${name} at ${address} is of the wrong type (${info.type} instead of "myStrom Lightbulb")`,
           );
@@ -466,10 +466,25 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
       switch (t) {
         case DeviceTypes.MYSTROM_BUTTON_PLUS:
         case DeviceTypes.MYSTROM_BUTTON:
-        case DeviceTypes.MYSTROM_LEDSTRIP:
           throw new DeviceNotImplementedError(
             `Device discovered at ${remoteInfo.address} of unsupported type ${DeviceTypes[t]}`,
           );
+          break;
+        case DeviceTypes.MYSTROM_LEDSTRIP:
+          this.log.debug(
+            'Discovered MyStrom LED Strip',
+            DeviceTypes[t],
+            'at',
+            remoteInfo.address,
+            '-> Attempting to identify and add.',
+          );
+          retryWithBreaker.execute(() => {
+            this.addMyStromLightbulbDevice({
+              address: remoteInfo.address,
+              name: 'Auto-Discovered MyStrom LED Strip',
+              token: this.config.globalToken,
+            });
+          });
           break;
         case DeviceTypes.MYSTROM_BULB:
           this.log.debug(
