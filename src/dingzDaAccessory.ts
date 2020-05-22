@@ -94,8 +94,8 @@ export class DingzDaAccessory implements Disposable {
 
   private services: Service[] = [];
 
-  private _updatedDeviceInfo: DingzDeviceInfo | undefined;
-  private _updatedDeviceInputConfig: DingzInputInfoItem | undefined;
+  private _updatedDeviceInfo?: DingzDeviceInfo;
+  private _updatedDeviceInputConfig?: DingzInputInfoItem;
 
   private switchOn = false;
   private device: DeviceInfo;
@@ -134,7 +134,7 @@ export class DingzDaAccessory implements Disposable {
 
   // Take stock of intervals to dispose at the end of the life of the Accessory
   private serviceTimers: NodeJS.Timer[] = [];
-  private motionTimer: NodeJS.Timer | undefined;
+  private motionTimer?: NodeJS.Timer;
   private dimmerTimers = {} as DimmerTimer;
   private windowCoveringTimers = {} as WindowCoveringTimer;
 
