@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 ---
+## [1.4.3] - 2020-05-24
+### Fixed
+* Bugfix release for auto-discovery on new-installs
+
 ## [1.4.2] - 2020-05-24
 This is mostly a maintenance release with no new functionality. It prepares the ground for some upcoming changes related to buttons. It also brings more stability and less stress for the DingZ as it combines the polling for the different services into one single call instead of 4-5 different calls.
 
@@ -141,8 +145,9 @@ The format is based on [Keep a Changelog][Keep a Changelog] and this project adh
 [Semantic Versioning]: https://semver.org/
 
 <!-- Versions -->
-[Unreleased]: https://github.com/johannrichard/homebridge-dingz/compare/v1.4.2...HEAD
+[Unreleased]: https://github.com/johannrichard/homebridge-dingz/compare/v1.4.3...HEAD
 [Released]: https://github.com/johannrichard/homebridge-dingz/releases
+[1.4.3]: https://github.com/johannrichard/homebridge-dingz/compare/v1.4.2..v1.4.3
 [1.4.2]: https://github.com/johannrichard/homebridge-dingz/compare/v1.4.1..v1.4.2
 [1.4.1]: https://github.com/johannrichard/homebridge-dingz/compare/v1.4.0..v1.4.1
 [1.4.0]: https://github.com/johannrichard/homebridge-dingz/compare/v1.3.1..v1.4.0

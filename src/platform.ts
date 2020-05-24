@@ -66,6 +66,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
 
   // this is used to track restored cached accessories
   public accessories: DingzAccessories = {};
+  private discovered = new Map();
   private requestServer?: Server;
 
   constructor(
@@ -478,7 +479,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
       const t: DeviceTypes = msg[6];
       const mac: string = this.byteToHexString(msg.subarray(0, 5));
 
-      if (!this.getAccessoryByMac(mac)) {
+      if (this.discovered.has(mac)) {
         this.log.debug(
           'Accessory at -> ',
           remoteInfo.address,
@@ -535,6 +536,8 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
             this.log.warn(`Unknown device: ${t}`);
             break;
         }
+
+        this.discovered.set(mac, remoteInfo);
       }
     } catch (e) {
       if (e instanceof DeviceNotImplementedError) {
