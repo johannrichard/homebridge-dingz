@@ -22,6 +22,12 @@
         "description": "Set this to 'off' if you want auto-discovery to be turned off.",
         "default": true
       },
+      "callbackPort": {
+        "title": "Port for button callbacks",
+        "type": "number",
+        "description": "In order to implement button actions, the DingZ exposes a webserver for callbacks. By default, it listens on port 18081. Add this setting if you want to change this.",
+        "default": "18081"
+      },
       "devices": {
         "title": "Dingz Devices",
         "type": "array",
@@ -37,8 +43,9 @@
                 { "title": "Dingz", "enum": ["Dingz"] },
                 { "title": "myStrom Switch", "enum": ["myStromSwitch"] },
                 { "title": "myStrom Lightbulb", "enum": ["myStromBulb"] },
-                { "title": "myStrom LED Strip (Not implemented)", "enum": ["myStromLED"] },
-                { "title": "myStrom Motion Sensor (Not implemented)", "enum": ["myStromPIR"] }
+                { "title": "myStrom LED Strip", "enum": ["myStromLED"] },
+                { "title": "myStrom Motion Sensor (Not implemented)", "enum": ["myStromPIR"] },
+                { "title": "myStrom Button", "enum": ["myStromButton"] }
               ],
               "required": true
             },

@@ -572,7 +572,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
     this.requestServer = http.createServer(this.handleRequest.bind(this));
     this.requestServer.listen(this.config.callbackPort ?? 18081, () =>
       this.log.warn(
-        `Http server listening on ${this.config.callbackPort ?? 18081}...`,
+        `Callback server listening on ${this.config.callbackPort ?? 18081}...`,
       ),
     );
   }
