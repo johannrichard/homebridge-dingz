@@ -1,5 +1,5 @@
-import { DingzAccessoryType, ButtonId, ButtonAction } from './internalTypes';
 import { EventEmitter } from 'events';
+import { DingzAccessoryType, ButtonId, ButtonAction } from './internalTypes';
 // Platform elements
 // EVENT TYPES
 export const enum DingzEvent {
