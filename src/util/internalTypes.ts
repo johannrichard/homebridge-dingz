@@ -206,10 +206,6 @@ export interface WindowCoveringState {
 }
 export type WindowCoveringProps = Record<WindowCoveringId, WindowCoveringState>;
 
-export interface Disposable {
-  dispose(): void;
-}
-
 // FIXME: Replace dispersed data gathering with `api/v1/state` endpoint
 
 export interface DingzState {
