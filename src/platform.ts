@@ -222,10 +222,11 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
           );
         }
 
+        // Fixme: Fetch more info about the Device (particularly Name)
         const deviceInfo: DeviceInfo = {
           name: name,
           address: address,
-          mac: mac,
+          mac: mac.toUpperCase(),
           token: token,
           model: info.puck_hw_model ?? 'DingZ',
           hwInfo: info,
@@ -322,7 +323,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
         const deviceInfo: DeviceInfo = {
           name: info.name ?? name,
           address: address,
-          mac: info.mac,
+          mac: info.mac.toUpperCase(),
           token: token,
           model: MYSTROM_SWITCH_TYPES[info.type] ?? 'CH v1',
           hwInfo: info,
@@ -408,7 +409,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
         const deviceInfo: DeviceInfo = {
           name: info.name ?? name,
           address: address,
-          mac: info.mac,
+          mac: info.mac.toUpperCase(),
           token: token,
           model: '102',
           hwInfo: info,
@@ -475,80 +476,65 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
       }
 
       const t: DeviceTypes = msg[6];
-      switch (t) {
-        case DeviceTypes.MYSTROM_BUTTON_PLUS:
-        case DeviceTypes.MYSTROM_BUTTON:
-          throw new DeviceNotImplementedError(
-            `Device discovered at ${remoteInfo.address} of unsupported type ${DeviceTypes[t]}`,
-          );
-          break;
-        case DeviceTypes.MYSTROM_LEDSTRIP:
-          this.log.debug(
-            'Discovered MyStrom LED Strip',
-            DeviceTypes[t],
-            'at',
-            remoteInfo.address,
-            '-> Attempting to identify and add.',
-          );
-          retryWithBreaker.execute(() => {
-            this.addMyStromLightbulbDevice({
-              address: remoteInfo.address,
-              name: 'Auto-Discovered MyStrom LED Strip',
-              token: this.config.globalToken,
-            });
-          });
-          break;
-        case DeviceTypes.MYSTROM_BULB:
-          this.log.debug(
-            'Discovered MyStrom Lightbulb',
-            DeviceTypes[t],
-            'at',
-            remoteInfo.address,
-            '-> Attempting to identify and add.',
-          );
-          retryWithBreaker.execute(() => {
-            this.addMyStromLightbulbDevice({
-              address: remoteInfo.address,
-              name: 'Auto-Discovered MyStrom Lightbulb',
-              token: this.config.globalToken,
-            });
-          });
-          break;
-        case DeviceTypes.MYSTROM_SWITCH_CHV1:
-        case DeviceTypes.MYSTROM_SWITCH_CHV2:
-        case DeviceTypes.MYSTROM_SWITCH_EU:
-          this.log.debug(
-            'Discovered MyStrom Switch',
-            DeviceTypes[t],
-            'at',
-            remoteInfo.address,
-            '-> Attempting to identify and add.',
-          );
-          retryWithBreaker.execute(() => {
-            this.addMyStromSwitchDevice({
-              address: remoteInfo.address,
-              name: 'Auto-Discovered MyStromSwitch',
-              token: this.config.globalToken,
-            });
-          });
-          break;
-        case DeviceTypes.DINGZ:
-          this.log.debug(
-            'Auto-Discovered Dingz Device at ',
-            remoteInfo.address,
-            '-> Attempting to identify and add.',
-          );
-          retryWithBreaker.execute(() => {
-            this.addDingzDevice(
-              remoteInfo.address,
-              'Auto-Discovered Dingz',
-              this.config.globalToken,
+      const mac: string = this.byteToHexString(msg.subarray(0, 5));
+
+      if (!this.getAccessoryByMac(mac)) {
+        this.log.debug(
+          'Accessory at -> ',
+          remoteInfo.address,
+          ' already initialized. Stopping Discovery here.',
+        );
+        return;
+      } else {
+        switch (t) {
+          case DeviceTypes.MYSTROM_BUTTON_PLUS:
+          case DeviceTypes.MYSTROM_BUTTON:
+            throw new DeviceNotImplementedError(
+              `Device discovered at ${remoteInfo.address} of unsupported type ${DeviceTypes[t]}`,
             );
-          });
-          break;
-        default:
-          this.log.debug(`Unknown device: ${t}`);
-          break;
+            break;
+          case DeviceTypes.MYSTROM_LEDSTRIP:
+            retryWithBreaker.execute(() => {
+              this.addMyStromLightbulbDevice({
+                address: remoteInfo.address,
+                name: 'Auto-Discovered MyStrom LED Strip',
+                token: this.config.globalToken,
+              });
+            });
+            break;
+          case DeviceTypes.MYSTROM_BULB:
+            retryWithBreaker.execute(() => {
+              this.addMyStromLightbulbDevice({
+                address: remoteInfo.address,
+                name: 'Auto-Discovered MyStrom Lightbulb',
+                token: this.config.globalToken,
+              });
+            });
+            break;
+          case DeviceTypes.MYSTROM_SWITCH_CHV1:
+          case DeviceTypes.MYSTROM_SWITCH_CHV2:
+          case DeviceTypes.MYSTROM_SWITCH_EU:
+            retryWithBreaker.execute(() => {
+              this.addMyStromSwitchDevice({
+                address: remoteInfo.address,
+                name: 'Auto-Discovered MyStromSwitch',
+                token: this.config.globalToken,
+              });
+            });
+            break;
+          case DeviceTypes.DINGZ:
+            retryWithBreaker.execute(() => {
+              this.addDingzDevice(
+                remoteInfo.address,
+                'Auto-Discovered Dingz',
+                this.config.globalToken,
+              );
+            });
+            break;
+          default:
+            this.log.warn(`Unknown device: ${t}`);
+            break;
+        }
       }
     } catch (e) {
       if (e instanceof DeviceNotImplementedError) {
@@ -577,7 +563,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
   }
 
   private getAccessoryByMac(mac: string): DingzAccessoryType {
-    const uuid = this.api.hap.uuid.generate(mac);
+    const uuid = this.api.hap.uuid.generate(mac.toUpperCase());
     return this.accessories[uuid];
   }
 
@@ -671,7 +657,6 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
     token?: string;
     body?: object | string;
   }) {
-    this.log.debug('Fetching ', url, 'with body', body ?? '');
     const data = await axios({
       url: url,
       method: method,
@@ -691,5 +676,20 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
         this.log.error('Error:', e);
       });
     return data;
+  }
+
+  byteToHexString(uint8arr: Uint8Array): string {
+    if (!uint8arr) {
+      return '';
+    }
+
+    let hexStr = '';
+    for (let i = 0; i < uint8arr.length; i++) {
+      let hex = (uint8arr[i] & 0xff).toString(16);
+      hex = hex.length === 1 ? '0' + hex : hex;
+      hexStr += hex;
+    }
+
+    return hexStr.toUpperCase();
   }
 }
