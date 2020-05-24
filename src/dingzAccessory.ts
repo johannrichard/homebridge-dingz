@@ -1,3 +1,4 @@
+import { EventEmitter } from 'events';
 import {
   CharacteristicEventTypes,
   CharacteristicGetCallback,
@@ -14,30 +15,30 @@ import qs from 'qs';
 
 // Internal types
 import {
-  DingzTemperatureData,
+  ButtonAction,
   DingzMotionData,
   DingzDevices,
   DingzDeviceInfo,
   DingzInputInfoItem,
   DingzInputInfo,
-  DingzLightData,
   DeviceInfo,
   Disposable,
   DimmerTimer,
   DimmerId,
-  DimmerProps,
-  WindowCoveringProps,
-  DingzDimmerState,
+  DimmerState,
   DingzLEDState,
   WindowCoveringId,
   WindowCoveringState,
   WindowCoveringTimer,
   DeviceDingzDimmerConfig,
   DingzDimmerConfigValue,
+  ButtonId,
+  DingzState,
 } from './util/internalTypes';
 
 import { MethodNotImplementedError } from './util/errors';
 import { DingzDaHomebridgePlatform } from './platform';
+import { DingzEvent } from './util/dingzEventBus';
 
 // Define a policy that will retry 20 times at most
 const retry = Policy.handleAll()
@@ -89,7 +90,7 @@ interface Error {
  * Each accessory may expose multiple services of different service types.
  */
 
-export class DingzDaAccessory implements Disposable {
+export class DingzDaAccessory extends EventEmitter implements Disposable {
   private readonly mutex = new Mutex();
 
   private services: Service[] = [];
@@ -105,31 +106,26 @@ export class DingzDaAccessory implements Disposable {
   // Todo: Make proper internal representation
   private dingzStates = {
     // FIXME: Make structure less hardware-like
-    Temperature: 0,
-    Dimmers: {
-      0: { on: false, value: 0, ramp: 0 },
-      1: { on: false, value: 0, ramp: 0 },
-      2: { on: false, value: 0, ramp: 0 },
-      3: { on: false, value: 0, ramp: 0 },
-    } as DimmerProps,
-    WindowCovers: {
-      0: {
-        target: { blind: 0, lamella: 0 },
-        current: { blind: 0, lamella: 0 },
-      } as WindowCoveringState,
-      1: {
-        target: { blind: 0, lamella: 0 },
-        current: { blind: 0, lamella: 0 },
-      } as WindowCoveringState,
-    } as WindowCoveringProps,
-    Motion: false,
+    // Outputs
+    Dimmers: [] as DimmerState[],
+    WindowCovers: [] as WindowCoveringState[],
     LED: {
       on: false,
       hsv: '0;0;100',
       rgb: 'FFFFFF',
       mode: 'hsv',
     } as DingzLEDState,
-    intensity: 0,
+    // Inputs
+    Buttons: {
+      '1': ButtonAction.SINGLE_PRESS,
+      '2': ButtonAction.SINGLE_PRESS,
+      '3': ButtonAction.SINGLE_PRESS,
+      '4': ButtonAction.SINGLE_PRESS,
+    },
+    // Sensors
+    Temperature: 0,
+    Motion: false,
+    Brightness: 0,
   };
 
   // Take stock of intervals to dispose at the end of the life of the Accessory
@@ -142,6 +138,8 @@ export class DingzDaAccessory implements Disposable {
     private readonly platform: DingzDaHomebridgePlatform,
     private readonly accessory: PlatformAccessory,
   ) {
+    super();
+
     // Set Base URL
     this.device = this.accessory.context.device;
     this.dingzDeviceInfo = this.device.hwInfo as DingzDeviceInfo;
@@ -162,6 +160,11 @@ export class DingzDaAccessory implements Disposable {
         : this.dingzDeviceInfo.puck_sn;
     this.accessory
       .getService(this.platform.Service.AccessoryInformation)!
+      .setCharacteristic(
+        this.platform.Characteristic.ConfiguredName,
+        this.device.name,
+      )
+      .setCharacteristic(this.platform.Characteristic.Name, this.device.name)
       .setCharacteristic(this.platform.Characteristic.Manufacturer, 'Iolo AG')
       .setCharacteristic(
         this.platform.Characteristic.Model,
@@ -207,13 +210,20 @@ export class DingzDaAccessory implements Disposable {
         setInterval(() => {
           // TODO: Set rechability if call times out too many times
           // Set up an interval to fetch Dimmer states
-          this.getDeviceDimmers().then((state) => {
+          this.getDeviceState().then((state) => {
             if (typeof state !== 'undefined') {
-              // push the new value to HomeKit
-              this.dingzStates.Dimmers = state;
+              // Outputs
+              this.dingzStates.Dimmers = state.dimmers;
+              this.dingzStates.LED = state.led;
+              this.dingzStates.WindowCovers = state.blinds;
+              // Sensors
+              this.dingzStates.Temperature = state.sensors.room_temperature;
+              this.dingzStates.Brightness = state.sensors.brightness;
+
+              this.platform.eb.emit(DingzEvent.STATE_UPDATE);
             }
           });
-        }, 2500);
+        }, 10000);
       });
 
     /**
@@ -234,6 +244,7 @@ export class DingzDaAccessory implements Disposable {
     this.addTemperatureService();
     this.addLEDService();
     this.addLightSensorService();
+    this.addButtonServices();
 
     this.services.forEach((service) => {
       this.platform.log.info(
@@ -264,34 +275,25 @@ export class DingzDaAccessory implements Disposable {
       .on(CharacteristicEventTypes.GET, this.getTemperature.bind(this));
     this.services.push(temperatureService);
 
-    const updateInterval: NodeJS.Timer = setInterval(() => {
-      // Get temperature value from Device
-      let currentTemperature: number;
-      this.getDeviceTemperature().then((data) => {
-        if (data.success) {
-          currentTemperature = data.temperature;
+    this.platform.eb.on(
+      DingzEvent.STATE_UPDATE,
+      this.updateTemperature.bind(this, temperatureService),
+    );
+  }
 
-          if (this.dingzStates.Temperature !== currentTemperature) {
-            this.dingzStates.Temperature = currentTemperature;
+  private updateTemperature(temperatureService: Service) {
+    const currentTemperature: number = this.dingzStates.Temperature;
 
-            temperatureService
-              .getCharacteristic(
-                this.platform.Characteristic.CurrentTemperature,
-              )
-              .updateValue(currentTemperature);
-            this.platform.log.debug(
-              'Pushed updated current Temperature state of',
-              temperatureService.getCharacteristic(
-                this.platform.Characteristic.Name,
-              ).value,
-              'to HomeKit:',
-              currentTemperature,
-            );
-          }
-        }
-      });
-    }, 10000);
-    this.serviceTimers.push(updateInterval);
+    temperatureService
+      .getCharacteristic(this.platform.Characteristic.CurrentTemperature)
+      .updateValue(currentTemperature);
+    this.platform.log.debug(
+      'Pushed updated current Temperature state of',
+      temperatureService.getCharacteristic(this.platform.Characteristic.Name)
+        .value,
+      'to HomeKit:',
+      currentTemperature,
+    );
   }
 
   /**
@@ -339,46 +341,31 @@ export class DingzDaAccessory implements Disposable {
     // Add the LightSensor that's integrated in the DingZ
     // API: /api/v1/light
 
-    const service =
+    const lightService =
       this.accessory.getService(this.platform.Service.LightSensor) ??
       this.accessory.addService(this.platform.Service.LightSensor);
 
-    service.setCharacteristic(this.platform.Characteristic.Name, 'Light');
-    this.services.push(service);
+    lightService.setCharacteristic(this.platform.Characteristic.Name, 'Light');
+    this.services.push(lightService);
 
-    setInterval(() => {
-      try {
-        this.getDeviceLight().then((data) => {
-          if (data.success) {
-            const intensity: number = data.intensity;
+    this.platform.eb.on(
+      DingzEvent.STATE_UPDATE,
+      this.updateLightSensor.bind(this, lightService),
+    );
+  }
 
-            // Only update if motionService exists *and* if there's a change in motion'
-            if (service && this.dingzStates.intensity !== intensity) {
-              this.dingzStates.intensity = intensity;
-              service
-                .getCharacteristic(
-                  this.platform.Characteristic.CurrentAmbientLightLevel,
-                )
-                .updateValue(intensity);
-              this.platform.log.debug(
-                'Pushed updated current Light Intensity state of',
-                service.getCharacteristic(this.platform.Characteristic.Name)
-                  .value,
-                'to HomeKit:',
-                intensity,
-                'lux',
-              );
-            }
-          }
-        });
-      } catch (e) {
-        this.platform.log.error(
-          'Error ->',
-          e.name,
-          ', unable to fetch DeviceMotion data',
-        );
-      }
-    }, 10000);
+  private updateLightSensor(lightService: Service) {
+    const intensity: number = this.dingzStates.Brightness;
+    lightService
+      .getCharacteristic(this.platform.Characteristic.CurrentAmbientLightLevel)
+      .updateValue(intensity);
+    this.platform.log.debug(
+      'Pushed updated current Light Intensity state of',
+      lightService.getCharacteristic(this.platform.Characteristic.Name).value,
+      'to HomeKit:',
+      intensity,
+      'lux',
+    );
   }
 
   private addOutputServices() {
@@ -506,6 +493,85 @@ export class DingzDaAccessory implements Disposable {
     });
   }
 
+  private addButtonServices() {
+    // Create Buttons
+    // Add Event Listeners
+    this.addButtonService('Button 1', '1');
+    this.addButtonService('Button 2', '2');
+    this.addButtonService('Button 3', '3');
+    this.addButtonService('Button 4', '4');
+
+    this.platform.eb.on(
+      DingzEvent.BTN_PRESS,
+      (mac: string, button: ButtonId, action: ButtonAction) => {
+        if (mac === this.device.mac) {
+          this.dingzStates.Buttons[button] = action ?? 1;
+          const service = this.accessory.getServiceById(
+            this.platform.Service.StatelessProgrammableSwitch,
+            button,
+          );
+
+          const ProgrammableSwitchEvent = this.platform.Characteristic
+            .ProgrammableSwitchEvent;
+          if (service) {
+            this.platform.log.warn(
+              `Button ${button} of ${this.device.name} (${service.displayName}) pressed -> ${action}`,
+            );
+            switch (action) {
+              case ButtonAction.SINGLE_PRESS:
+                service
+                  .getCharacteristic(ProgrammableSwitchEvent)
+                  .updateValue(ProgrammableSwitchEvent.SINGLE_PRESS);
+                this.platform.log.warn('SINGLE_PRESS');
+                break;
+              case ButtonAction.DOUBLE_PRESS:
+                service
+                  .getCharacteristic(ProgrammableSwitchEvent)
+                  .updateValue(ProgrammableSwitchEvent.DOUBLE_PRESS);
+                this.platform.log.warn('DOUBLE_PRESS');
+                break;
+              case ButtonAction.LONG_PRESS:
+                service
+                  .getCharacteristic(ProgrammableSwitchEvent)
+                  .updateValue(ProgrammableSwitchEvent.LONG_PRESS);
+                this.platform.log.warn('LONG_PRESS');
+                break;
+            }
+          }
+        }
+      },
+    );
+  }
+
+  private addButtonService(name: string, button: ButtonId): Service {
+    this.platform.log.debug('Adding Button Service ->', name, ' -> ', button);
+
+    const newService =
+      this.accessory.getServiceById(
+        this.platform.Service.StatelessProgrammableSwitch,
+        button,
+      ) ??
+      this.accessory.addService(
+        this.platform.Service.StatelessProgrammableSwitch,
+        name ?? `Button ${button}`, // Name Dimmers according to WebUI, not API info
+        button,
+      );
+
+    newService
+      .getCharacteristic(this.platform.Characteristic.ProgrammableSwitchEvent)
+      .on(CharacteristicEventTypes.GET, this.getButtonState.bind(this, button));
+
+    return newService;
+  }
+
+  private getButtonState(
+    button: ButtonId,
+    callback: CharacteristicGetCallback,
+  ) {
+    const currentState = this.dingzStates.Buttons[button];
+    callback(null, currentState);
+  }
+
   private addDimmerService({
     name,
     output,
@@ -543,44 +609,50 @@ export class DingzDaAccessory implements Disposable {
         .on(CharacteristicEventTypes.SET, this.setBrightness.bind(this, index)); // SET - bind to the 'setBrightness` method below
     }
 
-    const updateInterval: NodeJS.Timer = setInterval(() => {
-      if (index) {
-        // index set
-        const state = this.dingzStates.Dimmers[index];
-        // Check that "state" is valid
-        if (state) {
-          if (output && output !== 'non_dimmable') {
-            newService
-              .getCharacteristic(this.platform.Characteristic.Brightness)
-              .updateValue(state.value);
-          }
-          newService
-            .getCharacteristic(this.platform.Characteristic.On)
-            .updateValue(state.on);
-
-          this.platform.log.debug(
-            'Pushed updated current Brightness and On state of',
-            newService.getCharacteristic(this.platform.Characteristic.Name)
-              .value,
-            'to HomeKit:',
-            state.value,
-            '->',
-            state.on,
-          );
-        } else {
-          this.platform.log.warn(
-            'We have an issue here: state should be non-empty but is undefined.',
-            `Continue here, not killing myself anymore. For the records, id: ${id},  index: ${index} and output is: `,
-            JSON.stringify(this.dingzStates),
-          );
-        }
-      }
-    }, 10000);
-
-    if (id && updateInterval) {
-      this.dimmerTimers[id] = updateInterval;
-    }
+    // Update State
+    this.platform.eb.on(
+      DingzEvent.STATE_UPDATE,
+      this.updateDimmerState.bind(this, index, output, newService, id),
+    );
     return newService;
+  }
+
+  private updateDimmerState(
+    index: number,
+    output: string | undefined,
+    newService: Service,
+    id: string,
+  ) {
+    if (index) {
+      // index set
+      const state = this.dingzStates.Dimmers[index];
+      // Check that "state" is valid
+      if (state) {
+        if (output && output !== 'non_dimmable') {
+          newService
+            .getCharacteristic(this.platform.Characteristic.Brightness)
+            .updateValue(state.value);
+        }
+        newService
+          .getCharacteristic(this.platform.Characteristic.On)
+          .updateValue(state.on);
+
+        this.platform.log.debug(
+          'Pushed updated current Brightness and On state of',
+          newService.getCharacteristic(this.platform.Characteristic.Name).value,
+          'to HomeKit:',
+          state.value,
+          '->',
+          state.on,
+        );
+      } else {
+        this.platform.log.warn(
+          'We have an issue here: state should be non-empty but is undefined.',
+          `Continue here, not killing myself anymore. For the records, id: ${id},  index: ${index} and output is: `,
+          JSON.stringify(this.dingzStates),
+        );
+      }
+    }
   }
 
   private removeDimmerService(id: 'D1' | 'D2' | 'D3' | 'D4') {
@@ -715,52 +787,40 @@ export class DingzDaAccessory implements Disposable {
         this.getTiltAngle.bind(this, id as WindowCoveringId),
       );
 
-    const updateInterval: NodeJS.Timer = setInterval(() => {
-      // assign the current brightness a random value between 0 and 100
-      try {
-        this.getWindowCovering(id as WindowCoveringId).then((state) => {
-          if (typeof state !== 'undefined' && id) {
-            // push the new value to HomeKit
-            this.dingzStates.WindowCovers[id] = state;
-            service
-              .getCharacteristic(this.platform.Characteristic.TargetPosition)
-              .updateValue(state.target.blind);
-            service
-              .getCharacteristic(
-                this.platform.Characteristic.TargetHorizontalTiltAngle,
-              )
-              .updateValue(state.target.lamella);
-            service
-              .getCharacteristic(this.platform.Characteristic.CurrentPosition)
-              .updateValue(state.current.blind);
-            service
-              .getCharacteristic(
-                this.platform.Characteristic.CurrentHorizontalTiltAngle,
-              )
-              .updateValue(state.current.lamella);
-
-            this.platform.log.debug(
-              'Pushed updated current WindowCovering state of',
-              service.getCharacteristic(this.platform.Characteristic.Name)
-                .value,
-              'to HomeKit:',
-              JSON.stringify(state),
-            );
-          }
-        });
-      } catch (e) {
-        this.platform.log.error(
-          'Error ->',
-          e.name,
-          ', unable to fetch WindowCovering data',
-        );
-      }
-    }, 10000);
-
-    if (id && updateInterval) {
-      this.windowCoveringTimers[id as number] = updateInterval;
-    }
+    this.platform.eb.on(
+      DingzEvent.STATE_UPDATE,
+      this.updateWindowCoveringState.bind(
+        this,
+        id as WindowCoveringId,
+        service,
+      ),
+    );
     return service;
+  }
+
+  private updateWindowCoveringState(id: WindowCoveringId, service: Service) {
+    const state: WindowCoveringState = this.dingzStates.WindowCovers[id];
+    service
+      .getCharacteristic(this.platform.Characteristic.TargetPosition)
+      .updateValue(state.target.blind);
+    service
+      .getCharacteristic(this.platform.Characteristic.TargetHorizontalTiltAngle)
+      .updateValue(state.target.lamella);
+    service
+      .getCharacteristic(this.platform.Characteristic.CurrentPosition)
+      .updateValue(state.current.blind);
+    service
+      .getCharacteristic(
+        this.platform.Characteristic.CurrentHorizontalTiltAngle,
+      )
+      .updateValue(state.current.lamella);
+
+    this.platform.log.debug(
+      'Pushed updated current WindowCovering state of',
+      service.getCharacteristic(this.platform.Characteristic.Name).value,
+      'to HomeKit:',
+      JSON.stringify(state),
+    );
   }
 
   private removeWindowCoveringService(id: 0 | 1) {
@@ -1124,51 +1184,46 @@ export class DingzDaAccessory implements Disposable {
     this.services.push(ledService);
     // Here we change update the brightness to a random value every 5 seconds using
     // the `updateCharacteristic` method.
-    setInterval(() => {
-      this.getDeviceLED()
-        .then((state) => {
-          // push the new value to HomeKit
-          this.dingzStates.LED = state;
-          if (state.mode === 'hsv') {
-            const hsv = state.hsv.split(';');
-            this.dingzStates.LED.hue = parseInt(hsv[0]);
-            this.dingzStates.LED.saturation = parseInt(hsv[1]);
-            this.dingzStates.LED.value = parseInt(hsv[2]);
-          } else {
-            // rgbw
-            const hsv = new simpleColorConverter({
-              color: `hex #${state.rgb}`, // Should be the most compatible form
-              to: 'hsv',
-            });
-            this.dingzStates.LED.hue = hsv.c;
-            this.dingzStates.LED.saturation = hsv.s;
-            this.dingzStates.LED.value = hsv.i;
-          }
+    this.platform.eb.on(
+      DingzEvent.STATE_UPDATE,
+      this.updateLEDState.bind(this, ledService),
+    );
+  }
 
-          ledService
-            .getCharacteristic(this.platform.Characteristic.Hue)
-            .setValue(this.dingzStates.LED.hue);
-          ledService
-            .getCharacteristic(this.platform.Characteristic.Saturation)
-            .setValue(this.dingzStates.LED.saturation);
-          ledService
-            .getCharacteristic(this.platform.Characteristic.Brightness)
-            .setValue(this.dingzStates.LED.value);
-          ledService
-            .getCharacteristic(this.platform.Characteristic.On)
-            .setValue(this.dingzStates.LED.on);
-          this.platform.log.debug(
-            'Pushed updated current LED state to HomeKit ->',
-            this.dingzStates.LED,
-          );
-        })
-        .catch((e) => {
-          this.platform.log.debug(
-            'Error while retrieving LED Device Report ->',
-            e,
-          );
-        });
-    }, 10000);
+  private updateLEDState(ledService: Service) {
+    const state: DingzLEDState = this.dingzStates.LED;
+    if (state.mode === 'hsv') {
+      const hsv = state.hsv.split(';');
+      this.dingzStates.LED.hue = parseInt(hsv[0]);
+      this.dingzStates.LED.saturation = parseInt(hsv[1]);
+      this.dingzStates.LED.value = parseInt(hsv[2]);
+    } else {
+      // rgbw
+      const hsv = new simpleColorConverter({
+        color: `hex #${state.rgb}`,
+        to: 'hsv',
+      });
+      this.dingzStates.LED.hue = hsv.c;
+      this.dingzStates.LED.saturation = hsv.s;
+      this.dingzStates.LED.value = hsv.i;
+    }
+
+    ledService
+      .getCharacteristic(this.platform.Characteristic.Hue)
+      .setValue(this.dingzStates.LED.hue);
+    ledService
+      .getCharacteristic(this.platform.Characteristic.Saturation)
+      .setValue(this.dingzStates.LED.saturation);
+    ledService
+      .getCharacteristic(this.platform.Characteristic.Brightness)
+      .setValue(this.dingzStates.LED.value);
+    ledService
+      .getCharacteristic(this.platform.Characteristic.On)
+      .setValue(this.dingzStates.LED.on);
+    this.platform.log.debug(
+      'Pushed updated current LED state to HomeKit ->',
+      this.dingzStates.LED,
+    );
   }
 
   /**
@@ -1286,36 +1341,12 @@ export class DingzDaAccessory implements Disposable {
     throw new Error('Dingz Device update failed -> Empty data.');
   }
 
-  // Data Fetchers
-  private async getDeviceTemperature(): Promise<DingzTemperatureData> {
-    const getTemperatureUrl = `${this.baseUrl}/api/v1/temp`;
-    return await this.platform.fetch({
-      url: getTemperatureUrl,
-      returnBody: true,
-      token: this.device.token,
-    });
-  }
-
   private async getDeviceMotion(): Promise<DingzMotionData> {
     const getMotionUrl = `${this.baseUrl}/api/v1/motion`;
     const release = await this.mutex.acquire();
     try {
       return await this.platform.fetch({
         url: getMotionUrl,
-        returnBody: true,
-        token: this.device.token,
-      });
-    } finally {
-      release();
-    }
-  }
-
-  private async getDeviceLight(): Promise<DingzLightData> {
-    const getLightUrl = `${this.baseUrl}/api/v1/light`;
-    const release = await this.mutex.acquire();
-    try {
-      return await this.platform.fetch({
-        url: getLightUrl,
         returnBody: true,
         token: this.device.token,
       });
@@ -1344,32 +1375,6 @@ export class DingzDaAccessory implements Disposable {
     });
   }
 
-  private async getDeviceDimmer(
-    id: DimmerId,
-  ): Promise<DingzDimmerState | undefined> {
-    const getDimmerUrl = `${this.baseUrl}/api/v1/dimmer/${id}`;
-    return await this.platform.fetch({
-      url: getDimmerUrl,
-      returnBody: true,
-      token: this.device.token,
-    });
-  }
-
-  // Get all values at once
-  private async getDeviceDimmers(): Promise<DimmerProps | undefined> {
-    const getDimmerUrl = `${this.baseUrl}/api/v1/dimmer/`;
-    const release = await this.mutex.acquire();
-    try {
-      return await this.platform.fetch({
-        url: getDimmerUrl,
-        returnBody: true,
-        token: this.device.token,
-      });
-    } finally {
-      release();
-    }
-  }
-
   // Set individual dimmer
   private async setWindowCovering(
     id: WindowCoveringId,
@@ -1389,26 +1394,6 @@ export class DingzDaAccessory implements Disposable {
         },
         { encode: false },
       ),
-    });
-  }
-
-  private async getWindowCovering(
-    id: WindowCoveringId,
-  ): Promise<WindowCoveringState> {
-    const getWindowCoveringUrl = `${this.baseUrl}/api/v1/shade/${id}`;
-    return await this.platform.fetch({
-      url: getWindowCoveringUrl,
-      returnBody: true,
-      token: this.device.token,
-    });
-  }
-
-  private async getWindowCoverings(): Promise<WindowCoveringProps> {
-    const getWindowCoveringUrl = `${this.baseUrl}/api/v1/shade/`;
-    return await this.platform.fetch({
-      url: getWindowCoveringUrl,
-      returnBody: true,
-      token: this.device.token,
     });
   }
 
@@ -1437,15 +1422,6 @@ export class DingzDaAccessory implements Disposable {
     });
   }
 
-  private async getDeviceLED(): Promise<DingzLEDState> {
-    const reportUrl = `${this.baseUrl}/api/v1/led/get`;
-    return await this.platform.fetch({
-      url: reportUrl,
-      returnBody: true,
-      token: this.device.token,
-    });
-  }
-
   private async getDingzDeviceDimmerConfig(): Promise<DeviceDingzDimmerConfig> {
     const getDimmerConfigUrl = `${this.baseUrl}/api/v1/dimmer_config`; // /api/v1/dimmer/<DIMMER>/on/?value=<value>
     return await this.platform.fetch({
@@ -1462,6 +1438,20 @@ export class DingzDaAccessory implements Disposable {
     try {
       return await this.platform.fetch({
         url: getInputConfigUrl,
+        returnBody: true,
+        token: this.device.token,
+      });
+    } finally {
+      release();
+    }
+  }
+
+  private async getDeviceState(): Promise<DingzState> {
+    const getDeviceStateUrl = `${this.baseUrl}/api/v1/state`;
+    const release = await this.mutex.acquire();
+    try {
+      return await this.platform.fetch({
+        url: getDeviceStateUrl,
         returnBody: true,
         token: this.device.token,
       });

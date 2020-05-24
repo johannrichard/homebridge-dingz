@@ -9,6 +9,8 @@ import type {
 import { Policy, ConsecutiveBreaker } from 'cockatiel';
 import { createSocket, Socket, RemoteInfo } from 'dgram';
 import axios, { AxiosRequestConfig } from 'axios';
+import http, { IncomingMessage, Server, ServerResponse } from 'http';
+import { URL } from 'url';
 
 // Internal Types
 import {
@@ -19,6 +21,9 @@ import {
   DeviceTypes,
   MyStromDeviceInfo,
   MYSTROM_SWITCH_TYPES,
+  DingzAccessoryType,
+  ButtonId,
+  ButtonAction,
 } from './util/internalTypes';
 
 import {
@@ -30,9 +35,10 @@ import {
 import { PLATFORM_NAME, PLUGIN_NAME, DINGZ_DISCOVERY_PORT } from './settings';
 
 // TODO: Some refactoring for beter event handling, cleanup of the code and separation of concerns
-import { DingzDaAccessory } from './dingzDaAccessory';
+import { DingzDaAccessory } from './dingzAccessory';
 import { MyStromSwitchAccessory } from './myStromSwitchAccessory';
 import { MyStromLightbulbAccessory } from './myStromLightbulbAccessory';
+import { DingzEventBus, DingzEvent } from './util/dingzEventBus';
 
 // Define a policy that will retry 20 times at most
 const retry = Policy.handleAll()
@@ -47,6 +53,7 @@ const circuitBreaker = Policy.handleAll().circuitBreaker(
   new ConsecutiveBreaker(5),
 );
 const retryWithBreaker = Policy.wrap(retry, circuitBreaker);
+
 /**
  * HomebridgePlatform
  * This class is the main constructor for your plugin, this is where you should
@@ -55,9 +62,11 @@ const retryWithBreaker = Policy.wrap(retry, circuitBreaker);
 export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
   public readonly Service = this.api.hap.Service;
   public readonly Characteristic = this.api.hap.Characteristic;
+  public readonly eb = new DingzEventBus();
 
   // this is used to track restored cached accessories
   public accessories: DingzAccessories = {};
+  private requestServer?: Server;
 
   constructor(
     public readonly log: Logger,
@@ -80,6 +89,8 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
       if (this.config.autoDiscover) {
         this.setupDeviceDiscovery();
       }
+
+      this.createButtonHttpService();
     });
   }
 
@@ -256,6 +267,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
           this.log.warn('Accessory already initialized');
 
           // FIXME: Update Names et al.
+          this.eb.emit(DingzEvent.UPDATE_INFO, this.accessories[uuid]);
           this.accessories[uuid].identify();
           return true;
         }
@@ -562,6 +574,46 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
       discoverySocket.close();
     }, 600000); // Discover for 10 min then stop
     return true;
+  }
+
+  private getAccessoryByMac(mac: string): DingzAccessoryType {
+    const uuid = this.api.hap.uuid.generate(mac);
+    return this.accessories[uuid];
+  }
+
+  // Create a Service to listen for Dingz Button events
+  createButtonHttpService() {
+    this.requestServer = http.createServer(this.handleRequest.bind(this));
+    this.requestServer.listen(this.config.callbackPort ?? 18081, () =>
+      this.log.warn(
+        `Http server listening on ${this.config.callbackPort ?? 18081}...`,
+      ),
+    );
+  }
+
+  private handleRequest(request: IncomingMessage, response: ServerResponse) {
+    if (request.url) {
+      const requestUrl: URL = new URL(
+        request.url,
+        `http://${request.headers.host}`,
+      );
+      response.writeHead(204); // 204 No content
+      response.end(() => {
+        const p = requestUrl.searchParams;
+        if (p.has('mac') && p.has('action') && p.has('button')) {
+          const mac: string = p.get('mac') || '';
+          const button: string = p.get('button') || '';
+          const action = p.get('action') || '1';
+
+          this.eb.emit(
+            DingzEvent.BTN_PRESS,
+            mac,
+            button as ButtonId,
+            action as ButtonAction,
+          );
+        }
+      });
+    }
   }
 
   /**

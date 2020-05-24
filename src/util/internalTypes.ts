@@ -1,7 +1,7 @@
 // Various Type Definitions for the Dingz Accessory
 // Based on the API definition
 
-import { DingzDaAccessory } from '../dingzDaAccessory';
+import { DingzDaAccessory } from '../dingzAccessory';
 import { MyStromSwitchAccessory } from '../myStromSwitchAccessory';
 import { MyStromLightbulbAccessory } from '../myStromLightbulbAccessory';
 
@@ -125,18 +125,25 @@ export interface DeviceInfo {
     | 'MyStromLightbulbAccessory';
 }
 
+export type DingzAccessoryType =
+  | DingzDaAccessory
+  | MyStromSwitchAccessory
+  | MyStromLightbulbAccessory;
 export interface DingzAccessories {
-  [key: string]:
-    | DingzDaAccessory
-    | MyStromSwitchAccessory
-    | MyStromLightbulbAccessory;
+  [key: string]: DingzAccessoryType;
 }
 
 // Internal representation of Dimmer in Plugin
 export type DimmerId = 0 | 1 | 2 | 3;
+export type ButtonId = '1' | '2' | '3' | '4';
+export enum ButtonAction {
+  SINGLE_PRESS = '1',
+  DOUBLE_PRESS = '2',
+  LONG_PRESS = '3',
+}
 
 // Representation of dimmer in Dingz
-export interface DingzDimmerState {
+export interface DimmerState {
   on: boolean;
   value: number;
   ramp: number;
@@ -146,7 +153,7 @@ export interface DingzDimmerState {
     absolute: number;
   };
 }
-export type DimmerProps = Record<DimmerId, DingzDimmerState>;
+export type DimmerProps = Record<DimmerId, DimmerState>;
 
 export interface DingzLEDState {
   on: boolean;
@@ -201,4 +208,51 @@ export type WindowCoveringProps = Record<WindowCoveringId, WindowCoveringState>;
 
 export interface Disposable {
   dispose(): void;
+}
+
+// FIXME: Replace dispersed data gathering with `api/v1/state` endpoint
+
+export interface DingzState {
+  dimmers: DimmerState[];
+  blinds: WindowCoveringState[];
+  led: DingzLEDState;
+  sensors: {
+    brightness: number;
+    light_state: 'night' | 'day';
+    room_temperature: number;
+    uncompensated_temperature: number;
+    cpu_temperature: number;
+    puck_temperature: number;
+    fet_temperature: number;
+    person_present: 0 | 1;
+    input_state: boolean;
+    power_outputs: [
+      {
+        value: number;
+      },
+      {
+        value: number;
+      },
+      {
+        value: number;
+      },
+      {
+        value: number;
+      },
+    ];
+  };
+  thermostat: {
+    active: false;
+    out: 0;
+    on: false;
+    enabled: true;
+    target_temp: number;
+    mode: string;
+    temp: number;
+    min_target_temp: number;
+    max_target_temp: number;
+  };
+  config: {
+    timestamp: number;
+  };
 }
