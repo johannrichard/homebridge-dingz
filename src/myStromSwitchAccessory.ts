@@ -149,14 +149,9 @@ export class MyStromSwitchAccessory {
               this.outletState.temperature,
             );
           }
-
-          this.platform.log.debug(
-            'Pushed updated current Outlet state to HomeKit ->',
-            this.outletState,
-          );
         })
         .catch((e) => {
-          this.platform.log.debug('Error while retrieving Device Report ->', e);
+          this.platform.log.error('Error while retrieving Device Report ->', e);
         });
     }, 2000);
   }

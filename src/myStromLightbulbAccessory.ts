@@ -144,11 +144,6 @@ export class MyStromLightbulbAccessory {
           this.lightbulbService
             .getCharacteristic(this.platform.Characteristic.Brightness)
             .setValue(this.lightbulbState.value);
-
-          this.platform.log.debug(
-            'Pushed updated current LightBulb state to HomeKit ->',
-            this.lightbulbState,
-          );
         })
         .catch((e) => {
           this.platform.log.debug('Error while retrieving Device Report ->', e);
@@ -173,7 +168,6 @@ export class MyStromLightbulbAccessory {
    */
   setOn(value: CharacteristicValue, callback: CharacteristicSetCallback) {
     // implement your own code to turn your device on/off
-    this.platform.log.debug('Set Characteristic On ->', value);
     this.lightbulbState.on = value as boolean;
     this.setDeviceLightbulb({ isOn: this.lightbulbState.on });
 
@@ -204,7 +198,6 @@ export class MyStromLightbulbAccessory {
     // implement your own code to set the brightness
     this.lightbulbState.hue = value as number;
 
-    this.platform.log.debug('Set Characteristic Hue -> ', value);
     const state: MyStromLightbulbReport = this.lightbulbState;
     await this.setDeviceLightbulb({
       isOn: state.on,
@@ -220,7 +213,6 @@ export class MyStromLightbulbAccessory {
     // implement your own code to set the brightness
     this.lightbulbState.saturation = value as number;
 
-    this.platform.log.debug('Set Characteristic Saturation -> ', value);
     // Call setDimmerValue()
     const state: MyStromLightbulbReport = this.lightbulbState;
     await this.setDeviceLightbulb({
@@ -236,9 +228,6 @@ export class MyStromLightbulbAccessory {
   ) {
     // implement your own code to set the brightness
     this.lightbulbState.value = value as number;
-
-    this.platform.log.debug('Set Characteristic Brightness -> ', value);
-    // Call setDimmerValue()
     const state: MyStromLightbulbReport = this.lightbulbState;
     await this.setDeviceLightbulb({
       isOn: state.on,
