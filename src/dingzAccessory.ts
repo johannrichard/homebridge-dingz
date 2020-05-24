@@ -1,4 +1,3 @@
-import { EventEmitter } from 'events';
 import {
   CharacteristicEventTypes,
   CharacteristicGetCallback,
@@ -8,7 +7,8 @@ import {
   Service,
 } from 'homebridge';
 
-import { Policy, ConsecutiveBreaker } from 'cockatiel';
+import { EventEmitter } from 'events';
+import { Policy } from 'cockatiel';
 import { Mutex } from 'async-mutex';
 import simpleColorConverter from 'simple-color-converter';
 import qs from 'qs';
@@ -22,7 +22,6 @@ import {
   DingzInputInfoItem,
   DingzInputInfo,
   DeviceInfo,
-  Disposable,
   DimmerTimer,
   DimmerId,
   DimmerState,
@@ -39,20 +38,6 @@ import {
 import { MethodNotImplementedError } from './util/errors';
 import { DingzDaHomebridgePlatform } from './platform';
 import { DingzEvent } from './util/dingzEventBus';
-
-// Define a policy that will retry 20 times at most
-const retry = Policy.handleAll()
-  .retry()
-  .exponential({ maxDelay: 10 * 1000, maxAttempts: 20 });
-
-// Create a circuit breaker that'll stop calling the executed function for 10
-// seconds if it fails 5 times in a row. This can give time for e.g. a database
-// to recover without getting tons of traffic.
-const circuitBreaker = Policy.handleAll().circuitBreaker(
-  10 * 1000,
-  new ConsecutiveBreaker(5),
-);
-const retryWithBreaker = Policy.wrap(retry, circuitBreaker);
 
 // Policy for long running tasks, retry every hour
 const retrySlow = Policy.handleAll()
@@ -90,7 +75,7 @@ interface Error {
  * Each accessory may expose multiple services of different service types.
  */
 
-export class DingzDaAccessory extends EventEmitter implements Disposable {
+export class DingzDaAccessory extends EventEmitter {
   private readonly mutex = new Mutex();
 
   private services: Service[] = [];
@@ -145,13 +130,8 @@ export class DingzDaAccessory extends EventEmitter implements Disposable {
     this.dingzDeviceInfo = this.device.hwInfo as DingzDeviceInfo;
     this.baseUrl = `http://${this.device.address}`;
 
-    this.platform.log.debug(
-      'Setting informationService Characteristics ->',
-      this.device.model,
-    );
-
     // Sanity check for "empty" SerialNumber
-    this.platform.log.warn(
+    this.platform.log.debug(
       `Attempting to set SerialNumber (which can not be empty) -> puck_sn: <${this.dingzDeviceInfo.puck_sn}>`,
     );
     const serialNumber: string =
@@ -188,19 +168,15 @@ export class DingzDaAccessory extends EventEmitter implements Disposable {
      */
 
     // Add Dimmers, Blinds etc.
-    this.platform.log.debug('Adding output devices -> [...]');
-    // FIXME: axios already does retries
-    retryWithBreaker
-      .execute(() => this.getDeviceInputConfig())
+    this.platform.log.info('Adding output devices -> [...]');
+    this.getDeviceInputConfig()
       .then((data) => {
-        this.platform.log.debug('Got DeviceInputConfig ->', data);
         if (data.inputs) {
           this.device.dingzInputInfo = data.inputs;
         }
         return this.getDingzDeviceDimmerConfig();
       })
       .then((data) => {
-        this.platform.log.debug('Got Dimmer Config ->', data);
         if (data.dimmers && data.dimmers.length === 4) {
           this.device.dimmerConfig = data;
         }
@@ -224,40 +200,41 @@ export class DingzDaAccessory extends EventEmitter implements Disposable {
             }
           });
         }, 10000);
+      })
+      .then(() => {
+        /**
+         * Add auxiliary services (Motion, Temperature)
+         */
+        if (this.dingzDeviceInfo.has_pir) {
+          // Dingz has a Motion sensor -- let's create it
+          this.addMotionService();
+        } else {
+          this.platform.log.info(
+            'Your Dingz',
+            this.accessory.displayName,
+            'has no Motion sensor.',
+          );
+        }
+        // Dingz has a temperature sensor and an LED,
+        // make these available here
+        this.addTemperatureService();
+        this.addLEDService();
+        this.addLightSensorService();
+        this.addButtonServices();
+
+        this.services.forEach((service) => {
+          this.platform.log.info(
+            'Service created ->',
+            service.getCharacteristic(this.platform.Characteristic.Name).value,
+          );
+        });
+
+        // Retry at least once every day
+        retrySlow.execute(() => {
+          this.updateAccessory();
+          return true;
+        });
       });
-
-    /**
-     * Add auxiliary services (Motion, Temperature)
-     */
-    if (this.dingzDeviceInfo.has_pir) {
-      // Dingz has a Motion sensor -- let's create it
-      this.addMotionService();
-    } else {
-      this.platform.log.info(
-        'Your Dingz',
-        this.accessory.displayName,
-        'has no Motion sensor.',
-      );
-    }
-    // Dingz has a temperature sensor and an LED,
-    // make these available here
-    this.addTemperatureService();
-    this.addLEDService();
-    this.addLightSensorService();
-    this.addButtonServices();
-
-    this.services.forEach((service) => {
-      this.platform.log.info(
-        'Service created ->',
-        service.getCharacteristic(this.platform.Characteristic.Name).value,
-      );
-    });
-
-    // Retry at least once every day
-    retrySlow.execute(() => {
-      this.updateAccessory();
-      return true;
-    });
   }
 
   private addTemperatureService() {
@@ -287,13 +264,6 @@ export class DingzDaAccessory extends EventEmitter implements Disposable {
     temperatureService
       .getCharacteristic(this.platform.Characteristic.CurrentTemperature)
       .updateValue(currentTemperature);
-    this.platform.log.debug(
-      'Pushed updated current Temperature state of',
-      temperatureService.getCharacteristic(this.platform.Characteristic.Name)
-        .value,
-      'to HomeKit:',
-      currentTemperature,
-    );
   }
 
   /**
@@ -303,11 +273,6 @@ export class DingzDaAccessory extends EventEmitter implements Disposable {
   private getTemperature(callback: CharacteristicSetCallback) {
     // set this to a valid value for CurrentTemperature
     const currentTemperature: number = this.dingzStates.Temperature;
-    this.platform.log.debug(
-      'Get Characteristic Temperature ->',
-      currentTemperature,
-    );
-
     callback(null, currentTemperature);
   }
 
@@ -318,11 +283,6 @@ export class DingzDaAccessory extends EventEmitter implements Disposable {
   private getMotionDetected(callback: CharacteristicSetCallback) {
     // set this to a valid value for MotionDetected
     const isMotion = this.dingzStates.Motion;
-    this.platform.log.debug(
-      'Get Characteristic getMotionDetected ->',
-      isMotion,
-    );
-
     callback(null, isMotion);
   }
 
@@ -331,7 +291,7 @@ export class DingzDaAccessory extends EventEmitter implements Disposable {
    * Typical this only ever happens at the pairing process.
    */
   identify(): void {
-    this.platform.log.debug(
+    this.platform.log.info(
       'Identify! -> Who am I? I am',
       this.accessory.displayName,
     );
@@ -359,13 +319,6 @@ export class DingzDaAccessory extends EventEmitter implements Disposable {
     lightService
       .getCharacteristic(this.platform.Characteristic.CurrentAmbientLightLevel)
       .updateValue(intensity);
-    this.platform.log.debug(
-      'Pushed updated current Light Intensity state of',
-      lightService.getCharacteristic(this.platform.Characteristic.Name).value,
-      'to HomeKit:',
-      intensity,
-      'lux',
-    );
   }
 
   private addOutputServices() {
@@ -583,7 +536,6 @@ export class DingzDaAccessory extends EventEmitter implements Disposable {
     id: 'D1' | 'D2' | 'D3' | 'D4';
     index: DimmerId;
   }) {
-    this.platform.log.debug('Adding Dimmer Service ->', name ?? `Dimmer ${id}`);
     // Service doesn't yet exist, create new one
     // FIXME can be done more beautifully I guess
     const newService =
@@ -636,15 +588,6 @@ export class DingzDaAccessory extends EventEmitter implements Disposable {
         newService
           .getCharacteristic(this.platform.Characteristic.On)
           .updateValue(state.on);
-
-        this.platform.log.debug(
-          'Pushed updated current Brightness and On state of',
-          newService.getCharacteristic(this.platform.Characteristic.Name).value,
-          'to HomeKit:',
-          state.value,
-          '->',
-          state.on,
-        );
       } else {
         this.platform.log.warn(
           'We have an issue here: state should be non-empty but is undefined.',
@@ -678,9 +621,6 @@ export class DingzDaAccessory extends EventEmitter implements Disposable {
     callback: CharacteristicSetCallback,
   ) {
     this.dingzStates.Dimmers[index].on = value as boolean;
-    this.platform.log.debug(
-      `Set Characteristic of Dimmer (Index: ${index}) On -> ${value}`,
-    );
     try {
       this.setDeviceDimmer(index, value as boolean);
     } catch (e) {
@@ -699,12 +639,7 @@ export class DingzDaAccessory extends EventEmitter implements Disposable {
    * Handle the "GET" requests from HomeKit
    */
   private getOn(index: DimmerId, callback: CharacteristicGetCallback) {
-    const isOn: boolean = this.dingzStates.Dimmers[index].on;
-
-    this.platform.log.debug(
-      `Get Characteristic Dimmer (Index: ${index}) On -> ${isOn}`,
-    );
-
+    const isOn: boolean = this.dingzStates.Dimmers[index]?.on ?? false;
     // you must call the callback function
     // the first argument should be null if there were no errors
     // the second argument should be the value to return
@@ -725,9 +660,6 @@ export class DingzDaAccessory extends EventEmitter implements Disposable {
     this.dingzStates.Dimmers[index].value = value as number;
     this.dingzStates.Dimmers[index].on = isOn;
 
-    this.platform.log.debug(
-      `Set Characteristic of Dimmer (Index: ${index} Brightness -> ${value}`,
-    );
     await this.setDeviceDimmer(index, isOn, value as number);
     // you must call the callback function
     callback(null);
@@ -814,30 +746,6 @@ export class DingzDaAccessory extends EventEmitter implements Disposable {
         this.platform.Characteristic.CurrentHorizontalTiltAngle,
       )
       .updateValue(state.current.lamella);
-
-    this.platform.log.debug(
-      'Pushed updated current WindowCovering state of',
-      service.getCharacteristic(this.platform.Characteristic.Name).value,
-      'to HomeKit:',
-      JSON.stringify(state),
-    );
-  }
-
-  private removeWindowCoveringService(id: 0 | 1) {
-    // Remove motionService
-
-    const service: Service | undefined = this.accessory.getServiceById(
-      this.platform.Service.WindowCovering,
-      id.toString(),
-    );
-    if (service) {
-      this.platform.log.debug(
-        'Removing WindowCovering ->',
-        service.displayName,
-      );
-      this.accessory.removeService(service);
-      clearTimeout(this.windowCoveringTimers[id]);
-    }
   }
 
   /**
@@ -854,7 +762,6 @@ export class DingzDaAccessory extends EventEmitter implements Disposable {
     const lamella: number = this.dingzStates.WindowCovers[id].target.lamella;
     this.dingzStates.WindowCovers[id].target.blind = blind;
 
-    this.platform.log.debug('Set Characteristic TargetPosition -> ', value);
     await this.setWindowCovering(id, blind, lamella);
     // you must call the callback function
     callback(null);
@@ -961,13 +868,6 @@ export class DingzDaAccessory extends EventEmitter implements Disposable {
               service
                 .getCharacteristic(this.platform.Characteristic.MotionDetected)
                 .updateValue(isMotion);
-              this.platform.log.debug(
-                'Pushed updated current Motion state of',
-                service.getCharacteristic(this.platform.Characteristic.Name)
-                  .value,
-                'to HomeKit:',
-                isMotion,
-              );
             }
           }
         });
@@ -1087,15 +987,10 @@ export class DingzDaAccessory extends EventEmitter implements Disposable {
         );
       }
 
-      this.platform.log.debug('Update Dimmer Service');
       this.updateDimmerServices();
     } finally {
       this.accessory.context.device.dingzDeviceInfo = updatedDingzDeviceInfo;
       this.accessory.context.device.dingzInputInfo = [updatedDingzInputInfo];
-      this.platform.log.debug(
-        'DingZ Device Info: ',
-        JSON.stringify(updatedDingzDeviceInfo),
-      );
     }
   }
 
@@ -1220,10 +1115,6 @@ export class DingzDaAccessory extends EventEmitter implements Disposable {
     ledService
       .getCharacteristic(this.platform.Characteristic.On)
       .setValue(this.dingzStates.LED.on);
-    this.platform.log.debug(
-      'Pushed updated current LED state to HomeKit ->',
-      this.dingzStates.LED,
-    );
   }
 
   /**
@@ -1235,7 +1126,6 @@ export class DingzDaAccessory extends EventEmitter implements Disposable {
     callback: CharacteristicSetCallback,
   ) {
     // implement your own code to turn your device on/off
-    this.platform.log.debug('Set LED Characteristic On ->', value);
     this.dingzStates.LED.on = value as boolean;
     const state = this.dingzStates.LED;
     this.setDeviceLED({ isOn: state.on });
@@ -1249,8 +1139,6 @@ export class DingzDaAccessory extends EventEmitter implements Disposable {
   private getLEDOn(callback: CharacteristicGetCallback) {
     // implement your own code to check if the device is on
     const isOn = this.dingzStates.LED.on;
-    this.platform.log.debug('Get LED Characteristic On ->', isOn);
-
     callback(null, isOn);
   }
 
@@ -1261,7 +1149,6 @@ export class DingzDaAccessory extends EventEmitter implements Disposable {
     // implement your own code to set the brightness    const isOn: boolean = value > 0 ? true : false;
     this.dingzStates.LED.hue = value as number;
 
-    this.platform.log.debug('Set LED Characteristic Hue -> ', value);
     const state: DingzLEDState = this.dingzStates.LED;
     const color = `${state.hue};${state.saturation};${state.value}`;
     this.setDeviceLED({
@@ -1278,7 +1165,6 @@ export class DingzDaAccessory extends EventEmitter implements Disposable {
     // implement your own code to set the brightness
     this.dingzStates.LED.saturation = value as number;
 
-    this.platform.log.debug('Set LED Characteristic Saturation -> ', value);
     const state: DingzLEDState = this.dingzStates.LED;
     const color = `${state.hue};${state.saturation};${state.value}`;
     this.setDeviceLED({
@@ -1295,7 +1181,6 @@ export class DingzDaAccessory extends EventEmitter implements Disposable {
     // implement your own code to set the brightness
     this.dingzStates.LED.value = value as number;
 
-    this.platform.log.debug('Set LED Characteristic Brightness -> ', value);
     const state: DingzLEDState = this.dingzStates.LED;
     const color = `${state.hue};${state.saturation};${state.value}`;
     this.setDeviceLED({
@@ -1303,19 +1188,6 @@ export class DingzDaAccessory extends EventEmitter implements Disposable {
       color: color,
     });
     callback(null);
-  }
-
-  // Disposes the Accessory
-  dispose() {
-    // Dispose of intervals
-    this.platform.log.debug('Clearing timers ->', this.dimmerTimers);
-    if (this.motionTimer) {
-      clearTimeout(this.motionTimer);
-    }
-
-    for (const key in this.dimmerTimers) {
-      clearTimeout(this.dimmerTimers[key]);
-    }
   }
 
   /**
@@ -1336,7 +1208,7 @@ export class DingzDaAccessory extends EventEmitter implements Disposable {
         return dingzDeviceInfo;
       }
     } catch (e) {
-      this.platform.log.debug('Error in getting Device Info ->', e.message);
+      this.platform.log.error('Error in getting Device Info ->', e.message);
     }
     throw new Error('Dingz Device update failed -> Empty data.');
   }
@@ -1362,9 +1234,6 @@ export class DingzDaAccessory extends EventEmitter implements Disposable {
     level?: number,
   ): Promise<void> {
     // /api/v1/dimmer/<DIMMER>/on/?value=<value>
-    this.platform.log.debug(
-      `Dimmer ${index} set to ${isOn}: ${level ? level : 'Keep level'}`,
-    );
     const setDimmerUrl = `${this.baseUrl}/api/v1/dimmer/${index}/${
       isOn ? 'on' : 'off'
     }/${level ? '?value=' + level : ''}`;
