@@ -35,7 +35,10 @@ import {
   DingzState,
 } from './util/internalTypes';
 
-import { MethodNotImplementedError } from './util/errors';
+import {
+  MethodNotImplementedError,
+  DeviceNotReachableError,
+} from './util/errors';
 import { DingzDaHomebridgePlatform } from './platform';
 import { DingzEvent } from './util/dingzEventBus';
 
@@ -57,18 +60,6 @@ interface Error {
   code: number;
   errors: string[];
 }
-
-/**
-  Implemented Characteristics:
-  [x] Dimmer (Lightbulb)
-  [x] Blinds (WindowCovering)
-  [x] Temperature (CurrentTemperature)
-  [x] PIR (MotionSensor)
-  [x] LED (ColorLightbulb)
-  [] Buttons (StatelessProgrammableButton or so)
-  [] Light Level (LightSensor/AmbientLightLevel)
-*/
-
 /**
  * Platform Accessory
  * An instance of this class is created for each accessory your platform registers
@@ -140,21 +131,24 @@ export class DingzDaAccessory extends EventEmitter {
         : this.dingzDeviceInfo.puck_sn;
     this.accessory
       .getService(this.platform.Service.AccessoryInformation)!
-      .setCharacteristic(
+      .updateCharacteristic(
         this.platform.Characteristic.ConfiguredName,
         this.device.name,
       )
-      .setCharacteristic(this.platform.Characteristic.Name, this.device.name)
-      .setCharacteristic(this.platform.Characteristic.Manufacturer, 'Iolo AG')
-      .setCharacteristic(
+      .updateCharacteristic(this.platform.Characteristic.Name, this.device.name)
+      .updateCharacteristic(
+        this.platform.Characteristic.Manufacturer,
+        'Iolo AG',
+      )
+      .updateCharacteristic(
         this.platform.Characteristic.Model,
         this.device.model as string,
       )
-      .setCharacteristic(
+      .updateCharacteristic(
         this.platform.Characteristic.FirmwareRevision,
-        this.dingzDeviceInfo.fw_version_puck ?? 'Unknown',
+        this.dingzDeviceInfo.fw_version ?? 'Unknown',
       )
-      .setCharacteristic(
+      .updateCharacteristic(
         this.platform.Characteristic.HardwareRevision,
         this.dingzDeviceInfo.hw_version_puck ?? 'Unknown',
       )
@@ -229,6 +223,11 @@ export class DingzDaAccessory extends EventEmitter {
           );
         });
 
+        // Set the callback URL (Override!)
+        this.platform.setButtonCallbackUrl({
+          baseUrl: this.baseUrl,
+          token: this.device.token,
+        });
         // Retry at least once every day
         retrySlow.execute(() => {
           this.updateAccessory();
@@ -294,6 +293,8 @@ export class DingzDaAccessory extends EventEmitter {
     this.platform.log.info(
       'Identify! -> Who am I? I am',
       this.accessory.displayName,
+      '-> MAC:',
+      this.device.mac,
     );
   }
 
@@ -449,15 +450,15 @@ export class DingzDaAccessory extends EventEmitter {
   private addButtonServices() {
     // Create Buttons
     // Add Event Listeners
-    this.addButtonService('Button 1', '1');
-    this.addButtonService('Button 2', '2');
-    this.addButtonService('Button 3', '3');
-    this.addButtonService('Button 4', '4');
+    this.services.push(this.addButtonService('DingZ Button 1', '1'));
+    this.services.push(this.addButtonService('DingZ Button 2', '2'));
+    this.services.push(this.addButtonService('DingZ Button 3', '3'));
+    this.services.push(this.addButtonService('DingZ Button 4', '4'));
 
     this.platform.eb.on(
       DingzEvent.BTN_PRESS,
-      (mac: string, button: ButtonId, action: ButtonAction) => {
-        if (mac === this.device.mac) {
+      (mac, action: ButtonAction, button: ButtonId) => {
+        if (mac === this.device.mac && button) {
           this.dingzStates.Buttons[button] = action ?? 1;
           const service = this.accessory.getServiceById(
             this.platform.Service.StatelessProgrammableSwitch,
@@ -506,10 +507,22 @@ export class DingzDaAccessory extends EventEmitter {
       ) ??
       this.accessory.addService(
         this.platform.Service.StatelessProgrammableSwitch,
-        name ?? `Button ${button}`, // Name Dimmers according to WebUI, not API info
+        name ?? `DingZ Button ${button}`, // Name Dimmers according to WebUI, not API info
         button,
       );
 
+    newService.setCharacteristic(
+      this.platform.Characteristic.ServiceLabelIndex,
+      button,
+    );
+    // newService.setCharacteristic(
+    //   this.platform.Characteristic.DisplayOrder,
+    //   button,
+    // );
+    // newService.setCharacteristic(
+    //   this.platform.Characteristic.ServiceLabelNamespace,
+    //   'Dingz Buttons',
+    // );
     newService
       .getCharacteristic(this.platform.Characteristic.ProgrammableSwitchEvent)
       .on(CharacteristicEventTypes.GET, this.getButtonState.bind(this, button));
@@ -611,10 +624,6 @@ export class DingzDaAccessory extends EventEmitter {
     }
   }
 
-  /**
-   * Handle "SET" requests from HomeKit
-   * These are sent when the user changes the state of an accessory, for example, turning on a Light bulb.
-   */
   private setOn(
     index: DimmerId,
     value: CharacteristicValue,
@@ -631,7 +640,6 @@ export class DingzDaAccessory extends EventEmitter {
         index,
       );
     }
-    // you must call the callback function
     callback(null);
   }
 
@@ -640,28 +648,19 @@ export class DingzDaAccessory extends EventEmitter {
    */
   private getOn(index: DimmerId, callback: CharacteristicGetCallback) {
     const isOn: boolean = this.dingzStates.Dimmers[index]?.on ?? false;
-    // you must call the callback function
-    // the first argument should be null if there were no errors
-    // the second argument should be the value to return
     callback(null, isOn);
   }
 
-  /**
-   * Handle "SET" requests from HomeKit
-   * These are sent when the user changes the state of an accessory, for example, changing the Brightness
-   */
   private async setBrightness(
     index: DimmerId,
     value: CharacteristicValue,
     callback: CharacteristicSetCallback,
   ) {
-    // implement your own code to set the brightness
     const isOn: boolean = value > 0 ? true : false;
     this.dingzStates.Dimmers[index].value = value as number;
     this.dingzStates.Dimmers[index].on = isOn;
 
     await this.setDeviceDimmer(index, isOn, value as number);
-    // you must call the callback function
     callback(null);
   }
 
@@ -748,28 +747,19 @@ export class DingzDaAccessory extends EventEmitter {
       .updateValue(state.current.lamella);
   }
 
-  /**
-   * Handle "SET" requests from HomeKit
-   * These are sent when the user changes the state of an accessory, for example, changing the Brightness
-   */
   private async setPosition(
     id: WindowCoveringId,
     value: CharacteristicValue,
     callback: CharacteristicSetCallback,
   ) {
-    // implement your own code to set the brightness
     const blind: number = value as number;
     const lamella: number = this.dingzStates.WindowCovers[id].target.lamella;
     this.dingzStates.WindowCovers[id].target.blind = blind;
 
     await this.setWindowCovering(id, blind, lamella);
-    // you must call the callback function
     callback(null);
   }
 
-  /**
-   * Handle the "GET" requests from HomeKit
-   */
   private getPosition(
     id: WindowCoveringId,
     callback: CharacteristicGetCallback,
@@ -787,22 +777,14 @@ export class DingzDaAccessory extends EventEmitter {
       position,
     );
 
-    // you must call the callback function
-    // the first argument should be null if there were no errors
-    // the second argument should be the value to return
     callback(null, position);
   }
 
-  /**
-   * Handle "SET" requests from HomeKit
-   * These are sent when the user changes the state of an accessory, for example, changing the Brightness
-   */
   private async setTiltAngle(
     id: WindowCoveringId,
     value: CharacteristicValue,
     callback: CharacteristicSetCallback,
   ) {
-    // implement your own code to set the brightness
     const blind: number = this.dingzStates.WindowCovers[id].target.blind;
     const lamella: number = value as number;
     this.dingzStates.WindowCovers[id].target.lamella = lamella;
@@ -814,7 +796,6 @@ export class DingzDaAccessory extends EventEmitter {
       value,
     );
     await this.setWindowCovering(id, blind, lamella);
-    // you must call the callback function
     callback(null);
   }
 
@@ -838,9 +819,6 @@ export class DingzDaAccessory extends EventEmitter {
       tiltAngle,
     );
 
-    // you must call the callback function
-    // the first argument should be null if there were no errors
-    // the second argument should be the value to return
     callback(null, tiltAngle);
   }
 
@@ -857,9 +835,9 @@ export class DingzDaAccessory extends EventEmitter {
     this.services.push(service);
     // Only check for motion if we have a PIR and set the Interval
     const motionInterval: NodeJS.Timer = setInterval(() => {
-      try {
-        this.getDeviceMotion().then((data) => {
-          if (data.success) {
+      this.getDeviceMotion()
+        .then((data) => {
+          if (data?.success) {
             const isMotion: boolean = data.motion;
 
             // Only update if motionService exists *and* if there's a change in motion'
@@ -869,15 +847,20 @@ export class DingzDaAccessory extends EventEmitter {
                 .getCharacteristic(this.platform.Characteristic.MotionDetected)
                 .updateValue(isMotion);
             }
+          } else {
+            throw new DeviceNotReachableError(
+              `Device can not be reached ->
+              ${this.device.name}-> ${this.device.address}`,
+            );
           }
+        })
+        .catch((e) => {
+          this.platform.log.error(
+            'Error ->',
+            e.name,
+            ', unable to fetch DeviceMotion data',
+          );
         });
-      } catch (e) {
-        this.platform.log.error(
-          'Error ->',
-          e.name,
-          ', unable to fetch DeviceMotion data',
-        );
-      }
     }, 2000); // Shorter term updates for motion sensor
     this.motionTimer = motionInterval;
   }
@@ -1049,11 +1032,7 @@ export class DingzDaAccessory extends EventEmitter {
       this.accessory.addService(this.platform.Service.Lightbulb, 'LED', 'LED');
 
     // set the service name, this is what is displayed as the default name on the Home app
-    // in this example we are using the name we stored in the `accessory.context` in the `discoverDevices` method.
     ledService.setCharacteristic(this.platform.Characteristic.Name, 'LED');
-
-    // each service must implement at-minimum the "required characteristics" for the given service type
-    // see https://developers.homebridge.io/#/service/Lightbulb
 
     // register handlers for the On/Off Characteristic
     ledService
@@ -1117,27 +1096,17 @@ export class DingzDaAccessory extends EventEmitter {
       .setValue(this.dingzStates.LED.on);
   }
 
-  /**
-   * Handle "SET" requests from HomeKit
-   * These are sent when the user changes the state of an accessory, for example, turning on a Light bulb.
-   */
   private setLEDOn(
     value: CharacteristicValue,
     callback: CharacteristicSetCallback,
   ) {
-    // implement your own code to turn your device on/off
     this.dingzStates.LED.on = value as boolean;
     const state = this.dingzStates.LED;
     this.setDeviceLED({ isOn: state.on });
-    // you must call the callback function
     callback(null);
   }
 
-  /**
-   * Handle the "GET" requests from HomeKit
-   */
   private getLEDOn(callback: CharacteristicGetCallback) {
-    // implement your own code to check if the device is on
     const isOn = this.dingzStates.LED.on;
     callback(null, isOn);
   }
@@ -1146,7 +1115,6 @@ export class DingzDaAccessory extends EventEmitter {
     value: CharacteristicValue,
     callback: CharacteristicSetCallback,
   ) {
-    // implement your own code to set the brightness    const isOn: boolean = value > 0 ? true : false;
     this.dingzStates.LED.hue = value as number;
 
     const state: DingzLEDState = this.dingzStates.LED;
@@ -1162,7 +1130,6 @@ export class DingzDaAccessory extends EventEmitter {
     value: CharacteristicValue,
     callback: CharacteristicSetCallback,
   ) {
-    // implement your own code to set the brightness
     this.dingzStates.LED.saturation = value as number;
 
     const state: DingzLEDState = this.dingzStates.LED;
@@ -1178,7 +1145,6 @@ export class DingzDaAccessory extends EventEmitter {
     value: CharacteristicValue,
     callback: CharacteristicSetCallback,
   ) {
-    // implement your own code to set the brightness
     this.dingzStates.LED.value = value as number;
 
     const state: DingzLEDState = this.dingzStates.LED;
@@ -1194,7 +1160,6 @@ export class DingzDaAccessory extends EventEmitter {
    * Device Methods -- these are used to retrieve the data from the Dingz
    * TODO: Refactor duplicate code into proper API caller
    */
-
   private async getDingzDeviceInfo(): Promise<DingzDeviceInfo> {
     const dingzDevices = await this.platform.getDingzDeviceInfo({
       address: this.device.address,

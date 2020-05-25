@@ -28,10 +28,7 @@ export class MyStromLightbulbAccessory {
   private device: DeviceInfo;
   private mystromDeviceInfo: MyStromDeviceInfo;
   private baseUrl: string;
-  /**
-   * These are just used to create a working example
-   * You should implement your own code to track the state of your accessory
-   */
+
   private lightbulbState = {
     on: false,
     color: '0;0;0',
@@ -74,21 +71,14 @@ export class MyStromLightbulbAccessory {
         this.device.mac,
       );
 
-    // get the LightBulb service if it exists, otherwise create a new LightBulb service
-    // you can create multiple services for each accessory
     this.lightbulbService =
       this.accessory.getService(this.platform.Service.Lightbulb) ??
       this.accessory.addService(this.platform.Service.Lightbulb);
 
-    // set the service name, this is what is displayed as the default name on the Home app
-    // in this example we are using the name we stored in the `accessory.context` in the `discoverDevices` method.
     this.lightbulbService.setCharacteristic(
       this.platform.Characteristic.Name,
       this.device.name ?? `${accessory.context.device.model} Bulb`,
     );
-
-    // each service must implement at-minimum the "required characteristics" for the given service type
-    // see https://developers.homebridge.io/#/service/Lightbulb
 
     // register handlers for the On/Off Characteristic
     this.lightbulbService
@@ -151,10 +141,6 @@ export class MyStromLightbulbAccessory {
     }, 2000);
   }
 
-  /*
-   * This method is optional to implement. It is called when HomeKit ask to identify the accessory.
-   * Typical this only ever happens at the pairing process.
-   */
   identify(): void {
     this.platform.log.debug(
       'Identify! -> Who am I? I am',
@@ -162,29 +148,16 @@ export class MyStromLightbulbAccessory {
     );
   }
 
-  /**
-   * Handle "SET" requests from HomeKit
-   * These are sent when the user changes the state of an accessory, for example, turning on a Light bulb.
-   */
-  setOn(value: CharacteristicValue, callback: CharacteristicSetCallback) {
-    // implement your own code to turn your device on/off
+  private setOn(
+    value: CharacteristicValue,
+    callback: CharacteristicSetCallback,
+  ) {
     this.lightbulbState.on = value as boolean;
     this.setDeviceLightbulb({ isOn: this.lightbulbState.on });
-
-    /*
-         .catch((e) => {
-           this.platform.log.debug('Error updating Device ->', e.name);
-         });
-     */
-    // you must call the callback function
     callback(null);
   }
 
-  /**
-   * Handle the "GET" requests from HomeKit
-   */
-  getOn(callback: CharacteristicGetCallback) {
-    // implement your own code to check if the device is on
+  private getOn(callback: CharacteristicGetCallback) {
     const isOn = this.lightbulbState.on;
     this.platform.log.debug('Get Characteristic On ->', isOn);
 
@@ -195,7 +168,6 @@ export class MyStromLightbulbAccessory {
     value: CharacteristicValue,
     callback: CharacteristicSetCallback,
   ) {
-    // implement your own code to set the brightness
     this.lightbulbState.hue = value as number;
 
     const state: MyStromLightbulbReport = this.lightbulbState;
@@ -210,7 +182,6 @@ export class MyStromLightbulbAccessory {
     value: CharacteristicValue,
     callback: CharacteristicSetCallback,
   ) {
-    // implement your own code to set the brightness
     this.lightbulbState.saturation = value as number;
 
     // Call setDimmerValue()
@@ -226,7 +197,6 @@ export class MyStromLightbulbAccessory {
     value: CharacteristicValue,
     callback: CharacteristicSetCallback,
   ) {
-    // implement your own code to set the brightness
     this.lightbulbState.value = value as number;
     const state: MyStromLightbulbReport = this.lightbulbState;
     await this.setDeviceLightbulb({

@@ -8,19 +8,20 @@ import type {
 } from 'homebridge';
 import { Policy, ConsecutiveBreaker } from 'cockatiel';
 import { createSocket, Socket, RemoteInfo } from 'dgram';
-import axios, { AxiosRequestConfig } from 'axios';
-import http, { IncomingMessage, Server, ServerResponse } from 'http';
-import { URL } from 'url';
+import axios, { AxiosRequestConfig, AxiosError } from 'axios';
+import * as bodyParser from 'body-parser';
+import e = require('express');
+import * as os from 'os';
 
 // Internal Types
 import {
+  MYSTROM_SWITCH_TYPES,
   DingzDevices,
   DingzDeviceInfo,
   DeviceInfo,
   DingzAccessories,
   DeviceTypes,
   MyStromDeviceInfo,
-  MYSTROM_SWITCH_TYPES,
   DingzAccessoryType,
   ButtonId,
   ButtonAction,
@@ -32,13 +33,21 @@ import {
   DeviceNotReachableError,
 } from './util/errors';
 
-import { PLATFORM_NAME, PLUGIN_NAME, DINGZ_DISCOVERY_PORT } from './settings';
+import {
+  PLATFORM_NAME,
+  PLUGIN_NAME,
+  DINGZ_DISCOVERY_PORT,
+  DINGZ_CALLBACK_PORT,
+} from './settings';
 
-// TODO: Some refactoring for beter event handling, cleanup of the code and separation of concerns
+// TODO: Some refactoring for better event handling, cleanup of the code and separation of concerns
+import { DingzEventBus, DingzEvent } from './util/dingzEventBus';
+
+// Accessory classes
 import { DingzDaAccessory } from './dingzAccessory';
 import { MyStromSwitchAccessory } from './myStromSwitchAccessory';
 import { MyStromLightbulbAccessory } from './myStromLightbulbAccessory';
-import { DingzEventBus, DingzEvent } from './util/dingzEventBus';
+import { MyStromButtonAccessory } from './myStromButtonAccessory';
 
 // Define a policy that will retry 20 times at most
 const retry = Policy.handleAll()
@@ -56,7 +65,7 @@ const retryWithBreaker = Policy.wrap(retry, circuitBreaker);
 
 /**
  * HomebridgePlatform
- * This class is the main constructor for your plugin, this is where you should
+ * This class is the main constructor for the plugin, this is where you should
  * parse the user config and discover/register accessories with Homebridge.
  */
 export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
@@ -67,7 +76,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
   // this is used to track restored cached accessories
   public accessories: DingzAccessories = {};
   private discovered = new Map();
-  private requestServer?: Server;
+  private readonly app: e.Application = e();
 
   constructor(
     public readonly log: Logger,
@@ -91,7 +100,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
         this.setupDeviceDiscovery();
       }
 
-      this.createButtonHttpService();
+      this.callbackServer();
     });
   }
 
@@ -109,15 +118,13 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
 
     // TODO: Remove the device if it has vanished for too long (i.e. restore was not possible for a long time)
     const context = accessory.context;
-    let platformAccessory:
-      | DingzDaAccessory
-      | MyStromSwitchAccessory
-      | MyStromLightbulbAccessory;
+    let platformAccessory: DingzAccessoryType;
     if (context.device && context.device.accessoryClass) {
       this.log.debug(
         'Restoring accessory of class ->',
         context.device.accessoryClass,
       );
+
       switch (context.device.accessoryClass) {
         case 'DingzDaAccessory':
           // add the restored accessory to the accessories cache so we can track if it has already been registered
@@ -130,6 +137,10 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
         case 'MyStromLightbulbAccessory':
           // add the restored accessory to the accessories cache so we can track if it has already been registered
           platformAccessory = new MyStromLightbulbAccessory(this, accessory);
+          break;
+        case 'MyStromButtonAccessory':
+          // add the restored accessory to the accessories cache so we can track if it has already been registered
+          platformAccessory = new MyStromButtonAccessory(this, accessory);
           break;
         default:
           this.log.warn(
@@ -149,11 +160,6 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
     }
   }
 
-  /**
-   * This is an example method showing how to register discovered accessories.
-   * Accessories must only be registered once, previously created accessories
-   * must not be registered again to prevent "duplicate UUID" errors.
-   */
   private async addDevices() {
     // loop over the discovered devices and register each one if it has not already been registered
     for (const device of this.config.devices) {
@@ -234,9 +240,6 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
           accessoryClass: 'DingzDaAccessory',
         };
 
-        // generate a unique id for the accessory this should be generated from
-        // something globally unique, but constant, for example, the device serial
-        // number or MAC address
         const uuid = this.api.hap.uuid.generate(deviceInfo.mac);
 
         // check that the device has not already been registered by checking the
@@ -331,9 +334,6 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
           accessoryClass: 'MyStromSwitchAccessory',
         };
 
-        // generate a unique id for the accessory this should be generated from
-        // something globally unique, but constant, for example, the device serial
-        // number or MAC address
         const uuid = this.api.hap.uuid.generate(deviceInfo.mac);
 
         // check that the device has not already been registered by checking the
@@ -417,9 +417,154 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
           accessoryClass: 'MyStromLightbulbAccessory',
         };
 
-        // generate a unique id for the accessory this should be generated from
-        // something globally unique, but constant, for example, the device serial
-        // number or MAC address
+        const uuid = this.api.hap.uuid.generate(deviceInfo.mac);
+
+        // check that the device has not already been registered by checking the
+        // cached devices we stored in the `configureAccessory` method above
+        if (!this.accessories[uuid]) {
+          this.log.info('Registering new accessory:', deviceInfo.name);
+          // create a new accessory
+          const accessory = new this.api.platformAccessory(
+            deviceInfo.name,
+            uuid,
+          );
+
+          // store a copy of the device object in the `accessory.context`
+          // the `context` property can be used to store any data about the accessory you may need
+          accessory.context.device = deviceInfo;
+
+          // create the accessory handler (which will add services as needed)
+          // this is imported from `dingzDaAccessory.ts`
+          const myStromLightbulbAccessory = new MyStromLightbulbAccessory(
+            this,
+            accessory,
+          );
+
+          // link the accessory to your platform
+          this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [
+            accessory,
+          ]);
+
+          // push into accessory cache
+          this.accessories[uuid] = myStromLightbulbAccessory;
+          return true;
+        } else {
+          this.log.warn('Accessory already initialized');
+          this.accessories[uuid].identify();
+          return true;
+        }
+      }
+    });
+
+    // Nothing found, throw error
+    if (!success) {
+      throw new DeviceNotReachableError(
+        `Device not found -> ${name} (${address})`,
+      );
+    }
+    return true;
+  }
+
+  // Add one device based on address and name
+  private addMyStromButtonDevice({
+    address,
+    name = 'myStrom Button',
+    token,
+    mac,
+  }: {
+    address: string;
+    name?: string;
+    token?: string;
+    mac: string;
+  }): boolean {
+    // Run a diacovery of changed things every 10 seconds
+    this.log.debug(`Add configured/discovered device -> ${name} (${address})`);
+
+    const uuid = this.api.hap.uuid.generate(mac.toUpperCase());
+
+    // check that the device has not already been registered by checking the
+    // cached devices we stored in the `configureAccessory` method above
+    if (!this.accessories[uuid]) {
+      this.log.info('Registering new accessory:', name);
+      // create a new accessory
+      const accessory = new this.api.platformAccessory(name, uuid);
+
+      const deviceInfo: DeviceInfo = {
+        name: name,
+        address: address,
+        mac: mac?.toUpperCase(),
+        token: token,
+        model: '104',
+        accessoryClass: 'MyStromButtonAccessory',
+      };
+      // store a copy of the device object in the `accessory.context`
+      // the `context` property can be used to store any data about the accessory you may need
+      accessory.context.device = deviceInfo;
+
+      // create the accessory handler (which will add services as needed)
+      // this is imported from `dingzDaAccessory.ts`
+      const myStromButtonAccessory = new MyStromButtonAccessory(
+        this,
+        accessory,
+      );
+
+      // link the accessory to your platform
+      this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [
+        accessory,
+      ]);
+
+      // push into accessory cache
+      this.accessories[uuid] = myStromButtonAccessory;
+
+      // Buttons can be initialized without fetching all Info -- however it would be good to fetch it anyway
+      this.getMyStromDeviceInfo({
+        address,
+        token,
+      }).then((data) => {
+        if (typeof data !== 'undefined') {
+          const info = data as MyStromDeviceInfo;
+
+          if (info.type !== 104) {
+            throw new InvalidTypeError(
+              `Device ${name} at ${address} is of the wrong type (${info.type} instead of "myStrom Button")`,
+            );
+          }
+          accessory.context.device.hwInfo = info;
+        }
+      });
+
+      return true;
+    } else {
+      this.log.warn('Accessory already initialized');
+      this.accessories[uuid].identify();
+      return true;
+    }
+
+    return false;
+    // Won't work ...
+    const success = this.getMyStromDeviceInfo({
+      address,
+      token,
+    }).then((data) => {
+      if (typeof data !== 'undefined') {
+        const info = data as MyStromDeviceInfo;
+
+        if (info.type !== 104) {
+          throw new InvalidTypeError(
+            `Device ${name} at ${address} is of the wrong type (${info.type} instead of "myStrom Lightbulb")`,
+          );
+        }
+
+        const deviceInfo: DeviceInfo = {
+          name: info.name ?? name,
+          address: address,
+          mac: info.mac.toUpperCase(),
+          token: token,
+          model: '102',
+          hwInfo: info,
+          accessoryClass: 'MyStromLightbulbAccessory',
+        };
+
         const uuid = this.api.hap.uuid.generate(deviceInfo.mac);
 
         // check that the device has not already been registered by checking the
@@ -477,11 +622,13 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
       }
 
       const t: DeviceTypes = msg[6];
-      const mac: string = this.byteToHexString(msg.subarray(0, 5));
+      const mac: string = this.byteToHexString(msg.subarray(0, 6));
 
       if (this.discovered.has(mac)) {
         this.log.debug(
-          'Accessory at -> ',
+          'Accessory with MAC',
+          mac,
+          'at ->',
           remoteInfo.address,
           ' already initialized. Stopping Discovery here.',
         );
@@ -489,10 +636,19 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
       } else {
         switch (t) {
           case DeviceTypes.MYSTROM_BUTTON_PLUS:
-          case DeviceTypes.MYSTROM_BUTTON:
             throw new DeviceNotImplementedError(
               `Device discovered at ${remoteInfo.address} of unsupported type ${DeviceTypes[t]}`,
             );
+            break;
+          case DeviceTypes.MYSTROM_BUTTON:
+            retryWithBreaker.execute(() => {
+              this.addMyStromButtonDevice({
+                address: remoteInfo.address,
+                name: 'Auto-Discovered MyStrom Button',
+                token: this.config.globalToken,
+                mac: mac,
+              });
+            });
             break;
           case DeviceTypes.MYSTROM_LEDSTRIP:
             retryWithBreaker.execute(() => {
@@ -570,39 +726,85 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
     return this.accessories[uuid];
   }
 
+  // Set the callback URL for the device
+  public async setButtonCallbackUrl({
+    baseUrl,
+    token,
+  }: {
+    baseUrl: string;
+    token?: string;
+  }) {
+    // FIXME: check for existing URL and add new one
+    const setCallbackUrl = `${baseUrl}/api/v1/action/`;
+    this.log.debug('Setting the callback URL -> ', this.getButtonCallbackUrl());
+    await this.fetch({
+      url: setCallbackUrl,
+      method: 'POST',
+      token: token,
+      body: this.getButtonCallbackUrl(),
+    });
+  }
+
   // Create a Service to listen for Dingz Button events
-  createButtonHttpService() {
-    this.requestServer = http.createServer(this.handleRequest.bind(this));
-    this.requestServer.listen(this.config.callbackPort ?? 18081, () =>
+  private callbackServer() {
+    this.app.use(bodyParser.urlencoded());
+    this.app.post('/button', this.handleRequest.bind(this));
+    this.app.listen(this.config.callbackPort ?? DINGZ_CALLBACK_PORT, () =>
       this.log.warn(
-        `Callback server listening on ${this.config.callbackPort ?? 18081}...`,
+        `Callback server listening for POST requests on ${
+          this.config.callbackPort ?? DINGZ_CALLBACK_PORT
+        }... use ${this.getButtonCallbackUrl()} as URL for your DingZ or MyStrom callbacks`,
       ),
     );
   }
 
-  private handleRequest(request: IncomingMessage, response: ServerResponse) {
+  private handleRequest(request: e.Request, response: e.Response) {
     if (request.url) {
-      const requestUrl: URL = new URL(
-        request.url,
-        `http://${request.headers.host}`,
-      );
       response.writeHead(204); // 204 No content
       response.end(() => {
-        const p = requestUrl.searchParams;
-        if (p.has('mac') && p.has('action') && p.has('button')) {
-          const mac: string = p.get('mac') || '';
-          const button: string = p.get('button') || '';
-          const action = p.get('action') || '1';
+        this.log.debug('Incoming request ->', request.body);
+        const b = request.body;
+        const mac: string = b.mac ?? '';
+        const button = b.index;
+        const action = b.action;
+        const battery = b.battery;
 
+        // Various types of callbacks
+        if (button) {
+          this.log.warn('-> DingZ/Multi-button Action');
           this.eb.emit(
             DingzEvent.BTN_PRESS,
             mac,
-            button as ButtonId,
             action as ButtonAction,
+            button as ButtonId,
           );
+        } else {
+          if (action) {
+            this.log.warn('-> Simple Button action');
+            this.eb.emit(
+              DingzEvent.BTN_PRESS,
+              mac,
+              action as ButtonAction,
+              battery as number,
+            );
+          } else {
+            this.log.warn('-> Button Heartbeat');
+            this.eb.emit(
+              DingzEvent.BTN_PRESS,
+              mac,
+              action as ButtonAction,
+              battery,
+            );
+          }
         }
       });
     }
+  }
+
+  public getButtonCallbackUrl() {
+    const hostname: string = this.config.callbackHostname ?? os.hostname();
+    const port: number = this.config.callbackPort ?? DINGZ_CALLBACK_PORT;
+    return `post://${hostname}:${port}/button`;
   }
 
   /**
@@ -675,13 +877,24 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
           return response.status;
         }
       })
-      .catch((e) => {
-        this.log.error('Error:', e);
-      });
+      .catch(this.handleError.bind(this));
     return data;
   }
 
-  byteToHexString(uint8arr: Uint8Array): string {
+  private handleError = (error: AxiosError) => {
+    if (error.response) {
+      this.log.error('HTTP Response Error ->' + error.config.url);
+      this.log.error(error.message);
+      this.log.error(error.response.data);
+      this.log.error(error.response.status.toString());
+      this.log.error(error.response.headers);
+    } else {
+      this.log.error('HTTP Response Error ->' + error.config.url);
+      this.log.error(error.message);
+    }
+  };
+
+  private byteToHexString(uint8arr: Uint8Array): string {
     if (!uint8arr) {
       return '';
     }

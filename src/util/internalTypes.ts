@@ -4,6 +4,7 @@
 import { DingzDaAccessory } from '../dingzAccessory';
 import { MyStromSwitchAccessory } from '../myStromSwitchAccessory';
 import { MyStromLightbulbAccessory } from '../myStromLightbulbAccessory';
+import { MyStromButtonAccessory } from '../myStromButtonAccessory';
 
 export interface DingzTemperatureData {
   success: boolean;
@@ -73,6 +74,7 @@ export interface MyStromDeviceInfo {
   mac: string;
   type: string | number;
   name?: string;
+  charge?: boolean;
   ssid: string;
   ip: string;
   mask: string;
@@ -122,13 +124,15 @@ export interface DeviceInfo {
   accessoryClass?:
     | 'DingzDaAccessory'
     | 'MyStromSwitchAccessory'
-    | 'MyStromLightbulbAccessory';
+    | 'MyStromLightbulbAccessory'
+    | 'MyStromButtonAccessory';
 }
 
 export type DingzAccessoryType =
   | DingzDaAccessory
   | MyStromSwitchAccessory
-  | MyStromLightbulbAccessory;
+  | MyStromLightbulbAccessory
+  | MyStromButtonAccessory;
 export interface DingzAccessories {
   [key: string]: DingzAccessoryType;
 }

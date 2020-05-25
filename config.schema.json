@@ -22,11 +22,16 @@
         "description": "Set this to 'off' if you want auto-discovery to be turned off.",
         "default": true
       },
+      "callbackHostname": {
+        "title": "Hostname / IP to use for button callbacks ",
+        "type": "string",
+        "format": "hostname",
+        "description": "In order to implement button actions, the DingZ plugin exposes a webserver for callbacks. By default, it will use the hostname where homebridge runs as address. Should you use a proxy service or run Homebridge inside a docker container, you might have to it manually."
+      },
       "callbackPort": {
         "title": "Port for button callbacks",
         "type": "number",
-        "description": "In order to implement button actions, the DingZ exposes a webserver for callbacks. By default, it listens on port 18081. Add this setting if you want to change this.",
-        "default": "18081"
+        "description": "In order to implement button actions, the DingZ plugin exposes a webserver for callbacks. By default, it listens on port 18081. Add this setting if you want to change this."
       },
       "devices": {
         "title": "Dingz Devices",
@@ -38,7 +43,6 @@
             "type": {
               "title": "Device Type",
               "type": "string",
-              "default": "form",
               "oneOf": [
                 { "title": "Dingz", "enum": ["Dingz"] },
                 { "title": "myStrom Switch", "enum": ["myStromSwitch"] },

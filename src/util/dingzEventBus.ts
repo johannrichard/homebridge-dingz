@@ -1,5 +1,6 @@
 import { EventEmitter } from 'events';
 import { DingzAccessoryType, ButtonId, ButtonAction } from './internalTypes';
+
 // Platform elements
 // EVENT TYPES
 export const enum DingzEvent {
@@ -11,7 +12,11 @@ export const enum DingzEvent {
 export declare interface DingzEventBus {
   on(
     event: DingzEvent.BTN_PRESS,
-    listener: (mac: string, button: ButtonId, action: ButtonAction) => void,
+    listener: (mac: string, action: ButtonAction, battery: number) => void,
+  ): this;
+  on(
+    event: DingzEvent.BTN_PRESS,
+    listener: (mac: string, action: ButtonAction, button: ButtonId) => void,
   ): this;
   on(
     event: DingzEvent.UPDATE_INFO,
@@ -22,8 +27,14 @@ export declare interface DingzEventBus {
   emit(
     event: DingzEvent.BTN_PRESS,
     mac: string,
+    action: ButtonAction,
+    battery: number,
+  ): boolean;
+  emit(
+    event: DingzEvent.BTN_PRESS,
+    mac: string,
+    action: ButtonAction,
     button: ButtonId,
-    action?: ButtonAction,
   ): boolean;
   emit(event: DingzEvent.UPDATE_INFO, accessory: DingzAccessoryType): boolean;
   emit(event: DingzEvent.STATE_UPDATE): boolean;

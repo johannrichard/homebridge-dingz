@@ -28,10 +28,7 @@ export class MyStromSwitchAccessory {
   private device: DeviceInfo;
   private mystromDeviceInfo: MyStromDeviceInfo;
   private baseUrl: string;
-  /**
-   * These are just used to create a working example
-   * You should implement your own code to track the state of your accessory
-   */
+
   private outletState = {
     relay: false,
     temperature: 0,
@@ -74,25 +71,14 @@ export class MyStromSwitchAccessory {
         this.device.mac,
       );
 
-    // get the LightBulb service if it exists, otherwise create a new LightBulb service
-    // you can create multiple services for each accessory
     this.outletService =
       this.accessory.getService(this.platform.Service.Outlet) ??
       this.accessory.addService(this.platform.Service.Outlet);
 
-    // To avoid "Cannot add a Service with the same UUID another Service without also defining a unique 'subtype' property." error,
-    // when creating multiple services of the same type, you need to use the following syntax to specify a name and subtype id:
-    // this.accessory.getService('NAME') ?? this.accessory.addService(this.platform.Service.Lightbulb, 'NAME', 'USER_DEFINED_SUBTYPE');
-
-    // set the service name, this is what is displayed as the default name on the Home app
-    // in this example we are using the name we stored in the `accessory.context` in the `discoverDevices` method.
     this.outletService.setCharacteristic(
       this.platform.Characteristic.Name,
       this.device.name ?? `${accessory.context.device.model} Outlet`,
     );
-
-    // each service must implement at-minimum the "required characteristics" for the given service type
-    // see https://developers.homebridge.io/#/service/Lightbulb
 
     // register handlers for the On/Off Characteristic
     this.outletService
@@ -122,12 +108,6 @@ export class MyStromSwitchAccessory {
         .on(CharacteristicEventTypes.GET, this.getTemperature.bind(this));
     }
 
-    // EXAMPLE ONLY
-    // Example showing how to update the state of a Characteristic asynchronously instead
-    // of using the `on('get')` handlers.
-    //
-    // Here we change update the brightness to a random value every 5 seconds using
-    // the `updateCharacteristic` method.
     setInterval(() => {
       this.getDeviceReport()
         .then((report) => {
@@ -156,10 +136,6 @@ export class MyStromSwitchAccessory {
     }, 2000);
   }
 
-  /*
-   * This method is optional to implement. It is called when HomeKit ask to identify the accessory.
-   * Typical this only ever happens at the pairing process.
-   */
   identify(): void {
     this.platform.log.debug(
       'Identify! -> Who am I? I am',
@@ -167,41 +143,24 @@ export class MyStromSwitchAccessory {
     );
   }
 
-  /**
-   * Handle "SET" requests from HomeKit
-   * These are sent when the user changes the state of an accessory, for example, turning on a Light bulb.
-   */
-  setOn(value: CharacteristicValue, callback: CharacteristicSetCallback) {
-    // implement your own code to turn your device on/off
+  private setOn(
+    value: CharacteristicValue,
+    callback: CharacteristicSetCallback,
+  ) {
     this.platform.log.debug('Set Characteristic On ->', value);
     this.outletState.relay = value as boolean;
     this.setDeviceState(this.outletState.relay);
-
-    /*
-         .catch((e) => {
-           this.platform.log.debug('Error updating Device ->', e.name);
-         });
-     */
-    // you must call the callback function
     callback(null);
   }
 
-  /**
-   * Handle the "GET" requests from HomeKit
-   */
-  getOn(callback: CharacteristicGetCallback) {
-    // implement your own code to check if the device is on
+  private getOn(callback: CharacteristicGetCallback) {
     const isOn = this.outletState.relay;
     this.platform.log.debug('Get Characteristic On ->', isOn);
 
     callback(null, isOn);
   }
 
-  /**
-   * Handle the "GET" requests from HomeKit
-   */
   private getTemperature(callback: CharacteristicGetCallback) {
-    // implement your own code to check if the device is on
     const temperature: number = this.outletState.temperature;
     this.platform.log.debug(
       'Get Characteristic Temperature ->',
@@ -212,11 +171,7 @@ export class MyStromSwitchAccessory {
     callback(null, temperature);
   }
 
-  /**
-   * Handle the "GET" requests from HomeKit
-   */
   private getOutletInUse(callback: CharacteristicGetCallback) {
-    // implement your own code to check if the device is on
     const inUse: boolean = this.outletState.power > 0;
     this.platform.log.debug('Get Characteristic OutletInUse ->', inUse);
     callback(null, inUse);
