@@ -1013,7 +1013,11 @@ export class DingzDaAccessory extends EventEmitter {
         service.removeCharacteristic(
           service.getCharacteristic(this.platform.Characteristic.Brightness),
         );
-      } else {
+      } else if (
+        !service.testCharacteristic(this.platform.Characteristic.Brightness)
+      ) {
+        // Only add listeners if needed, i.e. if Characteristic is not yet defined
+        service.addCharacteristic(this.platform.Characteristic.Brightness);
         service
           .getCharacteristic(this.platform.Characteristic.Brightness)
           .on(
