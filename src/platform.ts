@@ -25,7 +25,7 @@ import {
   DingzAccessoryType,
   ButtonId,
   ButtonAction,
-} from './util/internalTypes';
+} from './util/commonTypes';
 
 import {
   InvalidTypeError,
@@ -730,7 +730,6 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
     oldUrl?: string;
     endpoints: string[];
   }) {
-    // FIXME: check for existing URL and add new one
     const setActionUrl = `${baseUrl}/api/v1/action/`;
     let callbackUrl: string = this.getCallbackUrl();
     if (oldUrl?.endsWith('||')) {

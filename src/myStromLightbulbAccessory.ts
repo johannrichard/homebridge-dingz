@@ -12,7 +12,7 @@ import {
   DeviceInfo,
   MyStromDeviceInfo,
   MyStromLightbulbReport,
-} from './util/internalTypes';
+} from './util/commonTypes';
 import simpleColorConverter from 'simple-color-converter';
 import qs from 'qs';
 

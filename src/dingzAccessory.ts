@@ -35,7 +35,7 @@ import {
   DingzState,
   DingzActionUrl,
   ButtonState,
-} from './util/internalTypes';
+} from './util/commonTypes';
 
 import {
   MethodNotImplementedError,

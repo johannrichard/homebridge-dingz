@@ -12,7 +12,7 @@ import {
   DeviceInfo,
   MyStromDeviceInfo,
   MyStromSwitchReport,
-} from './util/internalTypes';
+} from './util/commonTypes';
 
 /**
  * Platform Accessory

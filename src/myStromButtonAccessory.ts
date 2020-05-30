@@ -11,7 +11,7 @@ import {
   DeviceInfo,
   MyStromDeviceInfo,
   ButtonAction,
-} from './util/internalTypes';
+} from './util/commonTypes';
 import { DingzEvent } from './util/dingzEventBus';
 
 // Policy for long running tasks, retry every hour
