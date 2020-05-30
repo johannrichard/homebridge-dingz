@@ -33,6 +33,8 @@ import {
   DingzDimmerConfigValue,
   ButtonId,
   DingzState,
+  DingzActionUrl,
+  ButtonState,
 } from './util/internalTypes';
 
 import {
@@ -70,6 +72,7 @@ export class DingzDaAccessory extends EventEmitter {
   private readonly mutex = new Mutex();
 
   private services: Service[] = [];
+  private motionService?: Service;
 
   private _updatedDeviceInfo?: DingzDeviceInfo;
   private _updatedDeviceInputConfig?: DingzInputInfoItem;
@@ -93,10 +96,10 @@ export class DingzDaAccessory extends EventEmitter {
     } as DingzLEDState,
     // Inputs
     Buttons: {
-      '1': ButtonAction.SINGLE_PRESS,
-      '2': ButtonAction.SINGLE_PRESS,
-      '3': ButtonAction.SINGLE_PRESS,
-      '4': ButtonAction.SINGLE_PRESS,
+      '1': { event: ButtonAction.SINGLE_PRESS, state: ButtonState.OFF },
+      '2': { event: ButtonAction.SINGLE_PRESS, state: ButtonState.OFF },
+      '3': { event: ButtonAction.SINGLE_PRESS, state: ButtonState.OFF },
+      '4': { event: ButtonAction.SINGLE_PRESS, state: ButtonState.OFF },
     },
     // Sensors
     Temperature: 0,
@@ -138,7 +141,11 @@ export class DingzDaAccessory extends EventEmitter {
       .updateCharacteristic(this.platform.Characteristic.Name, this.device.name)
       .updateCharacteristic(
         this.platform.Characteristic.Manufacturer,
-        'Iolo AG',
+        'iolo AG',
+      )
+      .updateCharacteristic(
+        this.platform.Characteristic.AppMatchingIdentifier,
+        'ch.iolo.dingz.consumer',
       )
       .updateCharacteristic(
         this.platform.Characteristic.Model,
@@ -223,11 +230,29 @@ export class DingzDaAccessory extends EventEmitter {
           );
         });
 
-        // Set the callback URL (Override!)
-        this.platform.setButtonCallbackUrl({
-          baseUrl: this.baseUrl,
-          token: this.device.token,
+        this.enablePIRCallback();
+        this.getButtonCallbackUrl().then((callBackUrl) => {
+          if (!callBackUrl?.url.includes(this.platform.getCallbackUrl())) {
+            this.platform.log.warn(
+              'Update existing callback URL ->',
+              callBackUrl,
+            );
+            // Set the callback URL (Override!)
+            this.platform.setButtonCallbackUrl({
+              baseUrl: this.baseUrl,
+              token: this.device.token,
+              oldUrl: callBackUrl.url,
+              // FIXME
+              endpoints: ['generic', 'pir/single'],
+            });
+          } else {
+            this.platform.log.debug(
+              'Callback URL already set ->',
+              callBackUrl?.url,
+            );
+          }
         });
+
         // Retry at least once every day
         retrySlow.execute(() => {
           this.updateAccessory();
@@ -457,38 +482,59 @@ export class DingzDaAccessory extends EventEmitter {
 
     this.platform.eb.on(
       DingzEvent.BTN_PRESS,
-      (mac, action: ButtonAction, button: ButtonId) => {
+      (mac, action: ButtonAction, button: ButtonId | '5') => {
         if (mac === this.device.mac && button) {
-          this.dingzStates.Buttons[button] = action ?? 1;
-          const service = this.accessory.getServiceById(
-            this.platform.Service.StatelessProgrammableSwitch,
-            button,
+          this.platform.log.debug(
+            `Button ${button} of ${this.device.name} pressed -> ${action}, MAC: ${mac} (This: ${this.device.mac})`,
           );
-
-          const ProgrammableSwitchEvent = this.platform.Characteristic
-            .ProgrammableSwitchEvent;
-          if (service) {
-            this.platform.log.warn(
-              `Button ${button} of ${this.device.name} (${service.displayName}) pressed -> ${action}`,
+          if (button === '5') {
+            // PUSH MOTION
+            if (!(this.platform.config.motionPoller ?? true)) {
+              this.platform.log.debug(
+                `Button ${button} of ${this.device.name} Motion -> ${action}`,
+              );
+              this.platform.log.debug('Motion Update from CALLBACK');
+              this.motionService
+                ?.getCharacteristic(this.platform.Characteristic.MotionDetected)
+                .updateValue(
+                  action === ButtonAction.PIR_MOTION_START ? true : false,
+                );
+            }
+          } else {
+            this.dingzStates.Buttons[button].event = action ?? 1;
+            this.dingzStates.Buttons[button].state =
+              this.dingzStates.Buttons[button].state === ButtonState.OFF
+                ? ButtonState.ON
+                : ButtonState.OFF;
+            const service = this.accessory.getServiceById(
+              this.platform.Service.StatelessProgrammableSwitch,
+              button,
+            );
+            const ProgrammableSwitchEvent = this.platform.Characteristic
+              .ProgrammableSwitchEvent;
+            service
+              ?.getCharacteristic(
+                this.platform.Characteristic.ProgrammableSwitchOutputState,
+              )
+              .updateValue(this.dingzStates.Buttons[button].state);
+            this.platform.log.info(
+              `Button ${button} of ${this.device.name} (${service?.displayName}) pressed -> ${action}`,
             );
             switch (action) {
               case ButtonAction.SINGLE_PRESS:
                 service
-                  .getCharacteristic(ProgrammableSwitchEvent)
+                  ?.getCharacteristic(ProgrammableSwitchEvent)
                   .updateValue(ProgrammableSwitchEvent.SINGLE_PRESS);
-                this.platform.log.warn('SINGLE_PRESS');
                 break;
               case ButtonAction.DOUBLE_PRESS:
                 service
-                  .getCharacteristic(ProgrammableSwitchEvent)
+                  ?.getCharacteristic(ProgrammableSwitchEvent)
                   .updateValue(ProgrammableSwitchEvent.DOUBLE_PRESS);
-                this.platform.log.warn('DOUBLE_PRESS');
                 break;
               case ButtonAction.LONG_PRESS:
                 service
-                  .getCharacteristic(ProgrammableSwitchEvent)
+                  ?.getCharacteristic(ProgrammableSwitchEvent)
                   .updateValue(ProgrammableSwitchEvent.LONG_PRESS);
-                this.platform.log.warn('LONG_PRESS');
                 break;
             }
           }
@@ -500,7 +546,7 @@ export class DingzDaAccessory extends EventEmitter {
   private addButtonService(name: string, button: ButtonId): Service {
     this.platform.log.debug('Adding Button Service ->', name, ' -> ', button);
 
-    const newService =
+    const buttonService =
       this.accessory.getServiceById(
         this.platform.Service.StatelessProgrammableSwitch,
         button,
@@ -511,31 +557,66 @@ export class DingzDaAccessory extends EventEmitter {
         button,
       );
 
-    newService.setCharacteristic(
+    buttonService.setCharacteristic(
       this.platform.Characteristic.ServiceLabelIndex,
       button,
     );
-    // newService.setCharacteristic(
-    //   this.platform.Characteristic.DisplayOrder,
-    //   button,
+
+    // Stateful Programmable Switches are not anymore exposed in HomeKit. However,
+    //  the "ProgrammableSwitchOutputState" Characteristic added to a
+    // StatelessProgrammableSwitch (i.e., a button), can be read out -- and used --
+    // by third-party apps for HomeKite, allowing users to create automations
+    // not only based on the button events, but also based on a state that's toggled
+    buttonService
+      .getCharacteristic(
+        this.platform.Characteristic.ProgrammableSwitchOutputState,
+      )
+      .on(
+        CharacteristicEventTypes.GET,
+        this.getSwitchButtonState.bind(this, button),
+      );
+    // .on(
+    //   CharacteristicEventTypes.SET,
+    //   this.setSwitchButtonState.bind(this, button),
     // );
-    // newService.setCharacteristic(
-    //   this.platform.Characteristic.ServiceLabelNamespace,
-    //   'Dingz Buttons',
-    // );
-    newService
+
+    buttonService
       .getCharacteristic(this.platform.Characteristic.ProgrammableSwitchEvent)
       .on(CharacteristicEventTypes.GET, this.getButtonState.bind(this, button));
 
-    return newService;
+    return buttonService;
   }
 
   private getButtonState(
     button: ButtonId,
     callback: CharacteristicGetCallback,
   ) {
-    const currentState = this.dingzStates.Buttons[button];
+    const currentState = this.dingzStates.Buttons[button].event;
     callback(null, currentState);
+  }
+
+  private getSwitchButtonState(
+    button: ButtonId,
+    callback: CharacteristicGetCallback,
+  ) {
+    const currentState = this.dingzStates.Buttons[button].state;
+    this.platform.log.info(
+      'Get Swicth State ->',
+      button,
+      '-> state:',
+      currentState,
+    );
+    callback(null, currentState);
+  }
+
+  private setSwitchButtonState(
+    button: ButtonId,
+    value: CharacteristicValue,
+    callback: CharacteristicSetCallback,
+  ) {
+    this.dingzStates.Buttons[button].state = value as ButtonState;
+    this.platform.log.info('Set Switch State ->', button, '-> state:', value);
+    callback(null);
   }
 
   private addDimmerService({
@@ -629,8 +710,8 @@ export class DingzDaAccessory extends EventEmitter {
     value: CharacteristicValue,
     callback: CharacteristicSetCallback,
   ) {
-    this.dingzStates.Dimmers[index].on = value as boolean;
     try {
+      this.dingzStates.Dimmers[index].on = value as boolean;
       this.setDeviceDimmer(index, value as boolean);
     } catch (e) {
       this.platform.log.error(
@@ -826,43 +907,49 @@ export class DingzDaAccessory extends EventEmitter {
    * Motion Service Methods
    */
   private addMotionService() {
-    let service: Service | undefined = undefined;
-
-    service =
+    this.motionService =
       this.accessory.getService(this.platform.Service.MotionSensor) ??
       this.accessory.addService(this.platform.Service.MotionSensor);
-    service.setCharacteristic(this.platform.Characteristic.Name, 'Motion');
-    this.services.push(service);
+    this.motionService.setCharacteristic(
+      this.platform.Characteristic.Name,
+      'Motion',
+    );
+    this.services.push(this.motionService);
     // Only check for motion if we have a PIR and set the Interval
-    const motionInterval: NodeJS.Timer = setInterval(() => {
-      this.getDeviceMotion()
-        .then((data) => {
-          if (data?.success) {
-            const isMotion: boolean = data.motion;
-
-            // Only update if motionService exists *and* if there's a change in motion'
-            if (service && this.dingzStates.Motion !== isMotion) {
-              this.dingzStates.Motion = isMotion;
-              service
-                .getCharacteristic(this.platform.Characteristic.MotionDetected)
-                .updateValue(isMotion);
-            }
-          } else {
-            throw new DeviceNotReachableError(
-              `Device can not be reached ->
+    if (this.platform.config.motionPoller ?? true) {
+      this.platform.log.info('Motion POLLING of', this.device.name, 'enabled');
+      const motionInterval: NodeJS.Timer = setInterval(() => {
+        this.getDeviceMotion()
+          .then((data) => {
+            if (data?.success) {
+              const isMotion: boolean = data.motion;
+              // Only update if motionService exists *and* if there's a change in motion'
+              if (this.motionService && this.dingzStates.Motion !== isMotion) {
+                this.platform.log.debug('Motion Update from POLLER');
+                this.dingzStates.Motion = isMotion;
+                this.motionService
+                  ?.getCharacteristic(
+                    this.platform.Characteristic.MotionDetected,
+                  )
+                  .updateValue(isMotion);
+              }
+            } else {
+              throw new DeviceNotReachableError(
+                `Device can not be reached ->
               ${this.device.name}-> ${this.device.address}`,
+              );
+            }
+          })
+          .catch((e) => {
+            this.platform.log.error(
+              'Error ->',
+              e.name,
+              ', unable to fetch DeviceMotion data',
             );
-          }
-        })
-        .catch((e) => {
-          this.platform.log.error(
-            'Error ->',
-            e.name,
-            ', unable to fetch DeviceMotion data',
-          );
-        });
-    }, 2000); // Shorter term updates for motion sensor
-    this.motionTimer = motionInterval;
+          });
+      }, 2000); // Shorter term updates for motion sensor
+      this.motionTimer = motionInterval;
+    }
   }
 
   // Remove motion service
@@ -1296,5 +1383,27 @@ export class DingzDaAccessory extends EventEmitter {
     } finally {
       release();
     }
+  }
+
+  // GEt the callback URL for the device
+  public async getButtonCallbackUrl(): Promise<DingzActionUrl> {
+    const getCallbackUrl = `${this.baseUrl}/api/v1/action/generic/generic`;
+    this.platform.log.debug('Getting the callback URL -> ', getCallbackUrl);
+    return await this.platform.fetch({
+      url: getCallbackUrl,
+      method: 'GET',
+      token: this.device.token,
+      returnBody: true,
+    });
+  }
+
+  async enablePIRCallback() {
+    const setActionUrl = `${this.baseUrl}/api/v1/action/pir/press_release/enable`;
+    this.platform.log.debug('Enabling the PIR callback -> ');
+    await this.platform.fetch({
+      url: setActionUrl,
+      method: 'POST',
+      token: this.device.token,
+    });
   }
 }

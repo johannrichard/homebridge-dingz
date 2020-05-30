@@ -144,6 +144,12 @@ export enum ButtonAction {
   SINGLE_PRESS = '1',
   DOUBLE_PRESS = '2',
   LONG_PRESS = '3',
+  PIR_MOTION_START = '8',
+  PIR_MOTION_STOP = '9',
+}
+export enum ButtonState {
+  OFF = 0,
+  ON = 1,
 }
 
 // Representation of dimmer in Dingz
@@ -210,6 +216,9 @@ export interface WindowCoveringState {
 }
 export type WindowCoveringProps = Record<WindowCoveringId, WindowCoveringState>;
 
+export interface DingzActionUrl {
+  url: string;
+}
 // FIXME: Replace dispersed data gathering with `api/v1/state` endpoint
 
 export interface DingzState {

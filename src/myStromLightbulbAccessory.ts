@@ -58,6 +58,10 @@ export class MyStromLightbulbAccessory {
         this.platform.Characteristic.Manufacturer,
         'MyStrom AG',
       )
+      .updateCharacteristic(
+        this.platform.Characteristic.AppMatchingIdentifier,
+        'ch.mystrom.iOSApp',
+      )
       .setCharacteristic(
         this.platform.Characteristic.Model,
         this.device.model as string,

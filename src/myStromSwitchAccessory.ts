@@ -54,6 +54,10 @@ export class MyStromSwitchAccessory {
         this.platform.Characteristic.Manufacturer,
         'MyStrom AG',
       )
+      .updateCharacteristic(
+        this.platform.Characteristic.AppMatchingIdentifier,
+        'ch.mystrom.iOSApp',
+      )
       .setCharacteristic(
         this.platform.Characteristic.Model,
         this.device.model as string,
@@ -154,14 +158,14 @@ export class MyStromSwitchAccessory {
   }
 
   private getOn(callback: CharacteristicGetCallback) {
-    const isOn = this.outletState.relay;
+    const isOn = this.outletState?.relay;
     this.platform.log.debug('Get Characteristic On ->', isOn);
 
     callback(null, isOn);
   }
 
   private getTemperature(callback: CharacteristicGetCallback) {
-    const temperature: number = this.outletState.temperature;
+    const temperature: number = this.outletState?.temperature;
     this.platform.log.debug(
       'Get Characteristic Temperature ->',
       temperature,
@@ -172,7 +176,7 @@ export class MyStromSwitchAccessory {
   }
 
   private getOutletInUse(callback: CharacteristicGetCallback) {
-    const inUse: boolean = this.outletState.power > 0;
+    const inUse: boolean = this.outletState?.power > 0;
     this.platform.log.debug('Get Characteristic OutletInUse ->', inUse);
     callback(null, inUse);
   }

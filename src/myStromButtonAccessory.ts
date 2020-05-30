@@ -54,6 +54,10 @@ export class MyStromButtonAccessory {
         'MyStrom AG',
       )
       .setCharacteristic(
+        this.platform.Characteristic.AppMatchingIdentifier,
+        'ch.mystrom.iOSApp',
+      )
+      .setCharacteristic(
         this.platform.Characteristic.Model,
         this.device.model as string,
       )
@@ -75,10 +79,10 @@ export class MyStromButtonAccessory {
     );
     const buttonService: Service =
       this.accessory.getService(
-        this.platform.Service.StatelessProgrammableSwitch,
+        this.platform.Service.StatefulProgrammableSwitch,
       ) ??
       this.accessory.addService(
-        this.platform.Service.StatelessProgrammableSwitch,
+        this.platform.Service.StatefulProgrammableSwitch,
       );
 
     buttonService.setCharacteristic(
@@ -117,7 +121,7 @@ export class MyStromButtonAccessory {
             .updateValue(battery);
         }
         const buttonService = this.accessory.getService(
-          this.platform.Service.StatelessProgrammableSwitch,
+          this.platform.Service.StatefulProgrammableSwitch,
         );
 
         const ProgrammableSwitchEvent = this.platform.Characteristic
@@ -177,6 +181,7 @@ export class MyStromButtonAccessory {
       this.platform.setButtonCallbackUrl({
         baseUrl: this.baseUrl,
         token: this.device.token,
+        endpoints: [],
       });
     });
   }

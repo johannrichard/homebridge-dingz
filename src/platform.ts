@@ -718,21 +718,36 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
   }
 
   // Set the callback URL for the device
+  // FIXME: Move this to a platform accessory base class
   public async setButtonCallbackUrl({
     baseUrl,
     token,
+    oldUrl,
+    endpoints,
   }: {
     baseUrl: string;
     token?: string;
+    oldUrl?: string;
+    endpoints: string[];
   }) {
     // FIXME: check for existing URL and add new one
-    const setCallbackUrl = `${baseUrl}/api/v1/action/`;
-    this.log.debug('Setting the callback URL -> ', this.getButtonCallbackUrl());
-    await this.fetch({
-      url: setCallbackUrl,
-      method: 'POST',
-      token: token,
-      body: this.getButtonCallbackUrl(),
+    const setActionUrl = `${baseUrl}/api/v1/action/`;
+    let callbackUrl: string = this.getCallbackUrl();
+    if (oldUrl?.endsWith('||')) {
+      callbackUrl = `${oldUrl}${callbackUrl}`;
+    } else if (oldUrl) {
+      callbackUrl = `${oldUrl}||${callbackUrl}`;
+    }
+    this.log.debug('Setting the callback URL -> ', callbackUrl);
+    endpoints.push('');
+    endpoints.forEach((endpoint) => {
+      this.log.debug(setActionUrl, 'Endpoint -> ', endpoint);
+      this.fetch({
+        url: `${setActionUrl}${endpoint}`,
+        method: 'POST',
+        token: token,
+        body: callbackUrl,
+      });
     });
   }
 
@@ -744,7 +759,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
       this.log.warn(
         `Callback server listening for POST requests on ${
           this.config.callbackPort ?? DINGZ_CALLBACK_PORT
-        }... use ${this.getButtonCallbackUrl()} as URL for your DingZ or MyStrom callbacks`,
+        }... use ${this.getCallbackUrl()} as URL for your DingZ or MyStrom callbacks`,
       ),
     );
   }
@@ -762,7 +777,10 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
 
         // Various types of callbacks
         if (button) {
-          this.log.warn('-> DingZ/Multi-button Action');
+          this.log.warn(
+            '-> DingZ/Multi-button Action from',
+            request.connection.remoteAddress,
+          );
           this.eb.emit(
             DingzEvent.BTN_PRESS,
             mac,
@@ -792,7 +810,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
     }
   }
 
-  public getButtonCallbackUrl() {
+  public getCallbackUrl() {
     const hostname: string = this.config.callbackHostname ?? os.hostname();
     const port: number = this.config.callbackPort ?? DINGZ_CALLBACK_PORT;
     return `post://${hostname}:${port}/button`;

@@ -2,7 +2,20 @@
 All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
+* Add support for the [myStrom Buttons](https://github.com/johannrichard/homebridge-dingz/wiki/myStrom-buttons)
 ---
+## [1.5.0] - 2020-05-30
+Version 1.5.0 adds support for DingZ Buttons. This is quite a significant change to the plugin so I expect new bugs and issues. There's quite [comprehensive]((https://github.com/johannrichard/homebridge-dingz/wiki/Dingz-buttons)) [documentation](https://github.com/johannrichard/homebridge-dingz/wiki/Plugin-settings) about how this works in the Wiki so please consult it to leanr more about limitations and caveats. 
+
+### Added
+* Add support for the Dingz Buttons, including [a *stealthy* "flip-switch" mode](https://github.com/johannrichard/homebridge-dingz/wiki/Dingz-buttons). Please consult the [Wiki](https://github.com/johannrichard/homebridge-dingz/wiki/Plugin-settings) for instructions if you want to use this on a different than the default port. 
+
+### Changed
+* Added more detail on the [plugin config](https://github.com/johannrichard/homebridge-dingz/wiki/Plugin-settings), the way the [buttons](https://github.com/johannrichard/homebridge-dingz/wiki/Dingz-buttons) and the way the [motion sensor](https://github.com/johannrichard/homebridge-dingz/wiki/Motion-sensor) works in the [Wiki](https://github.com/johannrichard/homebridge-dingz/wiki)
+* Discovery process stops without polling a discovered device if it has already been added to HomeKit. This reduces unnecessary strain of the devices
+* Additional fixes to make the plugin more robust in case of connection issues
+* Reduce logging to a more useful amount in case of network issues
+
 ## [1.4.3] - 2020-05-24
 ### Fixed
 * Bugfix release for auto-discovery on new-installs
@@ -147,6 +160,7 @@ The format is based on [Keep a Changelog][Keep a Changelog] and this project adh
 <!-- Versions -->
 [Unreleased]: https://github.com/johannrichard/homebridge-dingz/compare/v1.4.3...HEAD
 [Released]: https://github.com/johannrichard/homebridge-dingz/releases
+[1.5.0]: https://github.com/johannrichard/homebridge/compare/v1.4.3..v1.5.0
 [1.4.3]: https://github.com/johannrichard/homebridge-dingz/compare/v1.4.2..v1.4.3
 [1.4.2]: https://github.com/johannrichard/homebridge-dingz/compare/v1.4.1..v1.4.2
 [1.4.1]: https://github.com/johannrichard/homebridge-dingz/compare/v1.4.0..v1.4.1
