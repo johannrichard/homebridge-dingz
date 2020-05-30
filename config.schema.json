@@ -8,7 +8,7 @@
       "name": {
         "title": "Name",
         "type": "string",
-        "default": "Dingz SmartHome Device",
+        "default": "Dingz & myStrom SmartHome platform",
         "required": true
       },
       "globalToken": {
@@ -16,10 +16,16 @@
         "type": "string",
         "description": "Set a global authentication token. This will be used for auto-discovery on the local network and as default token for manually specified devices."
       },
+      "motionPoller": {
+        "title": "Poll Motion Sensor",
+        "type": "boolean",
+        "default": true,
+        "description": "By default, the DingZ will be polled every 2.5 seconds for the motion state. If you disable this, the DingZ will push a trigger event when motion begins and reset the motion event when the motion timer of the DingZ fires at the end of the period defined in the DingZ Web UI (default: 180s). While the pull puts additional strain on the DingZ *and* introduces a certain lag, the push mode is dependent on the timer setting which might not be what you want."
+      },
       "autoDiscover": {
         "title": "Auto Discovery of Devices",
         "type": "boolean",
-        "description": "Set this to 'off' if you want auto-discovery to be turned off.",
+        "description": "Disable this setting if you want auto-discovery to be turned off.",
         "default": true
       },
       "callbackHostname": {
