@@ -5,7 +5,7 @@
 
 This plugin implements some (but not all) functions of [Dingz](https://dingz.ch) Smart Home Devices. The plugin also supports (some) myStrom Devices as they share much of the same API definitions and concepts with Dingz.
 
-Please have a look at the [Wiki](https://github.com/johannrichard/homebridge-dingz/wiki) for more details on the configuration options and the plugin's behavior _vis-à-vis_ the DingZ' settings for outputs and more.
+Please have a look at the [Wiki](https://github.com/johannrichard/homebridge-dingz/wiki) for more details on the configuration options and the plugin's behavior _vis-à-vis_ the DingZ' settings for outputs and more, as well as on the supported devices.
 
 ## Auto-discovery
 The plugin attempts to
@@ -14,32 +14,6 @@ The plugin attempts to
 - auto-identify dingz settings and thus accessories by using device type, dip switch settings and input configuration
 
 Older myStrom WiFi Switches don't support auto-discovery and must be added manually. Depending on your setup, you might want or have to add all your devices manually. Configuration settings will be read-out automatically in either case.
-
-## DingZ
-The following Dingz services are implemented:
-
-- Dimmers (LightBulb) & Non-Dimmable Lights
-- Shades (Blinds)
-- Room temperature (Temperature)
-- Front LED (LightBulb)
-- Light Sensor
-- Motion sensor status (polling only, only for Dingz+ models)
-
-Not (yet) implemented:
-
-- Buttons (StatefulProgrammableSwitch)
-- Thermostat (Temperature)
-- Motion sensor webhook (push mode instead of polling)
-
-## MyStrom Devices
-
-Currently, the following MyStrom Devices are implemented in this plugin:
-
-- MyStrom WiFi Switch CH V1 (tested, must be manually added)
-- MyStrom WiFi Switch CH V2 (tested, w/ auto-discovery)
-- MyStrom WiFi Switch EU (untested, should work with auto-discovery too)
-- MyStrom WiFi Lightbulb (tested, w/ auto-discovery)
-- MyStrom WiFi LED Strip (tested, w/ auto-discovery)
 
 ## Usage
 Easy: Install and configure the plugin via [Config UI X](https://www.npmjs.com/package/homebridge-config-ui-x) in a working [HomeBridge](https://homebridge.io) environment. This is the recommended way.
