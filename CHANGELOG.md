@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 * Add support for the [myStrom Buttons](https://github.com/johannrichard/homebridge-dingz/wiki/myStrom-buttons)
 ---
+## [Released]
+
 ## [1.5.0] - 2020-05-30
 Version 1.5.0 adds support for DingZ Buttons. This is quite a significant change to the plugin so I expect new bugs and issues. There's quite [comprehensive]((https://github.com/johannrichard/homebridge-dingz/wiki/Dingz-buttons)) [documentation](https://github.com/johannrichard/homebridge-dingz/wiki/Plugin-settings) about how this works in the Wiki so please consult it to leanr more about limitations and caveats. 
 
@@ -79,7 +81,6 @@ After upgrading to this version, you have to remove the plugin config block from
 ### Fixed
 * Fixes for myStrom WiFi Lightbulb support
 
-## [Released]
 ## [1.1.3] - 2020-05-17
 ### Added
 * cb13f9b Exponential decay for accessory config check
