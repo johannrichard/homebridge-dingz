@@ -15,14 +15,13 @@ import * as os from 'os';
 
 // Internal Types
 import { DingzDevices, DingzDeviceInfo, ButtonId } from './util/dingzTypes';
-import { MyStromDeviceInfo } from './util/myStromTypes';
+import { MyStromDeviceInfo, MyStromSwitchTypes } from './util/myStromTypes';
 
 import {
-  MYSTROM_SWITCH_TYPES,
   DeviceInfo,
-  DingzAccessories,
+  AccessoryTypes,
   DeviceTypes,
-  DingzAccessoryType,
+  AccessoryType,
   ButtonAction,
 } from './util/commonTypes';
 
@@ -73,7 +72,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
   public readonly eb = new DingzEventBus();
 
   // this is used to track restored cached accessories
-  public accessories: DingzAccessories = {};
+  public accessories: AccessoryTypes = {};
   private discovered = new Map();
   private readonly app: e.Application = e();
 
@@ -117,7 +116,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
 
     // TODO: Remove the device if it has vanished for too long (i.e. restore was not possible for a long time)
     const context = accessory.context;
-    let platformAccessory: DingzAccessoryType;
+    let platformAccessory: AccessoryType;
     if (context.device && context.device.accessoryClass) {
       this.log.debug(
         'Restoring accessory of class ->',
@@ -328,7 +327,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
           address: address,
           mac: info.mac.toUpperCase(),
           token: token,
-          model: MYSTROM_SWITCH_TYPES[info.type] ?? 'CH v1',
+          model: MyStromSwitchTypes[info.type] ?? 'CH v1',
           hwInfo: info,
           accessoryClass: 'MyStromSwitchAccessory',
         };
@@ -711,7 +710,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
     return true;
   }
 
-  private getAccessoryByMac(mac: string): DingzAccessoryType {
+  private getAccessoryByMac(mac: string): AccessoryType {
     const uuid = this.api.hap.uuid.generate(mac.toUpperCase());
     return this.accessories[uuid];
   }

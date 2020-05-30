@@ -83,7 +83,7 @@ export type DingzDimmerConfigValue =
   | 'pulse'
   | 'ohmic';
 
-export interface DeviceDingzDimmerConfig {
+export interface DingzDimmerConfig {
   dimmers: [
     {
       output: DingzDimmerConfigValue;

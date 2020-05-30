@@ -1,3 +1,11 @@
+// Common Type since it's used by platform.ts to
+// work - around some bugs in different FW versions
+export const MyStromSwitchTypes = {
+  WS2: 'CH v2',
+  '106': 'CH v2',
+  WSEU: 'EU',
+  '107': 'EU',
+};
 export interface MyStromDeviceInfo {
   version: string;
   mac: string;

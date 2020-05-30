@@ -27,13 +27,17 @@ import {
   WindowCoveringId,
   WindowCoveringState,
   WindowCoveringTimer,
-  DeviceDingzDimmerConfig,
+  DingzDimmerConfig,
   DingzDimmerConfigValue,
   ButtonId,
   DingzState,
   ButtonState,
 } from './util/dingzTypes';
-import { ButtonAction, DeviceInfo, DingzActionUrl } from './util/commonTypes';
+import {
+  ButtonAction,
+  DeviceInfo,
+  AccessoryActionUrl,
+} from './util/commonTypes';
 
 import {
   MethodNotImplementedError,
@@ -356,7 +360,7 @@ export class DingzDaAccessory extends EventEmitter {
 
     const inputConfig: DingzInputInfoItem[] | undefined = this.device
       .dingzInputInfo;
-    const dimmerConfig: DeviceDingzDimmerConfig | undefined = this.device
+    const dimmerConfig: DingzDimmerConfig | undefined = this.device
       .dimmerConfig;
 
     /** DIP Switch
@@ -994,7 +998,7 @@ export class DingzDaAccessory extends EventEmitter {
     const updatedDingzInputInfo: DingzInputInfoItem =
       this._updatedDeviceInputConfig ?? currentDingzInputInfo;
 
-    const dimmerConfig: DeviceDingzDimmerConfig | undefined = this.device
+    const dimmerConfig: DingzDimmerConfig | undefined = this.device
       .dimmerConfig;
 
     try {
@@ -1345,7 +1349,7 @@ export class DingzDaAccessory extends EventEmitter {
     });
   }
 
-  private async getDingzDeviceDimmerConfig(): Promise<DeviceDingzDimmerConfig> {
+  private async getDingzDeviceDimmerConfig(): Promise<DingzDimmerConfig> {
     const getDimmerConfigUrl = `${this.baseUrl}/api/v1/dimmer_config`; // /api/v1/dimmer/<DIMMER>/on/?value=<value>
     return await this.platform.fetch({
       url: getDimmerConfigUrl,
@@ -1384,7 +1388,7 @@ export class DingzDaAccessory extends EventEmitter {
   }
 
   // GEt the callback URL for the device
-  public async getButtonCallbackUrl(): Promise<DingzActionUrl> {
+  public async getButtonCallbackUrl(): Promise<AccessoryActionUrl> {
     const getCallbackUrl = `${this.baseUrl}/api/v1/action/generic/generic`;
     this.platform.log.debug('Getting the callback URL -> ', getCallbackUrl);
     return await this.platform.fetch({

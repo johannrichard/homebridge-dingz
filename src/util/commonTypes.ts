@@ -10,7 +10,7 @@ import { MyStromButtonAccessory } from '../myStromButtonAccessory';
 import {
   DingzDeviceInfo,
   DingzInputInfoItem,
-  DeviceDingzDimmerConfig,
+  DingzDimmerConfig,
 } from './dingzTypes';
 import { MyStromDeviceInfo } from './myStromTypes';
 
@@ -24,13 +24,6 @@ export enum DeviceTypes {
   MYSTROM_SWITCH_EU = 107,
   DINGZ = 108,
 }
-
-export const MYSTROM_SWITCH_TYPES = {
-  WS2: 'CH v2',
-  '106': 'CH v2',
-  WSEU: 'EU',
-  '107': 'EU',
-};
 
 export enum ButtonAction {
   SINGLE_PRESS = '1',
@@ -47,7 +40,7 @@ export interface DeviceInfo {
   model?: string;
   token?: string;
   hwInfo?: DingzDeviceInfo | MyStromDeviceInfo;
-  dimmerConfig?: DeviceDingzDimmerConfig;
+  dimmerConfig?: DingzDimmerConfig;
   dingzInputInfo?: DingzInputInfoItem[];
   lastUpdate?: Date;
   accessoryClass?:
@@ -57,15 +50,15 @@ export interface DeviceInfo {
     | 'MyStromButtonAccessory';
 }
 
-export type DingzAccessoryType =
+export type AccessoryType =
   | DingzDaAccessory
   | MyStromSwitchAccessory
   | MyStromLightbulbAccessory
   | MyStromButtonAccessory;
-export interface DingzAccessories {
-  [key: string]: DingzAccessoryType;
+export interface AccessoryTypes {
+  [key: string]: AccessoryType;
 }
 
-export interface DingzActionUrl {
+export interface AccessoryActionUrl {
   url: string;
 }
