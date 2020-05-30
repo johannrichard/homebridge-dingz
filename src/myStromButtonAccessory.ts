@@ -7,11 +7,8 @@ import type {
 import { Policy } from 'cockatiel';
 
 import { DingzDaHomebridgePlatform } from './platform';
-import {
-  DeviceInfo,
-  MyStromDeviceInfo,
-  ButtonAction,
-} from './util/commonTypes';
+import { MyStromDeviceInfo } from './util/myStromTypes';
+import { DeviceInfo, ButtonAction } from './util/commonTypes';
 import { DingzEvent } from './util/dingzEventBus';
 
 // Policy for long running tasks, retry every hour

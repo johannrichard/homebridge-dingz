@@ -14,16 +14,15 @@ import e = require('express');
 import * as os from 'os';
 
 // Internal Types
+import { DingzDevices, DingzDeviceInfo, ButtonId } from './util/dingzTypes';
+import { MyStromDeviceInfo } from './util/myStromTypes';
+
 import {
   MYSTROM_SWITCH_TYPES,
-  DingzDevices,
-  DingzDeviceInfo,
   DeviceInfo,
   DingzAccessories,
   DeviceTypes,
-  MyStromDeviceInfo,
   DingzAccessoryType,
-  ButtonId,
   ButtonAction,
 } from './util/commonTypes';
 

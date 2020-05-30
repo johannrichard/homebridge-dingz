@@ -8,11 +8,8 @@ import type {
 } from 'homebridge';
 
 import { DingzDaHomebridgePlatform } from './platform';
-import {
-  DeviceInfo,
-  MyStromDeviceInfo,
-  MyStromSwitchReport,
-} from './util/commonTypes';
+import { MyStromDeviceInfo, MyStromSwitchReport } from './util/myStromTypes';
+import { DeviceInfo } from './util/commonTypes';
 
 /**
  * Platform Accessory

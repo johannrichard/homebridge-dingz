@@ -15,13 +15,11 @@ import qs from 'qs';
 
 // Internal types
 import {
-  ButtonAction,
   DingzMotionData,
   DingzDevices,
   DingzDeviceInfo,
   DingzInputInfoItem,
   DingzInputInfo,
-  DeviceInfo,
   DimmerTimer,
   DimmerId,
   DimmerState,
@@ -33,9 +31,9 @@ import {
   DingzDimmerConfigValue,
   ButtonId,
   DingzState,
-  DingzActionUrl,
   ButtonState,
-} from './util/commonTypes';
+} from './util/dingzTypes';
+import { ButtonAction, DeviceInfo, DingzActionUrl } from './util/commonTypes';
 
 import {
   MethodNotImplementedError,

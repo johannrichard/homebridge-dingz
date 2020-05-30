@@ -7,14 +7,12 @@ import type {
   CharacteristicGetCallback,
 } from 'homebridge';
 
-import { DingzDaHomebridgePlatform } from './platform';
-import {
-  DeviceInfo,
-  MyStromDeviceInfo,
-  MyStromLightbulbReport,
-} from './util/commonTypes';
 import simpleColorConverter from 'simple-color-converter';
 import qs from 'qs';
+
+import { DingzDaHomebridgePlatform } from './platform';
+import { MyStromDeviceInfo, MyStromLightbulbReport } from './util/myStromTypes';
+import { DeviceInfo } from './util/commonTypes';
 
 /**
  * Platform Accessory
