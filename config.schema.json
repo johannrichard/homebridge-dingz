@@ -32,7 +32,7 @@
         "title": "Hostname / IP to use for button callbacks ",
         "type": "string",
         "format": "hostname",
-        "description": "In order to implement button actions, the DingZ plugin exposes a webserver for callbacks. By default, it will use the hostname where homebridge runs as address. Should you use a proxy service or run Homebridge inside a docker container, you might have to it manually."
+        "description": "In order to implement button actions, the DingZ plugin exposes a webserver for callbacks. By default, it will use the hostname where homebridge runs as address. Should you use a proxy service or run Homebridge inside a docker container, you might have to add it manually."
       },
       "callbackPort": {
         "title": "Port for button callbacks",
