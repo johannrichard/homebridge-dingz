@@ -164,7 +164,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
       // Call addDevice, retry until found
       this.log.info('Add Device from config: ', device.type, '->', device.name);
       switch (device.type) {
-        case 'Dingz':
+        case 'dingz':
           await retryWithBreaker.execute(() =>
             this.addDingzDevice(
               device.address,
@@ -207,7 +207,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
   // Add one device based on address and name
   private addDingzDevice(
     address: string,
-    name = 'Unnamed DingzDa Device',
+    name = 'Unnamed dingz Device',
     token?: string,
   ): boolean {
     // Run a diacovery of changed things every 10 seconds
@@ -233,7 +233,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
           address: address,
           mac: mac.toUpperCase(),
           token: token,
-          model: info.puck_hw_model ?? 'DingZ',
+          model: info.puck_hw_model ?? 'dingz',
           hwInfo: info,
           accessoryClass: 'DingzDaAccessory',
         };
@@ -672,7 +672,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
             retryWithBreaker.execute(() => {
               this.addDingzDevice(
                 remoteInfo.address,
-                'Auto-Discovered Dingz',
+                'Auto-Discovered dingz',
                 this.config.globalToken,
               );
             });
@@ -748,7 +748,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
     });
   }
 
-  // Create a Service to listen for Dingz Button events
+  // Create a Service to listen for dingz Button events
   private callbackServer() {
     this.app.use(bodyParser.urlencoded());
     this.app.post('/button', this.handleRequest.bind(this));
@@ -756,7 +756,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
       this.log.warn(
         `Callback server listening for POST requests on ${
           this.config.callbackPort ?? DINGZ_CALLBACK_PORT
-        }... use ${this.getCallbackUrl()} as URL for your DingZ or MyStrom callbacks`,
+        }... use ${this.getCallbackUrl()} as URL for your dingz or MyStrom callbacks`,
       ),
     );
   }
@@ -775,7 +775,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
         // Various types of callbacks
         if (button) {
           this.log.warn(
-            '-> DingZ/Multi-button Action from',
+            '-> dingz/Multi-button Action from',
             request.connection.remoteAddress,
           );
           this.eb.emit(
@@ -814,7 +814,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
   }
 
   /**
-   * Device Methods -- these are used to retrieve the data from the Dingz
+   * Device Methods -- these are used to retrieve the data from the dingz
    * TODO: Refactor duplicate code into proper API caller
    */
   async getDingzDeviceInfo({
@@ -833,7 +833,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
   }
 
   /**
-   * Device Methods -- these are used to retrieve the data from the Dingz
+   * Device Methods -- these are used to retrieve the data from the dingz
    * FIXME: API Endpoint
    * Officially, the API is at /api/v1/info but there's
    * an undocumenten API at /info which also works for V1 switches

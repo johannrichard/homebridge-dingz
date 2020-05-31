@@ -209,16 +209,16 @@ export class DingzDaAccessory extends EventEmitter {
          * Add auxiliary services (Motion, Temperature)
          */
         if (this.dingzDeviceInfo.has_pir) {
-          // Dingz has a Motion sensor -- let's create it
+          // dingz has a Motion sensor -- let's create it
           this.addMotionService();
         } else {
           this.platform.log.info(
-            'Your Dingz',
+            'Your dingz',
             this.accessory.displayName,
             'has no Motion sensor.',
           );
         }
-        // Dingz has a temperature sensor and an LED,
+        // dingz has a temperature sensor and an LED,
         // make these available here
         this.addTemperatureService();
         this.addLEDService();
@@ -326,7 +326,7 @@ export class DingzDaAccessory extends EventEmitter {
   }
 
   private addLightSensorService() {
-    // Add the LightSensor that's integrated in the DingZ
+    // Add the LightSensor that's integrated in the dingz
     // API: /api/v1/light
 
     const lightService =
@@ -415,7 +415,7 @@ export class DingzDaAccessory extends EventEmitter {
         windowCoverServices.push(this.addWindowCoveringService('Blind', 0));
         // Dimmers are always 0 based
         // i.e. if outputs 1 / 2 are for blinds, outputs 3/4 will be dimmer 0/1
-        // We use the "index" value of the DingZ to determine what to use
+        // We use the "index" value of the dingz to determine what to use
         dimmerServices.push(
           this.addDimmerService({
             name: dimmerConfig?.dimmers[0].name,
@@ -477,10 +477,10 @@ export class DingzDaAccessory extends EventEmitter {
   private addButtonServices() {
     // Create Buttons
     // Add Event Listeners
-    this.services.push(this.addButtonService('DingZ Button 1', '1'));
-    this.services.push(this.addButtonService('DingZ Button 2', '2'));
-    this.services.push(this.addButtonService('DingZ Button 3', '3'));
-    this.services.push(this.addButtonService('DingZ Button 4', '4'));
+    this.services.push(this.addButtonService('dingz Button 1', '1'));
+    this.services.push(this.addButtonService('dingz Button 2', '2'));
+    this.services.push(this.addButtonService('dingz Button 3', '3'));
+    this.services.push(this.addButtonService('dingz Button 4', '4'));
 
     this.platform.eb.on(
       DingzEvent.BTN_PRESS,
@@ -555,7 +555,7 @@ export class DingzDaAccessory extends EventEmitter {
       ) ??
       this.accessory.addService(
         this.platform.Service.StatelessProgrammableSwitch,
-        name ?? `DingZ Button ${button}`, // Name Dimmers according to WebUI, not API info
+        name ?? `dingz Button ${button}`, // Name Dimmers according to WebUI, not API info
         button,
       );
 
@@ -780,7 +780,7 @@ export class DingzDaAccessory extends EventEmitter {
     // Set min/max Values
     service
       .getCharacteristic(this.platform.Characteristic.TargetHorizontalTiltAngle)
-      .setProps({ minValue: 0, maxValue: 90 }) // Dingz Maximum values
+      .setProps({ minValue: 0, maxValue: 90 }) // dingz Maximum values
       .on(
         CharacteristicEventTypes.SET,
         this.setTiltAngle.bind(this, id as WindowCoveringId),
@@ -1268,7 +1268,7 @@ export class DingzDaAccessory extends EventEmitter {
     } catch (e) {
       this.platform.log.error('Error in getting Device Info ->', e.message);
     }
-    throw new Error('Dingz Device update failed -> Empty data.');
+    throw new Error('dingz Device update failed -> Empty data.');
   }
 
   private async getDeviceMotion(): Promise<DingzMotionData> {

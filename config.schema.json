@@ -8,7 +8,7 @@
       "name": {
         "title": "Name",
         "type": "string",
-        "default": "Dingz & myStrom SmartHome platform",
+        "default": "dingz & myStrom SmartHome platform",
         "required": true
       },
       "globalToken": {
@@ -40,17 +40,17 @@
         "description": "In order to implement button actions, the DingZ plugin exposes a webserver for callbacks. By default, it listens on port 18081. Add this setting if you want to change this."
       },
       "devices": {
-        "title": "Dingz Devices",
+        "title": "dingz Devices",
         "type": "array",
         "items": {
-          "title": "Dingz",
+          "title": "dingz",
           "type": "object",
           "properties": {
             "type": {
               "title": "Device Type",
               "type": "string",
               "oneOf": [
-                { "title": "Dingz", "enum": ["Dingz"] },
+                { "title": "dingz", "enum": ["dingz"] },
                 { "title": "myStrom Switch", "enum": ["myStromSwitch"] },
                 { "title": "myStrom Lightbulb", "enum": ["myStromBulb"] },
                 { "title": "myStrom LED Strip", "enum": ["myStromLED"] },
@@ -62,7 +62,7 @@
             "name": {
               "title": "Name",
               "type": "string",
-              "default": "Dingz SmartHome Device",
+              "default": "dingz SmartHome Device",
               "required": true
             },
             "address": {
