@@ -21,6 +21,7 @@ Steps to reproduce the behavior:
 A clear and concise description of what you expected to happen.
 
 **Plugin environment (please complete the following information):**
+ - dingz/myStrom Device Firmware Version [e.g. 1.49.0]
  - Homebridge Server: [e.g. Homebridge Docker]
  - Plugin Version [e.g. 1.5.0]
  - Node.js Version [e.g. 14.1.0]
