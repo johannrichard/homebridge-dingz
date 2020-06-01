@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 * Add support for the [myStrom Buttons](https://github.com/johannrichard/homebridge-dingz/wiki/myStrom-buttons)
 ---
 ## [Released]
+## [1.5.1] - 2020-06-01
+Version 1.5.0 added support for DingZ Buttons. This is quite a significant change to the plugin so I expect new bugs and issues. There's quite [comprehensive]((https://github.com/johannrichard/homebridge-dingz/wiki/Dingz-buttons)) [documentation](https://github.com/johannrichard/homebridge-dingz/wiki/Plugin-settings) about how this works in the Wiki so please consult it to leanr more about limitations and caveats. 
+
+### Fixed
+* **dingz:** Fix for blinds not working after refactoring ([1926110](https://github.com/johannrichard/homebridge-dingz/commit/1926110f4d18a1eba9f899772bd809915768e517)), closes [#11](https://github.com/johannrichard/homebridge-dingz/issues/11)
+* **typo:** Fix typo in log output ([c6de553](https://github.com/johannrichard/homebridge-dingz/commit/c6de55343ebb2af46f489ea71806381475b795c1)), closes [#12](https://github.com/johannrichard/homebridge-dingz/issues/12)
+* **typo:** Fix for typo ([75f10ac](https://github.com/johannrichard/homebridge-dingz/commit/75f10ac2f07f604814d61e6b2a37c0e54c767342)), closes [#10](https://github.com/johannrichard/homebridge-dingz/issues/10)
+* **typo:** Fix for typo ([7e36033](https://github.com/johannrichard/homebridge-dingz/commit/7e360332cd4b111c230669e55649df79d062a4b9)), closes [#9](https://github.com/johannrichard/homebridge-dingz/issues/9)
 
 ## [1.5.0] - 2020-05-30
 Version 1.5.0 adds support for DingZ Buttons. This is quite a significant change to the plugin so I expect new bugs and issues. There's quite [comprehensive]((https://github.com/johannrichard/homebridge-dingz/wiki/Dingz-buttons)) [documentation](https://github.com/johannrichard/homebridge-dingz/wiki/Plugin-settings) about how this works in the Wiki so please consult it to leanr more about limitations and caveats. 
@@ -161,7 +169,8 @@ The format is based on [Keep a Changelog][Keep a Changelog] and this project adh
 <!-- Versions -->
 [Unreleased]: https://github.com/johannrichard/homebridge-dingz/compare/v1.4.3...HEAD
 [Released]: https://github.com/johannrichard/homebridge-dingz/releases
-[1.5.0]: https://github.com/johannrichard/homebridge/compare/v1.4.3..v1.5.0
+[1.5.1]: https://github.com/johannrichard/homebridge-dingz/compare/v1.5.0..v1.5.1
+[1.5.0]: https://github.com/johannrichard/homebridge-dingz/compare/v1.4.3..v1.5.0
 [1.4.3]: https://github.com/johannrichard/homebridge-dingz/compare/v1.4.2..v1.4.3
 [1.4.2]: https://github.com/johannrichard/homebridge-dingz/compare/v1.4.1..v1.4.2
 [1.4.1]: https://github.com/johannrichard/homebridge-dingz/compare/v1.4.0..v1.4.1
