@@ -30,8 +30,8 @@ import {
   DingzMotionData,
   DingzState,
   WindowCoveringId,
-  WindowCoveringState,
   WindowCoveringTimer,
+  WindowCoveringStates,
 } from './util/dingzTypes';
 import {
   ButtonAction,
@@ -89,7 +89,7 @@ export class DingzDaAccessory extends EventEmitter {
     // FIXME: Make structure less hardware-like
     // Outputs
     Dimmers: [] as DimmerState[],
-    WindowCovers: [] as WindowCoveringState[],
+    WindowCovers: [] as WindowCoveringStates[],
     LED: {
       on: false,
       hsv: '0;0;100',
@@ -194,6 +194,7 @@ export class DingzDaAccessory extends EventEmitter {
               // Outputs
               this.dingzStates.Dimmers = state.dimmers;
               this.dingzStates.LED = state.led;
+              // FIXME: Not the same structure here
               this.dingzStates.WindowCovers = state.blinds;
               // Sensors
               this.dingzStates.Temperature = state.sensors.room_temperature;
@@ -813,21 +814,23 @@ export class DingzDaAccessory extends EventEmitter {
   }
 
   private updateWindowCoveringState(id: WindowCoveringId, service: Service) {
-    const state: WindowCoveringState = this.dingzStates.WindowCovers[id];
-    service
-      .getCharacteristic(this.platform.Characteristic.TargetPosition)
-      .updateValue(state.target.blind);
-    service
-      .getCharacteristic(this.platform.Characteristic.TargetHorizontalTiltAngle)
-      .updateValue(state.target.lamella);
+    const state: WindowCoveringStates = this.dingzStates.WindowCovers[id];
+
+    // FIXME: Different structure
+    // service
+    //   .getCharacteristic(this.platform.Characteristic.TargetPosition)
+    //   .updateValue(state.target.blind);
+    // service
+    //   .getCharacteristic(this.platform.Characteristic.TargetHorizontalTiltAngle)
+    //   .updateValue(state.target.lamella);
     service
       .getCharacteristic(this.platform.Characteristic.CurrentPosition)
-      .updateValue(state.current.blind);
+      .updateValue(state.position);
     service
       .getCharacteristic(
         this.platform.Characteristic.CurrentHorizontalTiltAngle,
       )
-      .updateValue(state.current.lamella);
+      .updateValue((state.lamella / 100) * 90); // Set in °, Get in % (...)
   }
 
   private async setPosition(
@@ -836,8 +839,9 @@ export class DingzDaAccessory extends EventEmitter {
     callback: CharacteristicSetCallback,
   ) {
     const blind: number = value as number;
-    const lamella: number = this.dingzStates.WindowCovers[id].target.lamella;
-    this.dingzStates.WindowCovers[id].target.blind = blind;
+    const lamella: number = this.dingzStates.WindowCovers[id].lamella;
+    // const lamella: number = this.dingzStates.WindowCovers[id].target.lamella;
+    this.dingzStates.WindowCovers[id].position = blind;
 
     await this.setWindowCovering(id, blind, lamella);
     callback(null);
@@ -851,7 +855,7 @@ export class DingzDaAccessory extends EventEmitter {
       'WindowCoverings: ',
       JSON.stringify(this.dingzStates.WindowCovers),
     );
-    const position: number = this.dingzStates.WindowCovers[id].current.blind;
+    const position: number = this.dingzStates.WindowCovers[id].position;
 
     this.platform.log.debug(
       'Get Characteristic for WindowCovering',
@@ -868,9 +872,10 @@ export class DingzDaAccessory extends EventEmitter {
     value: CharacteristicValue,
     callback: CharacteristicSetCallback,
   ) {
-    const blind: number = this.dingzStates.WindowCovers[id].target.blind;
+    // const blind: number = this.dingzStates.WindowCovers[id].target.blind;
+    const blind: number = this.dingzStates.WindowCovers[id].position;
     const lamella: number = value as number;
-    this.dingzStates.WindowCovers[id].target.lamella = lamella;
+    this.dingzStates.WindowCovers[id].lamella = lamella;
 
     this.platform.log.debug(
       'Set Characteristic TargetHorizontalTiltAngle on ',
@@ -893,7 +898,7 @@ export class DingzDaAccessory extends EventEmitter {
       'WindowCoverings: ',
       JSON.stringify(this.dingzStates.WindowCovers),
     );
-    const tiltAngle: number = this.dingzStates.WindowCovers[id].current.lamella;
+    const tiltAngle: number = this.dingzStates.WindowCovers[id].lamella;
 
     this.platform.log.debug(
       'Get Characteristic for WindowCovering',
@@ -1195,7 +1200,8 @@ export class DingzDaAccessory extends EventEmitter {
   ) {
     this.dingzStates.LED.on = value as boolean;
     const state = this.dingzStates.LED;
-    this.setDeviceLED({ isOn: state.on });
+    const color = `${state.hue};${state.saturation};${state.value}`;
+    this.setDeviceLED({ isOn: state.on, color: color });
     callback(null);
   }
 
@@ -1305,8 +1311,8 @@ export class DingzDaAccessory extends EventEmitter {
   // Set individual dimmer
   private async setWindowCovering(
     id: WindowCoveringId,
-    blind?: number,
-    lamella?: number,
+    blind: number,
+    lamella: number,
   ): Promise<void> {
     // {{ip}}/api/v1/shade/0?blind=<value>&lamella=<value>
     const setWindowCoveringUrl = `${this.baseUrl}/api/v1/shade/${id}/`;
@@ -1316,8 +1322,8 @@ export class DingzDaAccessory extends EventEmitter {
       token: this.device.token,
       body: qs.stringify(
         {
-          blind: blind ?? undefined,
-          lamella: lamella ?? undefined,
+          blind: blind,
+          lamella: lamella,
         },
         { encode: false },
       ),
@@ -1330,7 +1336,7 @@ export class DingzDaAccessory extends EventEmitter {
     color,
   }: {
     isOn: boolean;
-    color?: string;
+    color: string;
   }): Promise<void> {
     const setLEDUrl = `${this.baseUrl}/api/v1/led/set`;
     await this.platform.fetch({
@@ -1340,8 +1346,8 @@ export class DingzDaAccessory extends EventEmitter {
       body: qs.stringify(
         {
           action: isOn ? 'on' : 'off',
-          color: color ?? undefined,
-          mode: color ? 'hsv' : undefined,
+          color: color,
+          mode: 'hsv', // Fixed for the time being
           ramp: 150,
         },
         { encode: false },

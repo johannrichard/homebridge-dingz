@@ -113,13 +113,24 @@ export interface WindowCoveringState {
   target: WindowCoveringPositon;
   current: WindowCoveringPositon;
 }
+
+export interface WindowCoveringStates {
+  moving: string;
+  position: number;
+  lamella: number;
+  readonly: boolean;
+  index?: {
+    relative: number;
+    absolute: number;
+  };
+}
 export type WindowCoveringProps = Record<WindowCoveringId, WindowCoveringState>;
 
 // FIXME: Replace dispersed data gathering with `api/v1/state` endpoint
 
 export interface DingzState {
   dimmers: DimmerState[];
-  blinds: WindowCoveringState[];
+  blinds: WindowCoveringStates[];
   led: DingzLEDState;
   sensors: {
     brightness: number;
