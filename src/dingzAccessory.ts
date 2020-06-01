@@ -603,7 +603,7 @@ export class DingzDaAccessory extends EventEmitter {
   ) {
     const currentState = this.dingzStates.Buttons[button].state;
     this.platform.log.info(
-      'Get Swicth State ->',
+      'Get Switch State ->',
       button,
       '-> state:',
       currentState,
