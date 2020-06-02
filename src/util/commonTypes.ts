@@ -1,4 +1,4 @@
-// Various Type Definitions for the Dingz Accessory
+// Various Type Definitions for the dingz Accessory
 // Based on the API definition
 
 import { DingzDaAccessory } from '../dingzAccessory';

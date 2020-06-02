@@ -20,7 +20,7 @@
         "title": "Poll Motion Sensor",
         "type": "boolean",
         "default": true,
-        "description": "By default, the DingZ will be polled every 2.5 seconds for the motion state. If you disable this, the DingZ will push a trigger event when motion begins and reset the motion event when the motion timer of the DingZ fires at the end of the period defined in the DingZ Web UI (default: 180s). While the pull puts additional strain on the DingZ *and* introduces a certain lag, the push mode is dependent on the timer setting which might not be what you want."
+        "description": "By default, the dingz will be polled every 2.5 seconds for the motion state. If you disable this, the dingz will push a trigger event when motion begins and reset the motion event when the motion timer of the dingz fires at the end of the period defined in the dingz Web UI (default: 180s). While the pull puts additional strain on the dingz *and* introduces a certain lag, the push mode is dependent on the timer setting which might not be what you want."
       },
       "autoDiscover": {
         "title": "Auto Discovery of Devices",
@@ -32,12 +32,12 @@
         "title": "Hostname / IP to use for button callbacks ",
         "type": "string",
         "format": "hostname",
-        "description": "In order to implement button actions, the DingZ plugin exposes a webserver for callbacks. By default, it will use the hostname where homebridge runs as address. Should you use a proxy service or run Homebridge inside a docker container, you might have to add it manually."
+        "description": "In order to implement button actions, the dingz plugin exposes a webserver for callbacks. By default, it will use the hostname where homebridge runs as address. Should you use a proxy service or run Homebridge inside a docker container, you might have to add it manually."
       },
       "callbackPort": {
         "title": "Port for button callbacks",
         "type": "number",
-        "description": "In order to implement button actions, the DingZ plugin exposes a webserver for callbacks. By default, it listens on port 18081. Add this setting if you want to change this."
+        "description": "In order to implement button actions, the dingz plugin exposes a webserver for callbacks. By default, it listens on port 18081. Add this setting if you want to change this."
       },
       "devices": {
         "title": "dingz Devices",
