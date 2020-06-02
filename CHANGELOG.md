@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file.
 ---
 ## [Released]
 ## [1.5.1] - 2020-06-01
-Version 1.5.0 added support for DingZ Buttons. This is quite a significant change to the plugin so I expect new bugs and issues. There's quite [comprehensive]((https://github.com/johannrichard/homebridge-dingz/wiki/Dingz-buttons)) [documentation](https://github.com/johannrichard/homebridge-dingz/wiki/Plugin-settings) about how this works in the Wiki so please consult it to leanr more about limitations and caveats. 
+Version 1.5.0 added support for dingz Buttons. This is quite a significant change to the plugin so I expect new bugs and issues. There's quite [comprehensive]((https://github.com/johannrichard/homebridge-dingz/wiki/dingz-buttons)) [documentation](https://github.com/johannrichard/homebridge-dingz/wiki/Plugin-settings) about how this works in the Wiki so please consult it to leanr more about limitations and caveats. 
 
 ### Fixed
 * **dingz:** Fix for blinds not working after refactoring ([1926110](https://github.com/johannrichard/homebridge-dingz/commit/1926110f4d18a1eba9f899772bd809915768e517)), closes [#11](https://github.com/johannrichard/homebridge-dingz/issues/11)
@@ -15,13 +15,13 @@ Version 1.5.0 added support for DingZ Buttons. This is quite a significant chang
 * **typo:** Fix for typo ([7e36033](https://github.com/johannrichard/homebridge-dingz/commit/7e360332cd4b111c230669e55649df79d062a4b9)), closes [#9](https://github.com/johannrichard/homebridge-dingz/issues/9)
 
 ## [1.5.0] - 2020-05-30
-Version 1.5.0 adds support for DingZ Buttons. This is quite a significant change to the plugin so I expect new bugs and issues. There's quite [comprehensive]((https://github.com/johannrichard/homebridge-dingz/wiki/Dingz-buttons)) [documentation](https://github.com/johannrichard/homebridge-dingz/wiki/Plugin-settings) about how this works in the Wiki so please consult it to leanr more about limitations and caveats. 
+Version 1.5.0 adds support for dingz Buttons. This is quite a significant change to the plugin so I expect new bugs and issues. There's quite [comprehensive]((https://github.com/johannrichard/homebridge-dingz/wiki/dingz-buttons)) [documentation](https://github.com/johannrichard/homebridge-dingz/wiki/Plugin-settings) about how this works in the Wiki so please consult it to leanr more about limitations and caveats. 
 
 ### Added
-* Add support for the Dingz Buttons, including [a *stealthy* "flip-switch" mode](https://github.com/johannrichard/homebridge-dingz/wiki/Dingz-buttons). Please consult the [Wiki](https://github.com/johannrichard/homebridge-dingz/wiki/Plugin-settings) for instructions if you want to use this on a different than the default port. 
+* Add support for the dingz Buttons, including [a *stealthy* "flip-switch" mode](https://github.com/johannrichard/homebridge-dingz/wiki/dingz-buttons). Please consult the [Wiki](https://github.com/johannrichard/homebridge-dingz/wiki/Plugin-settings) for instructions if you want to use this on a different than the default port. 
 
 ### Changed
-* Added more detail on the [plugin config](https://github.com/johannrichard/homebridge-dingz/wiki/Plugin-settings), the way the [buttons](https://github.com/johannrichard/homebridge-dingz/wiki/Dingz-buttons) and the way the [motion sensor](https://github.com/johannrichard/homebridge-dingz/wiki/Motion-sensor) works in the [Wiki](https://github.com/johannrichard/homebridge-dingz/wiki)
+* Added more detail on the [plugin config](https://github.com/johannrichard/homebridge-dingz/wiki/Plugin-settings), the way the [buttons](https://github.com/johannrichard/homebridge-dingz/wiki/dingz-buttons) and the way the [motion sensor](https://github.com/johannrichard/homebridge-dingz/wiki/Motion-sensor) works in the [Wiki](https://github.com/johannrichard/homebridge-dingz/wiki)
 * Discovery process stops without polling a discovered device if it has already been added to HomeKit. This reduces unnecessary strain of the devices
 * Additional fixes to make the plugin more robust in case of connection issues
 * Reduce logging to a more useful amount in case of network issues
@@ -31,16 +31,16 @@ Version 1.5.0 adds support for DingZ Buttons. This is quite a significant change
 * Bugfix release for auto-discovery on new-installs
 
 ## [1.4.2] - 2020-05-24
-This is mostly a maintenance release with no new functionality. It prepares the ground for some upcoming changes related to buttons. It also brings more stability and less stress for the DingZ as it combines the polling for the different services into one single call instead of 4-5 different calls.
+This is mostly a maintenance release with no new functionality. It prepares the ground for some upcoming changes related to buttons. It also brings more stability and less stress for the dingz as it combines the polling for the different services into one single call instead of 4-5 different calls.
 
 ### Changed
 * Reduce device polling during auto-discovery
 * Reduce the amount of logging significantly
 * Under-the-hood changes for Button callback (manual)
-* Add Event Bus for Dingz Accessories
+* Add Event Bus for dingz Accessories
 * Use undocumented `/api/v1/state` API endpoint, and
 * Reduce polling amount by at least a factor of 4, leading to
-* Lower DingZ front panel temperature
+* Lower dingz front panel temperature
 
 ## [1.4.1] - 2020-05-21
 ### Added
@@ -48,12 +48,12 @@ This is mostly a maintenance release with no new functionality. It prepares the 
 
 ## [1.4.0] - 2020-05-21
 ### Added
-* Names of Lightbulbs will follow the naming set in DingZ
+* Names of Lightbulbs will follow the naming set in dingz
 * Non-dimmable outputs will be created as simple Light Switches
 
 ### Fixed
 * Fix for blank puck S/N number (Upstream edge-case/glitch/bug/feature in [HAP-NodeJS](https://github.com/homebridge/HAP-NodeJS/issues/824). This fixes [#5](https://github.com/johannrichard/homebridge-dingz/issues/5). Thanks [Simon Iannelli](https://twitter.com/simonnelli) for the help with getting to the bottom of this issue!)
-* Fix for DingZ lamella tilt-angle minima/maxima (Thanks [Michael Burch](https://twitter.com/derBurch) for reporting/debugging.)
+* Fix for dingz lamella tilt-angle minima/maxima (Thanks [Michael Burch](https://twitter.com/derBurch) for reporting/debugging.)
 
 ## [1.3.1] - 2020-05-19
 ### Changed
@@ -74,14 +74,14 @@ This is mostly a maintenance release with no new functionality. It prepares the 
 After upgrading to this version, you have to remove the plugin config block from your config, restart Homebridge, add the plugin config again and restart Homebridge once more to apply the fix. Otherwise you will end up with spurious old Lightbulbs in your setup. 
 
 ### Added
-* Support for Dingz LightSensor 
+* Support for dingz LightSensor 
 ### Fixed
 * Fix for Dimmer index issues (Thanks [Michael Burch](https://twitter.com/derBurch) for reporting/debugging.)
 * Small refactorings
 
 ## [1.2.0] - 2020-05-17
 ### Added
-* Support for DingZ Front LED
+* Support for dingz Front LED
 
 ### Changed
 * Replace popsicle library with axios for better POST handling
@@ -136,19 +136,19 @@ Fixes presumably wrong association of DIP switches.
 
 ## [1.0.0] - 2020-05-14
 
-This plugin implements some (but not all) functions of [Dingz](https://dingz.ch) Smart Home Devices. The plugin also supports (some) myStrom Devices as they share much of the same API definitions and concepts with Dingz.
+This plugin implements some (but not all) functions of [dingz](https://dingz.ch) Smart Home Devices. The plugin also supports (some) myStrom Devices as they share much of the same API definitions and concepts with dingz.
 
 The plugin attempts to
 
 - auto-discover devices, and to
 - auto-identify dingz settings and thus accessories by using device type, dip switch settings and input configuration
 
-The following Dingz services are implemented:
+The following dingz services are implemented:
 
 - Dimmers (LightBulb) 
 - Shades (Blinds)
 - Room temperature
-- Motion sensor status (polling only, only for Dingz+ models)
+- Motion sensor status (polling only, only for dingz+ models)
 
 Not (yet) implemented:
 
