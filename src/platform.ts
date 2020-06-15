@@ -476,7 +476,9 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
     mac: string;
   }): boolean {
     // Run a diacovery of changed things every 10 seconds
-    this.log.debug(`Add configured/discovered device -> ${name} (${address})`);
+    this.log.debug(
+      `Add configured/discovered myStrom Button device -> ${name} (${address})`,
+    );
 
     const uuid = this.api.hap.uuid.generate(mac.toUpperCase());
 
@@ -681,8 +683,9 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
             this.log.warn(`Unknown device: ${t}`);
             break;
         }
-
         this.discovered.set(mac, remoteInfo);
+      } else {
+        this.log.debug('Stopping discovery of already known device:', mac);
       }
     } catch (e) {
       if (e instanceof DeviceNotImplementedError) {
@@ -702,6 +705,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
     });
 
     discoverySocket.on('message', this.datagramMessageHandler.bind(this));
+    this.log.info('Starting discovery');
     discoverySocket.bind(DINGZ_DISCOVERY_PORT);
     setTimeout(() => {
       this.log.info('Stopping discovery');
@@ -736,7 +740,6 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
       callbackUrl = `${oldUrl}||${callbackUrl}`;
     }
     this.log.debug('Setting the callback URL -> ', callbackUrl);
-    endpoints.push('');
     endpoints.forEach((endpoint) => {
       this.log.debug(setActionUrl, 'Endpoint -> ', endpoint);
       this.fetch({
