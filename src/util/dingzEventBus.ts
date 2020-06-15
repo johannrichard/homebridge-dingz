@@ -44,5 +44,6 @@ export declare interface DingzEventBus {
 export class DingzEventBus extends EventEmitter {
   constructor() {
     super();
+    this.setMaxListeners(20); // Maximum of 20 services
   }
 }
