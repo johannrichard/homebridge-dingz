@@ -117,6 +117,10 @@ export class MyStromButtonAccessory {
       .on(CharacteristicEventTypes.GET, this.getBatteryLevel.bind(this));
 
     batteryService
+      .getCharacteristic(this.platform.Characteristic.StatusLowBattery)
+      .on(CharacteristicEventTypes.GET, this.getStatusBatteryLow.bind(this));
+
+    batteryService
       .getCharacteristic(this.platform.Characteristic.ChargingState)
       .on(CharacteristicEventTypes.GET, this.getChargingState.bind(this));
 
@@ -214,6 +218,16 @@ export class MyStromButtonAccessory {
   private getBatteryLevel(callback: CharacteristicGetCallback) {
     const currentLevel = this.batteryLevel;
     callback(null, currentLevel);
+  }
+
+  private getStatusBatteryLow(callback: CharacteristicGetCallback) {
+    const currentLevel: number = this.batteryLevel ?? 0;
+    callback(
+      null,
+      currentLevel <= 10
+        ? this.platform.Characteristic.StatusLowBattery.BATTERY_LEVEL_LOW
+        : this.platform.Characteristic.StatusLowBattery.BATTERY_LEVEL_NORMAL,
+    );
   }
 
   private getChargingState(callback: CharacteristicGetCallback) {
