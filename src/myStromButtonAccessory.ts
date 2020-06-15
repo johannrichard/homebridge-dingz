@@ -10,6 +10,7 @@ import { DingzDaHomebridgePlatform } from './platform';
 import { MyStromDeviceInfo } from './util/myStromTypes';
 import { DeviceInfo, ButtonAction } from './util/commonTypes';
 import { DingzEvent } from './util/dingzEventBus';
+import { ButtonState } from './util/dingzTypes';
 
 // Policy for long running tasks, retry every hour
 const retrySlow = Policy.handleAll()
@@ -28,6 +29,7 @@ export class MyStromButtonAccessory {
   private mystromDeviceInfo: MyStromDeviceInfo;
   private baseUrl: string;
   private buttonState?: ButtonAction;
+  private switchButtonState?: ButtonState;
   private batteryLevel: Nullable<number> = 0;
   private chargingState = false;
 
@@ -76,10 +78,10 @@ export class MyStromButtonAccessory {
     );
     const buttonService: Service =
       this.accessory.getService(
-        this.platform.Service.StatefulProgrammableSwitch,
+        this.platform.Service.StatelessProgrammableSwitch,
       ) ??
       this.accessory.addService(
-        this.platform.Service.StatefulProgrammableSwitch,
+        this.platform.Service.StatelessProgrammableSwitch,
       );
 
     buttonService.setCharacteristic(
@@ -90,6 +92,21 @@ export class MyStromButtonAccessory {
     buttonService
       .getCharacteristic(this.platform.Characteristic.ProgrammableSwitchEvent)
       .on(CharacteristicEventTypes.GET, this.getButtonState.bind(this));
+
+    // Stateful Programmable Switches are not anymore exposed in HomeKit. However,
+    //  the "ProgrammableSwitchOutputState" Characteristic added to a
+    // StatelessProgrammableSwitch (i.e., a button), can be read out -- and used --
+    // by third-party apps for HomeKite, allowing users to create automations
+    // not only based on the button events, but also based on a state that's toggled
+    buttonService
+      .getCharacteristic(
+        this.platform.Characteristic.ProgrammableSwitchOutputState,
+      )
+      .on(CharacteristicEventTypes.GET, this.getButtonState.bind(this));
+    // .on(
+    //   CharacteristicEventTypes.SET,
+    //   this.setSwitchButtonState.bind(this, button),
+    // );
 
     const batteryService: Service =
       this.accessory.getService(this.platform.Service.BatteryService) ??
@@ -105,7 +122,7 @@ export class MyStromButtonAccessory {
 
     this.platform.eb.on(DingzEvent.BTN_PRESS, (mac, action, battery) => {
       if (mac === this.device.mac) {
-        this.buttonState = action ?? 1;
+        this.buttonState = action ?? ButtonAction.SINGLE_PRESS;
         this.batteryLevel = battery;
 
         const batteryService = this.accessory.getService(
@@ -118,7 +135,7 @@ export class MyStromButtonAccessory {
             .updateValue(battery);
         }
         const buttonService = this.accessory.getService(
-          this.platform.Service.StatefulProgrammableSwitch,
+          this.platform.Service.StatelessProgrammableSwitch,
         );
 
         const ProgrammableSwitchEvent = this.platform.Characteristic
@@ -178,13 +195,19 @@ export class MyStromButtonAccessory {
       this.platform.setButtonCallbackUrl({
         baseUrl: this.baseUrl,
         token: this.device.token,
-        endpoints: [],
+        endpoints: ['generic'], // Buttons need the 'generic' endpoint specifically set
       });
     });
   }
 
   private getButtonState(callback: CharacteristicGetCallback) {
     const currentState = this.buttonState;
+    callback(null, currentState);
+  }
+
+  private getSwitchButtonState(callback: CharacteristicGetCallback) {
+    const currentState = this.switchButtonState;
+    this.platform.log.info('Get Switch State ->', currentState);
     callback(null, currentState);
   }
 
