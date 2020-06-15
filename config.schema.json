@@ -8,7 +8,7 @@
       "name": {
         "title": "Name",
         "type": "string",
-        "default": "dingz & myStrom SmartHome platform",
+        "default": "dingz and myStrom SmartHome platform",
         "required": true
       },
       "globalToken": {
