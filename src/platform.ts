@@ -289,7 +289,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
   // Add one device based on address and name
   private addMyStromSwitchDevice({
     address,
-    name = 'Unidentified myStrom Switch',
+    name = 'Switch',
     token,
   }: {
     address: string;
@@ -383,7 +383,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
   // Add one device based on address and name
   private addMyStromLightbulbDevice({
     address,
-    name = 'Unidentified myStrom Lightbulb/LED',
+    name = 'Lightbulb/LED',
     token,
   }: {
     address: string;
@@ -466,7 +466,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
   // Add one device based on address and name
   private addMyStromButtonDevice({
     address,
-    name = 'myStrom Button',
+    name = 'Button',
     token,
     mac,
   }: {
@@ -635,7 +635,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
             retryWithBreaker.execute(() => {
               this.addMyStromButtonDevice({
                 address: remoteInfo.address,
-                name: 'Auto-Discovered MyStrom Button',
+                name: 'Button',
                 token: this.config.globalToken,
                 mac: mac,
               });
@@ -645,7 +645,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
             retryWithBreaker.execute(() => {
               this.addMyStromLightbulbDevice({
                 address: remoteInfo.address,
-                name: 'Auto-Discovered MyStrom LED Strip',
+                name: 'LED Strip',
                 token: this.config.globalToken,
               });
             });
@@ -654,7 +654,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
             retryWithBreaker.execute(() => {
               this.addMyStromLightbulbDevice({
                 address: remoteInfo.address,
-                name: 'Auto-Discovered MyStrom Lightbulb',
+                name: 'Lightbulb',
                 token: this.config.globalToken,
               });
             });
@@ -665,7 +665,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
             retryWithBreaker.execute(() => {
               this.addMyStromSwitchDevice({
                 address: remoteInfo.address,
-                name: 'Auto-Discovered MyStromSwitch',
+                name: 'Switch',
                 token: this.config.globalToken,
               });
             });
@@ -674,7 +674,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
             retryWithBreaker.execute(() => {
               this.addDingzDevice(
                 remoteInfo.address,
-                'Auto-Discovered dingz',
+                'dingz',
                 this.config.globalToken,
               );
             });
