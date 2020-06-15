@@ -2,11 +2,20 @@
 All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
-* Add support for the [myStrom Buttons](https://github.com/johannrichard/homebridge-dingz/wiki/myStrom-buttons)
 ---
 ## [Released]
+## [1.5.2] - 2020-06-15
+### Bug Fixes
+* **dingz:** increase max listeners ([e43ee0c](https://github.com/johannrichard/homebridge-dingz/commit/e43ee0c64375550e937504ca2d5d28942c71f2ac))
+* **dingz:** set pir callback only if pir present ([a3b3b0b](https://github.com/johannrichard/homebridge-dingz/commit/a3b3b0b4cb6576254466799d6793b1b6bfedb77c)), closes [#16](https://github.com/johannrichard/homebridge-dingz/issues/16)
+* **schema:** remove "&" in schema ([c6f36b5](https://github.com/johannrichard/homebridge-dingz/commit/c6f36b5d1ef3f15ebf7fea492c53483a7d7e519f))
+
+### Features
+* **button:** implement low battery warning ([816c562](https://github.com/johannrichard/homebridge-dingz/commit/816c5620591a9470224661303b04b6bbc12d95f7))
+* **button:** implement mystrom button ([a4e82b8](https://github.com/johannrichard/homebridge-dingz/commit/a4e82b872eddc26f5626a179da7a90ba304cad9c))
+
 ## [1.5.1] - 2020-06-01
-Version 1.5.0 added support for dingz Buttons. This is quite a significant change to the plugin so I expect new bugs and issues. There's quite [comprehensive]((https://github.com/johannrichard/homebridge-dingz/wiki/dingz-buttons)) [documentation](https://github.com/johannrichard/homebridge-dingz/wiki/Plugin-settings) about how this works in the Wiki so please consult it to leanr more about limitations and caveats. 
+Version 1.5.0 added support for dingz buttons. This is quite a significant change to the plugin so I expect new bugs and issues. There's quite [comprehensive]((https://github.com/johannrichard/homebridge-dingz/wiki/dingz-buttons)) [documentation](https://github.com/johannrichard/homebridge-dingz/wiki/Plugin-settings) about how this works in the Wiki so please consult it to leanr more about limitations and caveats. 
 
 ### Fixed
 * **dingz:** Fix for blinds not working after refactoring ([1926110](https://github.com/johannrichard/homebridge-dingz/commit/1926110f4d18a1eba9f899772bd809915768e517)), closes [#11](https://github.com/johannrichard/homebridge-dingz/issues/11)
@@ -169,6 +178,7 @@ The format is based on [Keep a Changelog][Keep a Changelog] and this project adh
 <!-- Versions -->
 [Unreleased]: https://github.com/johannrichard/homebridge-dingz/compare/v1.4.3...HEAD
 [Released]: https://github.com/johannrichard/homebridge-dingz/releases
+[1.5.2]: https://github.com/johannrichard/homebridge-dingz/compare/v1.5.1..v1.5.2
 [1.5.1]: https://github.com/johannrichard/homebridge-dingz/compare/v1.5.0..v1.5.1
 [1.5.0]: https://github.com/johannrichard/homebridge-dingz/compare/v1.4.3..v1.5.0
 [1.4.3]: https://github.com/johannrichard/homebridge-dingz/compare/v1.4.2..v1.4.3
