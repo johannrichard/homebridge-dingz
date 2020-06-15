@@ -207,7 +207,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
   // Add one device based on address and name
   private addDingzDevice(
     address: string,
-    name = 'Unnamed dingz Device',
+    name = 'dingz',
     token?: string,
   ): boolean {
     // Run a diacovery of changed things every 10 seconds
