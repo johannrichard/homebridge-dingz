@@ -241,12 +241,14 @@ export class DingzDaAccessory extends EventEmitter {
               callBackUrl,
             );
             // Set the callback URL (Override!)
+            const endpoints = this.dingzDeviceInfo.has_pir
+              ? ['generic', 'pir/single']
+              : ['generic'];
             this.platform.setButtonCallbackUrl({
               baseUrl: this.baseUrl,
               token: this.device.token,
               oldUrl: callBackUrl.url,
-              // FIXME
-              endpoints: ['generic', 'pir/single'],
+              endpoints: endpoints,
             });
           } else {
             this.platform.log.debug(
