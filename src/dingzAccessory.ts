@@ -170,7 +170,11 @@ export class DingzDaAccessory extends EventEmitter {
      */
 
     // Add Dimmers, Blinds etc.
-    this.platform.log.info('Adding output devices -> [...]');
+    this.platform.log.info(
+      'Adding output devices for ',
+      this.device.address,
+      ' -> [...]',
+    );
     this.getDeviceInputConfig()
       .then((data) => {
         if (data.inputs) {
@@ -196,17 +200,6 @@ export class DingzDaAccessory extends EventEmitter {
               // Sensors
               this.dingzStates.Temperature = state.sensors.room_temperature;
               this.dingzStates.Brightness = state.sensors.brightness;
-
-              // this.platform.log.info(
-              //   'Blinds',
-              //   this.device.address,
-              //   'State:',
-              //   state.blinds,
-              // );
-              // this.platform.log.info(
-              //   'Blinds Local state:',
-              //   this.dingzStates.WindowCovers,
-              // );
               this.platform.eb.emit(DingzEvent.STATE_UPDATE);
             }
           });
@@ -1091,7 +1084,11 @@ export class DingzDaAccessory extends EventEmitter {
 
   // Updates the Accessory (e.g. if the config has changed)
   private async updateAccessory(): Promise<void> {
-    this.platform.log.info('Update accessory -> Check for changed config.');
+    this.platform.log.info(
+      'Update accessory ',
+      this.device.address,
+      '-> Check for changed config.',
+    );
 
     this.getDeviceInputConfig().then((inputConfig) => {
       if (inputConfig && inputConfig.inputs[0]) {
