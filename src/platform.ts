@@ -9,6 +9,7 @@ import type {
 import { Policy, ConsecutiveBreaker } from 'cockatiel';
 import { createSocket, Socket, RemoteInfo } from 'dgram';
 import axios, { AxiosRequestConfig, AxiosError } from 'axios';
+import axiosRetry from 'axios-retry';
 import * as bodyParser from 'body-parser';
 import e = require('express');
 import * as os from 'os';
@@ -81,6 +82,8 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
     public readonly config: PlatformConfig,
     public readonly api: API,
   ) {
+    axiosRetry(axios, { retries: 3, retryDelay: axiosRetry.exponentialDelay });
+
     this.log.debug('Finished initializing platform:', this.config.name);
 
     // When this event is fired it means Homebridge has restored all cached accessories from disk.
@@ -871,6 +874,8 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
     token?: string;
     body?: object | string;
   }) {
+    // Retry up to 3 times, with exponential Backoff
+    // (https://developers.google.com/analytics/devguides/reporting/core/v3/errors#backoff)
     const data = await axios({
       url: url,
       method: method,
