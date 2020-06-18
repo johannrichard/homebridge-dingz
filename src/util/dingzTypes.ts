@@ -43,6 +43,21 @@ export interface DingzDeviceInfo {
   front_sn: string;
 }
 
+export interface DingzDeviceSystemConfig {
+  allow_reset: boolean;
+  allow_wps: boolean;
+  allow_reboot: boolean;
+  broadcast_period: number;
+  origin: boolean;
+  token: string;
+  upgrade_blink: boolean;
+  reboot_blink: boolean;
+  dingz_name: string;
+  room_name: string;
+  time: string;
+  system_status: string;
+}
+
 // Internal representation of Dimmer in Plugin
 export type DimmerId = 0 | 1 | 2 | 3;
 export type ButtonId = '1' | '2' | '3' | '4';

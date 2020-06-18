@@ -15,7 +15,12 @@ import e = require('express');
 import * as os from 'os';
 
 // Internal Types
-import { DingzDevices, DingzDeviceInfo, ButtonId } from './util/dingzTypes';
+import {
+  ButtonId,
+  DingzDevices,
+  DingzDeviceInfo,
+  DingzDeviceSystemConfig,
+} from './util/dingzTypes';
 import { MyStromDeviceInfo, MyStromSwitchTypes } from './util/myStromTypes';
 
 import {
@@ -216,69 +221,70 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
     // Run a diacovery of changed things every 10 seconds
     this.log.debug(`Add configured device -> ${name} (${address})`);
 
-    const success = this.getDingzDeviceInfo({ address, token }).then((data) => {
-      this.log.debug('Got Device ->', JSON.stringify(data as DingzDevices));
-      if (typeof data !== 'undefined') {
-        const dingzDevices = data as DingzDevices;
-        const keys = Object.keys(dingzDevices);
-        const mac = keys[0]; // keys[0]
-        const info: DingzDeviceInfo = dingzDevices[mac];
+    const success = this.getDingzDeviceInfo({ address, token }).then(
+      ([dingzDevices, dingzConfig]) => {
+        this.log.debug('Got Device ->', JSON.stringify(dingzDevices));
+        if (typeof dingzDevices !== 'undefined') {
+          const keys = Object.keys(dingzDevices);
+          const mac = keys[0]; // keys[0]
+          const info: DingzDeviceInfo = dingzDevices[mac];
 
-        if (info.type !== 'dingz') {
-          throw new InvalidTypeError(
-            `Device ${name} at ${address} is of the wrong type (${info.type} instead of "dingz")`,
-          );
+          if (info.type !== 'dingz') {
+            throw new InvalidTypeError(
+              `Device ${name} at ${address} is of the wrong type (${info.type} instead of "dingz")`,
+            );
+          }
+
+          // Fixme: Fetch more info about the Device (particularly Name)
+          const deviceInfo: DeviceInfo = {
+            name: dingzConfig.dingz_name,
+            address: address,
+            mac: mac.toUpperCase(),
+            token: token,
+            model: info.puck_hw_model ?? 'dingz',
+            hwInfo: info,
+            accessoryClass: 'DingzDaAccessory',
+          };
+
+          const uuid = this.api.hap.uuid.generate(deviceInfo.mac);
+
+          // check that the device has not already been registered by checking the
+          // cached devices we stored in the `configureAccessory` method above
+          if (!this.accessories[uuid]) {
+            this.log.info('Registering new accessory:', deviceInfo.name);
+            // create a new accessory
+            const accessory = new this.api.platformAccessory(
+              deviceInfo.name,
+              uuid,
+            );
+
+            // store a copy of the device object in the `accessory.context`
+            // the `context` property can be used to store any data about the accessory you may need
+            accessory.context.device = deviceInfo;
+
+            // create the accessory handler (which will add services as needed)
+            // this is imported from `dingzDaAccessory.ts`
+            const dingzDaAccessory = new DingzDaAccessory(this, accessory);
+
+            // link the accessory to your platform
+            this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [
+              accessory,
+            ]);
+
+            // push into accessory cache
+            this.accessories[uuid] = dingzDaAccessory;
+            return true;
+          } else {
+            this.log.warn('Accessory already initialized');
+
+            // FIXME: Update Names et al.
+            this.eb.emit(DingzEvent.UPDATE_INFO, this.accessories[uuid]);
+            this.accessories[uuid].identify();
+            return true;
+          }
         }
-
-        // Fixme: Fetch more info about the Device (particularly Name)
-        const deviceInfo: DeviceInfo = {
-          name: name,
-          address: address,
-          mac: mac.toUpperCase(),
-          token: token,
-          model: info.puck_hw_model ?? 'dingz',
-          hwInfo: info,
-          accessoryClass: 'DingzDaAccessory',
-        };
-
-        const uuid = this.api.hap.uuid.generate(deviceInfo.mac);
-
-        // check that the device has not already been registered by checking the
-        // cached devices we stored in the `configureAccessory` method above
-        if (!this.accessories[uuid]) {
-          this.log.info('Registering new accessory:', deviceInfo.name);
-          // create a new accessory
-          const accessory = new this.api.platformAccessory(
-            deviceInfo.name,
-            uuid,
-          );
-
-          // store a copy of the device object in the `accessory.context`
-          // the `context` property can be used to store any data about the accessory you may need
-          accessory.context.device = deviceInfo;
-
-          // create the accessory handler (which will add services as needed)
-          // this is imported from `dingzDaAccessory.ts`
-          const dingzDaAccessory = new DingzDaAccessory(this, accessory);
-
-          // link the accessory to your platform
-          this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [
-            accessory,
-          ]);
-
-          // push into accessory cache
-          this.accessories[uuid] = dingzDaAccessory;
-          return true;
-        } else {
-          this.log.warn('Accessory already initialized');
-
-          // FIXME: Update Names et al.
-          this.eb.emit(DingzEvent.UPDATE_INFO, this.accessories[uuid]);
-          this.accessories[uuid].identify();
-          return true;
-        }
-      }
-    });
+      },
+    );
 
     if (!success) {
       // Nothing found, throw error
@@ -829,13 +835,22 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
   }: {
     address: string;
     token?: string;
-  }): Promise<DingzDevices> {
+  }): Promise<[DingzDevices, DingzDeviceSystemConfig]> {
     const deviceInfoUrl = `http://${address}/api/v1/device`;
-    return await this.fetch({
-      url: deviceInfoUrl,
-      returnBody: true,
-      token,
-    });
+    const deviceConfigUrl = `http://${address}/api/v1/system_config`;
+
+    return Promise.all<DingzDevices, DingzDeviceSystemConfig>([
+      this.fetch({
+        url: deviceInfoUrl,
+        returnBody: true,
+        token,
+      }),
+      this.fetch({
+        url: deviceConfigUrl,
+        returnBody: true,
+        token,
+      }),
+    ]);
   }
 
   /**
