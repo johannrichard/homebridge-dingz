@@ -177,6 +177,7 @@ export class DingzDaAccessory extends EventEmitter {
     );
     this.getDeviceInputConfig()
       .then((data) => {
+        // FIXME: Don't continue if no data
         if (data.inputs) {
           this.device.dingzInputInfo = data.inputs;
         }
@@ -687,7 +688,8 @@ export class DingzDaAccessory extends EventEmitter {
       } else {
         this.platform.log.warn(
           'We have an issue here: state should be non-empty but is undefined.',
-          `Continue here, not killing myself anymore. For the records, device: ${this.device.address} - id: ${id},  index: ${index} and output is: `,
+          'Continue here, not killing myself anymore.',
+          `For the records, device: ${this.device.address} - id: ${id},  index: ${index} and output is: `,
           JSON.stringify(this.dingzStates),
         );
       }
@@ -778,7 +780,7 @@ export class DingzDaAccessory extends EventEmitter {
       );
 
     // Set min/max Values
-    // FIXME: different modes with/without lamella exist
+    // FIXME: #24 different modes with/without lamella exist
     service
       .getCharacteristic(this.platform.Characteristic.TargetHorizontalTiltAngle)
       .setProps({ minValue: 0, maxValue: 90 }) // dingz Maximum values
