@@ -1371,14 +1371,12 @@ export class DingzDaAccessory extends EventEmitter {
    * TODO: Refactor duplicate code into proper API caller
    */
   private async getDingzDeviceInfo(): Promise<DingzDeviceInfo> {
-    const dingzDevices = await this.platform.getDingzDeviceInfo({
+    const [dingzDevices] = await this.platform.getDingzDeviceInfo({
       address: this.device.address,
       token: this.device.token,
     });
     try {
-      const dingzDeviceInfo: DingzDeviceInfo = (dingzDevices as DingzDevices)[
-        this.device.mac
-      ];
+      const dingzDeviceInfo: DingzDeviceInfo = dingzDevices[this.device.mac];
       if (dingzDeviceInfo) {
         return dingzDeviceInfo;
       }
