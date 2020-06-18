@@ -21,7 +21,6 @@ import {
   DimmerState,
   DimmerTimer,
   DingzDeviceInfo,
-  DingzDevices,
   DingzDimmerConfig,
   DingzDimmerConfigValue,
   DingzInputInfo,
