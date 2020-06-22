@@ -23,7 +23,7 @@ import {
   DingzDeviceInfo,
   DingzDimmerConfig,
   DingzDimmerConfigValue,
-  DingzInputInfo,
+  DingzInputConfig,
   DingzInputInfoItem,
   DingzLEDState,
   DingzMotionData,
@@ -174,37 +174,37 @@ export class DingzDaAccessory extends EventEmitter {
       this.device.address,
       ' -> [...]',
     );
-    this.getDeviceInputConfig()
-      .then((data) => {
-        // FIXME: Don't continue if no data
-        if (data.inputs) {
-          this.device.dingzInputInfo = data.inputs;
-        }
-        return this.getDingzDeviceDimmerConfig();
-      })
-      .then((data) => {
-        if (data.dimmers && data.dimmers.length === 4) {
-          this.device.dimmerConfig = data;
-        }
 
-        // Now we have what we need and can create the services …
-        this.addOutputServices();
-        setInterval(() => {
-          // TODO: Set rechability if call times out too many times
-          // Set up an interval to fetch Dimmer states
-          this.getDeviceState().then((state) => {
-            if (typeof state !== 'undefined' && state?.config) {
-              // Outputs
-              this.dingzStates.Dimmers = state.dimmers;
-              this.dingzStates.LED = state.led;
-              // Sensors
-              this.dingzStates.Temperature = state.sensors.room_temperature;
-              this.dingzStates.Brightness = state.sensors.brightness;
-              this.platform.eb.emit(DingzEvent.STATE_UPDATE);
-            }
-          });
-        }, 10000);
-      })
+    // FIXME: Is there a better way to handle errors?
+    this.getConfigs()
+      .then(([inputConfig, dimmerConfig]) => {
+        if (
+          inputConfig?.inputs &&
+          dimmerConfig?.dimmers &&
+          dimmerConfig?.dimmers.length === 4
+        ) {
+          this.device.dingzInputInfo = inputConfig.inputs;
+          this.device.dimmerConfig = dimmerConfig;
+
+          // Now we have what we need and can create the services …
+          this.addOutputServices();
+          setInterval(() => {
+            // TODO: Set rechability if call times out too many times
+            // Set up an interval to fetch Dimmer states
+            this.getDeviceState().then((state) => {
+              if (typeof state !== 'undefined' && state?.config) {
+                // Outputs
+                this.dingzStates.Dimmers = state.dimmers;
+                this.dingzStates.LED = state.led;
+                // Sensors
+                this.dingzStates.Temperature = state.sensors.room_temperature;
+                this.dingzStates.Brightness = state.sensors.brightness;
+                this.platform.eb.emit(DingzEvent.STATE_UPDATE);
+              }
+            });
+          }, 10000);
+        }
+      }) // FIXME: Don't chain this way, improve error handling
       .then(() => {
         /**
          * Add auxiliary services (Motion, Temperature)
@@ -1091,18 +1091,15 @@ export class DingzDaAccessory extends EventEmitter {
       '-> Check for changed config.',
     );
 
-    this.getDeviceInputConfig().then((inputConfig) => {
-      if (inputConfig && inputConfig.inputs[0]) {
+    this.getConfigs().then(([inputConfig, dimmerConfig]) => {
+      if (inputConfig?.inputs[0]) {
         this._updatedDeviceInputConfig = inputConfig.inputs[0];
       }
+      this.device.dimmerConfig = dimmerConfig;
     });
 
     this.getDingzDeviceInfo().then((deviceInfo) => {
       this._updatedDeviceInfo = deviceInfo;
-    });
-
-    this.getDingzDeviceDimmerConfig().then((dimmerConfig) => {
-      this.device.dimmerConfig = dimmerConfig;
     });
 
     const currentDingzDeviceInfo: DingzDeviceInfo = this.accessory.context
@@ -1482,28 +1479,23 @@ export class DingzDaAccessory extends EventEmitter {
     });
   }
 
-  private async getDingzDeviceDimmerConfig(): Promise<DingzDimmerConfig> {
-    const getDimmerConfigUrl = `${this.baseUrl}/api/v1/dimmer_config`; // /api/v1/dimmer/<DIMMER>/on/?value=<value>
-    return await this.platform.fetch({
-      url: getDimmerConfigUrl,
-      returnBody: true,
-      token: this.device.token,
-    });
-  }
+  // Get Input & Dimmer Config
+  private async getConfigs(): Promise<[DingzInputConfig, DingzDimmerConfig]> {
+    const getInputConfigUrl = `${this.baseUrl}/api/v1/input_config`;
+    const getDimmerConfigUrl = `${this.baseUrl}/api/v1/dimmer_config`;
 
-  private async getDeviceInputConfig(): Promise<DingzInputInfo> {
-    const getInputConfigUrl = `${this.baseUrl}/api/v1/input_config`; // /api/v1/dimmer/<DIMMER>/on/?value=<value>
-
-    const release = await this.mutex.acquire();
-    try {
-      return await this.platform.fetch({
+    return Promise.all<DingzInputConfig, DingzDimmerConfig>([
+      this.platform.fetch({
         url: getInputConfigUrl,
         returnBody: true,
         token: this.device.token,
-      });
-    } finally {
-      release();
-    }
+      }),
+      this.platform.fetch({
+        url: getDimmerConfigUrl,
+        returnBody: true,
+        token: this.device.token,
+      }),
+    ]);
   }
 
   private async getDeviceState(): Promise<DingzState> {

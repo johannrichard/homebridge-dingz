@@ -14,7 +14,7 @@ export interface DingzLightData {
   state: 'night' | 'day';
 }
 
-export interface DingzInputInfo {
+export interface DingzInputConfig {
   inputs: DingzInputInfoItem[];
 }
 export interface DingzInputInfoItem {
