@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ---
 ## [Released]
 ## [1.6.0] - 2020-06-22
+### Features
 * **platform:** implement exponential backoff ([e8e0797](https://github.com/johannrichard/homebridge-dingz/commit/e8e07973ce9817e2f3fbbe761e62318903b19726))
 * **dingz**: read name from system configuration ([2374a43](https://github.com/johannrichard/homebridge-dingz/commit/2374a43)) (Thanks @rryter for the contribution)
 
