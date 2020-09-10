@@ -9,4 +9,4 @@ import { DingzDaHomebridgePlatform } from './platform';
  */
 export default function(api: API) {
   api.registerPlatform(PLUGIN_NAME, PLATFORM_NAME, DingzDaHomebridgePlatform);
-};
+}
