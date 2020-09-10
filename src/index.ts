@@ -8,5 +8,5 @@ import { DingzDaHomebridgePlatform } from './platform';
  * This method registers the platform with Homebridge
  */
 export = (api: API) => {
-  api.registerPlatform(PLATFORM_NAME, DingzDaHomebridgePlatform);
+  api.registerPlatform(PLUGIN_NAME, PLATFORM_NAME, DingzDaHomebridgePlatform);
 };
