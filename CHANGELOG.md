@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 ---
 ## [Released]
+## [1.6.1] - 2020-09-11
+### Bug Fixes
+* **platform** implement fix to run plugin in [HOOBS](http://hoobs.org) (Fixes #56, thanks @claude1984 for reporting it)
+
 ## [1.6.0] - 2020-06-22
 ### Features
 * **platform:** implement exponential backoff ([e8e0797](https://github.com/johannrichard/homebridge-dingz/commit/e8e07973ce9817e2f3fbbe761e62318903b19726))
@@ -181,8 +185,9 @@ The format is based on [Keep a Changelog][Keep a Changelog] and this project adh
 [Semantic Versioning]: https://semver.org/
 
 <!-- Versions -->
-[Unreleased]: https://github.com/johannrichard/homebridge-dingz/compare/v1.4.3...HEAD
+[Unreleased]: https://github.com/johannrichard/homebridge-dingz/compare/v1.6.1...HEAD
 [Released]: https://github.com/johannrichard/homebridge-dingz/releases
+[1.6.1]: https://github.com/johannrichard/homebridge-dingz/compare/v1.6.0..v1.6.1
 [1.6.0]: https://github.com/johannrichard/homebridge-dingz/compare/v1.5.2..v1.6.0
 [1.5.2]: https://github.com/johannrichard/homebridge-dingz/compare/v1.5.1..v1.5.2
 [1.5.1]: https://github.com/johannrichard/homebridge-dingz/compare/v1.5.0..v1.5.1
