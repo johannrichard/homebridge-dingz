@@ -93,7 +93,7 @@ export class MyStromSwitchAccessory {
       .on(CharacteristicEventTypes.GET, this.getOutletInUse.bind(this)); // GET - bind to the `getOn` method below
 
     if (this.device.hwInfo?.type !== undefined) {
-      // Dingz has a temperature sensor, make it available here
+      // Switch has a temperature sensor, make it available here
       // create a new Temperature Sensor service
       this.temperatureService =
         this.accessory.getService(this.platform.Service.TemperatureSensor) ??

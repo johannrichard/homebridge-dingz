@@ -696,7 +696,7 @@ export class DingzDaAccessory extends EventEmitter {
   }
 
   private removeDimmerService(id: 'D1' | 'D2' | 'D3' | 'D4') {
-    // Remove motionService
+    // Remove DimmerService
     const service: Service | undefined = this.accessory.getServiceById(
       this.platform.Service.Lightbulb,
       id,
