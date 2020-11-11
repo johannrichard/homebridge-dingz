@@ -52,6 +52,7 @@ import { DingzDaAccessory } from './dingzAccessory';
 import { MyStromSwitchAccessory } from './myStromSwitchAccessory';
 import { MyStromLightbulbAccessory } from './myStromLightbulbAccessory';
 import { MyStromButtonAccessory } from './myStromButtonAccessory';
+import { MyStromPIRAccessory } from './myStromPIRAccessory';
 
 // Define a policy that will retry 20 times at most
 const retry = Policy.handleAll()
@@ -148,6 +149,10 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
           // add the restored accessory to the accessories cache so we can track if it has already been registered
           platformAccessory = new MyStromButtonAccessory(this, accessory);
           break;
+        case 'MyStromPIRAccessory':
+          // add the restored accessory to the accessories cache so we can track if it has already been registered
+          platformAccessory = new MyStromPIRAccessory(this, accessory);
+          break;
         default:
           this.log.warn(
             'No Accessory type defined for Accessory',
@@ -201,6 +206,14 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
           );
           break;
         case 'myStromPIR':
+          await retryWithBreaker.execute(() =>
+            this.addMyStromPIRDevice({
+              address: device.address,
+              name: device.name,
+              token: device.token ?? this.config.globalToken,
+            }),
+          );
+          break;
         default:
           this.log.info(
             'Device type',
@@ -473,6 +486,89 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
   }
 
   // Add one device based on address and name
+  private addMyStromPIRDevice({
+    address,
+    name = 'Motion Sensor',
+    token,
+  }: {
+    address: string;
+    name?: string;
+    token?: string;
+  }): boolean {
+    // Run a diacovery of changed things every 10 seconds
+    this.log.debug(
+      `Add configured/discovered myStrom PIR device -> ${name} (${address})`,
+    );
+    const success = this.getMyStromDeviceInfo({
+      address,
+      token,
+    }).then((data) => {
+      if (typeof data !== 'undefined') {
+        const info = data as MyStromDeviceInfo;
+
+        // Need this to identify the right type
+        if (info.type !== 110) {
+          throw new InvalidTypeError(
+            `Device ${name} at ${address} is of the wrong type (${info.type} instead of "myStrom Lightbulb")`,
+          );
+        }
+
+        const deviceInfo: DeviceInfo = {
+          name: info.name ?? name,
+          address: address,
+          mac: info.mac.toUpperCase(),
+          token: token,
+          model: '110',
+          hwInfo: info,
+          accessoryClass: 'MyStromPIRAccessory',
+        };
+
+        const uuid = this.api.hap.uuid.generate(deviceInfo.mac);
+
+        // check that the device has not already been registered by checking the
+        // cached devices we stored in the `configureAccessory` method above
+        if (!this.accessories[uuid]) {
+          this.log.info('Registering new accessory:', deviceInfo.name);
+          // create a new accessory
+          const accessory = new this.api.platformAccessory(
+            deviceInfo.name,
+            uuid,
+          );
+
+          // store a copy of the device object in the `accessory.context`
+          // the `context` property can be used to store any data about the accessory you may need
+          accessory.context.device = deviceInfo;
+
+          // create the accessory handler (which will add services as needed)
+          // this is imported from `dingzDaAccessory.ts`
+          const myStromPIRAccessory = new MyStromPIRAccessory(this, accessory);
+
+          // link the accessory to your platform
+          this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [
+            accessory,
+          ]);
+
+          // push into accessory cache
+          this.accessories[uuid] = myStromPIRAccessory;
+          return true;
+        } else {
+          this.log.warn('Accessory already initialized');
+          this.accessories[uuid].identify();
+          return true;
+        }
+      }
+    });
+
+    // Nothing found, throw error
+    if (!success) {
+      throw new DeviceNotReachableError(
+        `Device not found -> ${name} (${address})`,
+      );
+    }
+    return true;
+  }
+
+  // Add one device based on address and name
   private addMyStromButtonDevice({
     address,
     name = 'Button',
@@ -675,6 +771,15 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
               this.addMyStromSwitchDevice({
                 address: remoteInfo.address,
                 name: 'Switch',
+                token: this.config.globalToken,
+              });
+            });
+            break;
+          case DeviceTypes.MYSTROM_PIR:
+            retryWithBreaker.execute(() => {
+              this.addMyStromPIRDevice({
+                address: remoteInfo.address,
+                name: 'Motion Sensor',
                 token: this.config.globalToken,
               });
             });

@@ -38,3 +38,9 @@ export interface MyStromLightbulbReport {
   mode: 'hsv' | 'rgb';
   power: number;
 }
+
+export interface MyStromPIRReport {
+  motion: boolean;
+  light?: number;
+  temperature: number;
+}

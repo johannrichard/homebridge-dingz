@@ -54,7 +54,7 @@
                 { "title": "myStrom Switch", "enum": ["myStromSwitch"] },
                 { "title": "myStrom Lightbulb", "enum": ["myStromBulb"] },
                 { "title": "myStrom LED Strip", "enum": ["myStromLED"] },
-                { "title": "myStrom Motion Sensor (Not implemented)", "enum": ["myStromPIR"] },
+                { "title": "myStrom PIR (Motion) Sensor", "enum": ["myStromPIR"] },
                 { "title": "myStrom Button", "enum": ["myStromButton"] }
               ],
               "required": true

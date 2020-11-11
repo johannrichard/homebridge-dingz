@@ -5,6 +5,7 @@ import { DingzDaAccessory } from '../dingzAccessory';
 import { MyStromSwitchAccessory } from '../myStromSwitchAccessory';
 import { MyStromLightbulbAccessory } from '../myStromLightbulbAccessory';
 import { MyStromButtonAccessory } from '../myStromButtonAccessory';
+import { MyStromPIRAccessory } from '../myStromPIRAccessory';
 
 // Types
 import {
@@ -23,6 +24,7 @@ export enum DeviceTypes {
   MYSTROM_SWITCH_CHV2 = 106,
   MYSTROM_SWITCH_EU = 107,
   DINGZ = 108,
+  MYSTROM_PIR = 110,
 }
 
 export enum ButtonAction {
@@ -47,14 +49,16 @@ export interface DeviceInfo {
     | 'DingzDaAccessory'
     | 'MyStromSwitchAccessory'
     | 'MyStromLightbulbAccessory'
-    | 'MyStromButtonAccessory';
+    | 'MyStromButtonAccessory'
+    | 'MyStromPIRAccessory';
 }
 
 export type AccessoryType =
   | DingzDaAccessory
   | MyStromSwitchAccessory
   | MyStromLightbulbAccessory
-  | MyStromButtonAccessory;
+  | MyStromButtonAccessory
+  | MyStromPIRAccessory;
 export interface AccessoryTypes {
   [key: string]: AccessoryType;
 }
