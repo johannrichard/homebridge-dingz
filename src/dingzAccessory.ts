@@ -1057,9 +1057,9 @@ export class DingzDaAccessory extends EventEmitter {
           })
           .catch((e) => {
             this.platform.log.error(
-              'Error ->',
+              'Error -> unable to fetch DeviceMotion data',
               e.name,
-              ', unable to fetch DeviceMotion data',
+              e.toString(),
             );
           });
       }, 2000); // Shorter term updates for motion sensor
