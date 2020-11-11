@@ -130,3 +130,7 @@ dist
 .yarn/unplugged
 .yarn/build-state.yml
 .pnp.*
+
+# Github templates and actions, own stuff
+.github
+api
