@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 ---
 ## [Released]
+## [1.7.0] - 2020-11-12
+### Features
+* **accessories** implement support for PIR motion sensor (Implements #87, thanks @qx54 for helping with testing)
+
 ## [1.6.1] - 2020-09-11
 ### Bug Fixes
 * **platform** implement fix to run plugin in [HOOBS](http://hoobs.org) (Fixes #56, thanks @claude1984 for reporting it)
@@ -187,6 +191,7 @@ The format is based on [Keep a Changelog][Keep a Changelog] and this project adh
 <!-- Versions -->
 [Unreleased]: https://github.com/johannrichard/homebridge-dingz/compare/v1.6.1...HEAD
 [Released]: https://github.com/johannrichard/homebridge-dingz/releases
+[1.7.0]: https://github.com/johannrichard/homebridge-dingz/compare/v1.6.1..v1.7.0
 [1.6.1]: https://github.com/johannrichard/homebridge-dingz/compare/v1.6.0..v1.6.1
 [1.6.0]: https://github.com/johannrichard/homebridge-dingz/compare/v1.5.2..v1.6.0
 [1.5.2]: https://github.com/johannrichard/homebridge-dingz/compare/v1.5.1..v1.5.2
