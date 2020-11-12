@@ -134,3 +134,5 @@ dist
 # Github templates and actions, own stuff
 .github
 api
+.prettierrc
+commitlint.config.js 
