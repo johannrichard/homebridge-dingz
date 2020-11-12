@@ -9,8 +9,9 @@ import { Mutex } from 'async-mutex';
 
 import { DingzDaHomebridgePlatform } from './platform';
 import { MyStromDeviceInfo, MyStromPIRReport } from './util/myStromTypes';
-import { DeviceInfo } from './util/commonTypes';
+import { ButtonAction, DeviceInfo } from './util/commonTypes';
 import { DeviceNotReachableError } from './util/errors';
+import { DingzEvent } from './util/dingzEventBus';
 
 // Policy for long running tasks, retry every hour
 const retrySlow = Policy.handleAll()
@@ -120,12 +121,17 @@ export class MyStromPIRAccessory {
     );
 
     // Only check for motion if we have a PIR and set the Interval
-    if (this.platform.config.motionPoller ?? true) {
-      this.platform.log.info('Motion POLLING of', this.device.name, 'enabled');
-      setInterval(() => {
-        this.getDeviceReport()
-          .then((report) => {
-            if (report) {
+    setInterval(() => {
+      this.getDeviceReport()
+        .then((report) => {
+          if (report) {
+            // If we are in motion polling mode, update motion from poller
+            if (this.platform.config.motionPoller ?? true) {
+              this.platform.log.info(
+                'Motion POLLING of',
+                this.device.name,
+                'enabled',
+              );
               const isMotion: boolean = report.motion;
               // Only update if motionService exists *and* if there's a change in motion'
               if (this.pirState.motion !== isMotion) {
@@ -136,32 +142,64 @@ export class MyStromPIRAccessory {
                   this.pirState.motion,
                 );
               }
-              this.pirState.temperature = report.temperature;
-              this.temperatureService.updateCharacteristic(
-                this.platform.Characteristic.CurrentTemperature,
-                this.pirState.temperature,
-              );
-
-              this.pirState.light = report.light ?? 0;
-              this.lightService.updateCharacteristic(
-                this.platform.Characteristic.CurrentAmbientLightLevel,
-                this.pirState.light,
-              );
-            } else {
-              throw new DeviceNotReachableError(
-                `Device can not be reached ->
-              ${this.device.name}-> ${this.device.address}`,
-              );
             }
-          })
-          .catch((e: Error) => {
-            this.platform.log.error(
-              'Error -> unable to fetch DeviceMotion data',
-              e.name,
-              e.toString(),
+
+            // Update temperature and light in any case
+            this.pirState.temperature = report.temperature;
+            this.temperatureService.updateCharacteristic(
+              this.platform.Characteristic.CurrentTemperature,
+              this.pirState.temperature,
             );
-          });
-      }, 2000); // Shorter term updates for motion sensor
+
+            this.pirState.light = report.light ?? 0;
+            this.lightService.updateCharacteristic(
+              this.platform.Characteristic.CurrentAmbientLightLevel,
+              this.pirState.light,
+            );
+          } else {
+            throw new DeviceNotReachableError(
+              `Device can not be reached ->
+              ${this.device.name}-> ${this.device.address}`,
+            );
+          }
+        })
+        .catch((e: Error) => {
+          this.platform.log.error(
+            'Error -> unable to fetch DeviceMotion data',
+            e.name,
+            e.toString(),
+          );
+        });
+    }, 2000); // Shorter term updates for motion sensor
+
+    if (!(this.platform.config.motionPoller ?? true)) {
+      // Implement *push* event handling
+      this.platform.eb.on(DingzEvent.ACTION, (mac, action) => {
+        this.platform.log.debug(`Processing DingzEvent.ACTION ${action}`);
+
+        if (mac === this.device.mac) {
+          this.platform.log.debug(
+            `Motion detected by ${this.device.name} (${this.device.mac}) pressed -> ${action}`,
+          );
+          let isMotion: boolean | undefined;
+          switch (action) {
+            case ButtonAction.PIR_MOTION_STOP:
+              isMotion = false;
+              break;
+            case ButtonAction.PIR_MOTION_START:
+            default:
+              isMotion = true;
+              break;
+          }
+
+          this.platform.log.debug('Motion Update from PUSH');
+          this.pirState.motion = isMotion;
+          this.motionService.updateCharacteristic(
+            this.platform.Characteristic.MotionDetected,
+            this.pirState.motion,
+          );
+        }
+      });
     }
 
     // Set the callback URL (Override!)
