@@ -6,17 +6,17 @@ import { ButtonId } from './dingzTypes';
 // EVENT TYPES
 export const enum DingzEvent {
   UPDATE_INFO = 'updateDingzInfo',
-  BTN_PRESS = 'buttonPress',
+  ACTION = 'deviceAction',
   STATE_UPDATE = 'stateUpdate',
 }
 
 export declare interface DingzEventBus {
   on(
-    event: DingzEvent.BTN_PRESS,
+    event: DingzEvent.ACTION,
     listener: (mac: string, action: ButtonAction, battery: number) => void,
   ): this;
   on(
-    event: DingzEvent.BTN_PRESS,
+    event: DingzEvent.ACTION,
     listener: (mac: string, action: ButtonAction, button: ButtonId) => void,
   ): this;
   on(
@@ -26,13 +26,13 @@ export declare interface DingzEventBus {
   on(event: DingzEvent.STATE_UPDATE, listener: () => void): this;
 
   emit(
-    event: DingzEvent.BTN_PRESS,
+    event: DingzEvent.ACTION,
     mac: string,
     action: ButtonAction,
     battery: number,
   ): boolean;
   emit(
-    event: DingzEvent.BTN_PRESS,
+    event: DingzEvent.ACTION,
     mac: string,
     action: ButtonAction,
     button: ButtonId,

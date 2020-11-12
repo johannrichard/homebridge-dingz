@@ -896,7 +896,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
             request.connection.remoteAddress,
           );
           this.eb.emit(
-            DingzEvent.BTN_PRESS,
+            DingzEvent.ACTION,
             mac,
             action as ButtonAction,
             button as ButtonId,
@@ -905,7 +905,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
           if (action) {
             this.log.warn('-> Simple Button action');
             this.eb.emit(
-              DingzEvent.BTN_PRESS,
+              DingzEvent.ACTION,
               mac,
               action as ButtonAction,
               battery as number,
@@ -913,7 +913,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
           } else {
             this.log.warn('-> Button Heartbeat');
             this.eb.emit(
-              DingzEvent.BTN_PRESS,
+              DingzEvent.ACTION,
               mac,
               action as ButtonAction,
               battery,

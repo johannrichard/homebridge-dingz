@@ -124,7 +124,7 @@ export class MyStromButtonAccessory {
       .getCharacteristic(this.platform.Characteristic.ChargingState)
       .on(CharacteristicEventTypes.GET, this.getChargingState.bind(this));
 
-    this.platform.eb.on(DingzEvent.BTN_PRESS, (mac, action, battery) => {
+    this.platform.eb.on(DingzEvent.ACTION, (mac, action, battery) => {
       if (mac === this.device.mac) {
         this.buttonState = action ?? ButtonAction.SINGLE_PRESS;
         this.batteryLevel = battery;

@@ -486,7 +486,7 @@ export class DingzDaAccessory extends EventEmitter {
     this.services.push(this.addButtonService('dingz Button 4', '4'));
 
     this.platform.eb.on(
-      DingzEvent.BTN_PRESS,
+      DingzEvent.ACTION,
       (mac, action: ButtonAction, button: ButtonId | '5') => {
         if (mac === this.device.mac && button) {
           this.platform.log.debug(
