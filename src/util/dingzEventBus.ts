@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events';
-import { AccessoryType, ButtonAction } from './commonTypes';
+import { ButtonAction, DeviceInfo } from './commonTypes';
 import { ButtonId } from './dingzTypes';
 
 // Platform elements
@@ -21,7 +21,7 @@ export declare interface DingzEventBus {
   ): this;
   on(
     event: DingzEvent.UPDATE_INFO,
-    listener: (accessory: AccessoryType) => void,
+    listener: (uuid: string, deviceInfo: DeviceInfo) => void,
   ): this;
   on(event: DingzEvent.STATE_UPDATE, listener: () => void): this;
 
@@ -37,7 +37,11 @@ export declare interface DingzEventBus {
     action: ButtonAction,
     button: ButtonId,
   ): boolean;
-  emit(event: DingzEvent.UPDATE_INFO, accessory: AccessoryType): boolean;
+  emit(
+    event: DingzEvent.UPDATE_INFO,
+    uuid: string,
+    deviceInfo: DeviceInfo,
+  ): boolean;
   emit(event: DingzEvent.STATE_UPDATE): boolean;
 }
 

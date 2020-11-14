@@ -119,50 +119,32 @@ export class DingzDaAccessory extends EventEmitter {
   ) {
     super();
 
-    // Set Base URL
+    // Set base info
     this.device = this.accessory.context.device;
     this.dingzDeviceInfo = this.device.hwInfo as DingzDeviceInfo;
     this.baseUrl = `http://${this.device.address}`;
 
-    // Sanity check for "empty" SerialNumber
-    this.platform.log.debug(
-      `Attempting to set SerialNumber (which can not be empty) -> puck_sn: <${this.dingzDeviceInfo.puck_sn}>`,
+    this.setAccessoryInformation();
+
+    // Register listener for updated device info (e.g. on restore)
+    this.platform.eb.on(
+      DingzEvent.UPDATE_INFO,
+      (uuid: string, deviceInfo: DeviceInfo) => {
+        if (uuid === this.accessory.UUID) {
+          this.platform.log.debug(
+            'Updated device info received -> update accessory',
+          );
+
+          // Persist updated info
+          this.accessory.context.device = deviceInfo;
+          this.device = deviceInfo;
+          this.dingzDeviceInfo = this.device.hwInfo as DingzDeviceInfo;
+          this.baseUrl = `http://${this.device.address}`;
+          this.setAccessoryInformation();
+        }
+      },
     );
-    const serialNumber: string =
-      this.dingzDeviceInfo.puck_sn === ''
-        ? this.device.mac // MAC will always be defined for a correct device
-        : this.dingzDeviceInfo.puck_sn;
-    this.accessory
-      .getService(this.platform.Service.AccessoryInformation)!
-      .updateCharacteristic(
-        this.platform.Characteristic.ConfiguredName,
-        this.device.name,
-      )
-      .updateCharacteristic(this.platform.Characteristic.Name, this.device.name)
-      .updateCharacteristic(
-        this.platform.Characteristic.Manufacturer,
-        'iolo AG',
-      )
-      .updateCharacteristic(
-        this.platform.Characteristic.AppMatchingIdentifier,
-        'ch.iolo.dingz.consumer',
-      )
-      .updateCharacteristic(
-        this.platform.Characteristic.Model,
-        this.device.model as string,
-      )
-      .updateCharacteristic(
-        this.platform.Characteristic.FirmwareRevision,
-        this.dingzDeviceInfo.fw_version ?? 'Unknown',
-      )
-      .updateCharacteristic(
-        this.platform.Characteristic.HardwareRevision,
-        this.dingzDeviceInfo.hw_version_puck ?? 'Unknown',
-      )
-      .setCharacteristic(
-        this.platform.Characteristic.SerialNumber,
-        serialNumber,
-      );
+
     /****
      * How to discover Accessories:
      * - Check for UDP Packets and/or use manually configured accessories
@@ -200,6 +182,8 @@ export class DingzDaAccessory extends EventEmitter {
                 this.dingzStates.Temperature = state.sensors.room_temperature;
                 this.dingzStates.Brightness = state.sensors.brightness;
                 this.platform.eb.emit(DingzEvent.STATE_UPDATE);
+              } else {
+                this.platform.log.error('Can`t get device state');
               }
             });
           }, 10000);
@@ -241,7 +225,7 @@ export class DingzDaAccessory extends EventEmitter {
           this.platform.log.debug(
             'Enable PIR callback for older firmware revisions',
           );
-        this.enablePIRCallback();
+          this.enablePIRCallback();
         }
         this.getButtonCallbackUrl().then((callBackUrl) => {
           if (!callBackUrl?.url.includes(this.platform.getCallbackUrl())) {
@@ -273,6 +257,46 @@ export class DingzDaAccessory extends EventEmitter {
           return true;
         });
       });
+  }
+
+  private setAccessoryInformation() {
+    // Sanity check for "empty" SerialNumber
+    this.platform.log.debug(
+      `Attempting to set SerialNumber (which can not be empty) -> puck_sn: <${this.dingzDeviceInfo.puck_sn}>`,
+    );
+    const serialNumber: string =
+      this.dingzDeviceInfo.front_sn === ''
+        ? this.device.mac // MAC will always be defined for a correct device
+        : this.dingzDeviceInfo.front_sn;
+    this.accessory
+      .getService(this.platform.Service.AccessoryInformation)!
+      .setCharacteristic(this.platform.Characteristic.Manufacturer, 'iolo AG')
+      .setCharacteristic(
+        this.platform.Characteristic.AppMatchingIdentifier,
+        'ch.iolo.dingz.consumer',
+      )
+      // Update info from deviceInfo
+      .setCharacteristic(
+        this.platform.Characteristic.ConfiguredName,
+        this.device.name,
+      )
+      .setCharacteristic(this.platform.Characteristic.Name, this.device.name)
+      .setCharacteristic(
+        this.platform.Characteristic.Model,
+        this.device.model as string,
+      )
+      .setCharacteristic(
+        this.platform.Characteristic.FirmwareRevision,
+        this.dingzDeviceInfo.fw_version ?? 'Unknown',
+      )
+      .setCharacteristic(
+        this.platform.Characteristic.HardwareRevision,
+        this.dingzDeviceInfo.hw_version_puck ?? 'Unknown',
+      )
+      .setCharacteristic(
+        this.platform.Characteristic.SerialNumber,
+        serialNumber,
+      );
   }
 
   private addTemperatureService() {
@@ -1116,6 +1140,7 @@ export class DingzDaAccessory extends EventEmitter {
     const updatedDingzDeviceInfo: DingzDeviceInfo =
       this._updatedDeviceInfo ?? currentDingzDeviceInfo;
 
+    // FIXME: Make this more error proof (if input is defined)
     const currentDingzInputInfo: DingzInputInfoItem = this.accessory.context
       .device.dingzInputInfo[0];
     const updatedDingzInputInfo: DingzInputInfoItem =
@@ -1125,7 +1150,6 @@ export class DingzDaAccessory extends EventEmitter {
       .dimmerConfig;
 
     try {
-      // FIXME: Crashes occasionally
       if (
         currentDingzDeviceInfo &&
         currentDingzDeviceInfo.has_pir !== updatedDingzDeviceInfo.has_pir

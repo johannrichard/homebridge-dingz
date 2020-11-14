@@ -290,8 +290,8 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
           } else {
             this.log.warn('Accessory already initialized');
 
-            // FIXME: Update Names et al.
-            this.eb.emit(DingzEvent.UPDATE_INFO, this.accessories[uuid]);
+            // Update Names et al. from new device info
+            this.eb.emit(DingzEvent.UPDATE_INFO, uuid, deviceInfo);
             this.accessories[uuid].identify();
             return true;
           }
