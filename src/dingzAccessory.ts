@@ -233,7 +233,16 @@ export class DingzDaAccessory extends EventEmitter {
           );
         });
 
+        // Only necessary for firmware version < 1.2.x
+        if (
+          this.dingzDeviceInfo.fw_version.indexOf('1.1.') === 0 ||
+          this.dingzDeviceInfo.fw_version.indexOf('1.0.') === 0
+        ) {
+          this.platform.log.debug(
+            'Enable PIR callback for older firmware revisions',
+          );
         this.enablePIRCallback();
+        }
         this.getButtonCallbackUrl().then((callBackUrl) => {
           if (!callBackUrl?.url.includes(this.platform.getCallbackUrl())) {
             this.platform.log.warn(
