@@ -1120,21 +1120,15 @@ export class DingzDaAccessory extends EventEmitter {
       this._updatedDeviceInfo = deviceInfo;
     });
 
-    const currentDingzDeviceInfo: DingzDeviceInfo = this.accessory.context
-      .device.dingzDeviceInfo;
-    const updatedDingzDeviceInfo: DingzDeviceInfo =
-      this._updatedDeviceInfo ?? currentDingzDeviceInfo;
-
-    // FIXME: Make this more error proof (if input is defined)
-    const currentDingzInputInfo: DingzInputInfoItem = this.accessory.context
-      .device.dingzInputInfo[0];
-    const updatedDingzInputInfo: DingzInputInfoItem =
-      this._updatedDeviceInputConfig ?? currentDingzInputInfo;
-
-    const dimmerConfig: DingzDimmerConfig | undefined = this.device
-      .dimmerConfig;
+    let updatedDingzDeviceInfo: DingzDeviceInfo | undefined;
+    let updatedDingzInputInfo: DingzInputInfoItem | undefined;
 
     try {
+    const currentDingzDeviceInfo: DingzDeviceInfo = this.accessory.context
+      .device.dingzDeviceInfo;
+      updatedDingzDeviceInfo =
+      this._updatedDeviceInfo ?? currentDingzDeviceInfo;
+
       if (
         currentDingzDeviceInfo &&
         currentDingzDeviceInfo.has_pir !== updatedDingzDeviceInfo.has_pir
@@ -1153,7 +1147,13 @@ export class DingzDaAccessory extends EventEmitter {
       // Something about the Input config changed -- either remove or add the Dimmer,
       // but only if DIP is not set to WindowCovers
       // Update PIR Service
-      if (updatedDingzInputInfo.active || currentDingzInputInfo.active) {
+      const currentDingzInputInfo: DingzInputInfoItem | undefined = this
+        .accessory.context.device.dingzInputInfo
+        ? this.accessory.context.device.dingzInputInfo[0]
+        : undefined;
+      updatedDingzInputInfo =
+        this._updatedDeviceInputConfig ?? currentDingzInputInfo;
+      if (updatedDingzInputInfo?.active || currentDingzInputInfo?.active) {
         if (
           this.accessory.getServiceById(this.platform.Service.Lightbulb, 'D1')
         ) {
@@ -1163,12 +1163,15 @@ export class DingzDaAccessory extends EventEmitter {
           this.removeDimmerService('D1');
         }
       } else if (
-        !updatedDingzInputInfo.active &&
+        !updatedDingzInputInfo?.active &&
         !this.accessory.getServiceById(this.platform.Service.Lightbulb, 'D1') &&
         (updatedDingzDeviceInfo.dip_config === 1 ||
           updatedDingzDeviceInfo.dip_config === 3)
       ) {
         // Only add Dimmer 0 if we're not in "WindowCover" mode
+        const dimmerConfig: DingzDimmerConfig | undefined = this.device
+          .dimmerConfig;
+
         this.platform.log.warn(
           'No Input defined. Attempting to add Dimmer Service D1.',
         );
@@ -1193,9 +1196,13 @@ export class DingzDaAccessory extends EventEmitter {
 
       this.updateDimmerServices();
     } finally {
+      if (updatedDingzDeviceInfo) {
       this.accessory.context.device.dingzDeviceInfo = updatedDingzDeviceInfo;
+      }
+      if (updatedDingzInputInfo) {
       this.accessory.context.device.dingzInputInfo = [updatedDingzInputInfo];
     }
+  }
   }
 
   // Updates the Dimemr Services with their correct name
