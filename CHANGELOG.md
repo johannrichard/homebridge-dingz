@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 ---
 ## [Released]
+## [1.7.1] - 2020-11-14
+### Changed
+* **accessories** slightly better error reporting when updates fail
+
 ## [1.7.0] - 2020-11-12
 ### Features
 * **accessories** implement support for PIR motion sensor (close #87, thanks @qx54 for helping with testing)
