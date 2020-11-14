@@ -94,8 +94,6 @@ export class DingzDaAccessory extends EventEmitter {
     Brightness: 0 as number,
   };
 
-  // Take stock of intervals to dispose at the end of the life of the Accessory
-  private serviceTimers: NodeJS.Timer[] = [];
   private motionTimer?: NodeJS.Timer;
   private dimmerTimers = {} as DimmerTimer;
   private windowCoveringTimers = {} as WindowCoveringTimer;
