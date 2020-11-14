@@ -132,7 +132,10 @@ export class MyStromSwitchAccessory {
           }
         })
         .catch((e) => {
-          this.platform.log.error('Error while retrieving Device Report ->', e);
+          this.platform.log.error(
+            'Error while retrieving Device Report ->',
+            e.toString(),
+          );
         });
     }, 2000);
   }

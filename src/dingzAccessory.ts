@@ -718,10 +718,10 @@ export class DingzDaAccessory extends EventEmitter {
       this.setDeviceDimmer(index, value as boolean);
     } catch (e) {
       this.platform.log.error(
-        'Error ->',
-        e.name,
-        ', unable to set Dimmer data ',
+        'Error -> unable to set Dimmer data ',
         index,
+        e.name,
+        e.toString(),
       );
     }
     callback(null);
@@ -848,9 +848,9 @@ export class DingzDaAccessory extends EventEmitter {
         });
       } catch (e) {
         this.platform.log.error(
-          'Error ->',
+          'Error -> unable to fetch WindowCovering data',
           e.name,
-          ', unable to fetch WindowCovering data',
+          e.toString(),
         );
       }
     }, 5000);
@@ -1379,7 +1379,7 @@ export class DingzDaAccessory extends EventEmitter {
         return dingzDeviceInfo;
       }
     } catch (e) {
-      this.platform.log.error('Error in getting Device Info ->', e.message);
+      this.platform.log.error('Error in getting Device Info ->', e.toString());
     }
     throw new Error('dingz Device update failed -> Empty data.');
   }
