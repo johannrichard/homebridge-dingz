@@ -4,9 +4,38 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 ---
 ## [Released]
-## [1.7.1] - 2020-11-14
-### Changed
-* **accessories** slightly better error reporting when updates fail
+# [1.8.0](https://github.com/johannrichard/homebridge-dingz/compare/v1.7.1...v1.8.0) (2020-11-14)
+
+
+### Bug Fixes
+
+* **dingz:** don't set callback for newer firmware versions ([eb5e7e5](https://github.com/johannrichard/homebridge-dingz/commit/eb5e7e5e661313e3620881878cb7689b9b852972))
+* **dingz:** fixes [#102](https://github.com/johannrichard/homebridge-dingz/issues/102) ([e468728](https://github.com/johannrichard/homebridge-dingz/commit/e468728590aaaeebf0d554b302145f8f414593d9))
+* **dingz:** small fixes to the code ([21d04bb](https://github.com/johannrichard/homebridge-dingz/commit/21d04bba063d8eff2259d4718d563426b395fa0c))
+* **dingz:** small fixes to the code ([c390c57](https://github.com/johannrichard/homebridge-dingz/commit/c390c5796253f38967480115b36546cbdd43cdeb))
+
+
+### Features
+
+* **dingz:** closes [#17](https://github.com/johannrichard/homebridge-dingz/issues/17): implement support for reachability ([73298a5](https://github.com/johannrichard/homebridge-dingz/commit/73298a58f2cfbf3dff2a12e146ab1d137b2aac64))
+* **dingz:** update accessory from dingz ([038a33a](https://github.com/johannrichard/homebridge-dingz/commit/038a33af27d9bcc8b9d5a8fe05a7745ee3b96e87))
+
+
+
+## [1.7.1](https://github.com/johannrichard/homebridge-dingz/compare/v1.7.0...v1.7.1) (2020-11-14)
+
+
+### Bug Fixes
+
+* **accessories:** better error reporting ([680407d](https://github.com/johannrichard/homebridge-dingz/commit/680407d75beadb6ee12c037bc766066d77c74510))
+* **accessories:** better error reporting ([cdda81f](https://github.com/johannrichard/homebridge-dingz/commit/cdda81f06983f71c6c6f8b5c1e2e140cdf5a102d))
+
+
+### Features
+
+* **accessories:** streamline push naming ([9614ad6](https://github.com/johannrichard/homebridge-dingz/commit/9614ad61e838b9fba0162406b96c54cd2bbd2b9a))
+* **accessories:** support wifi pir motion sensor ([f4b2155](https://github.com/johannrichard/homebridge-dingz/commit/f4b2155bac0ea279f66d343151ada78292b5a737)), closes [#87](https://github.com/johannrichard/homebridge-dingz/issues/87)
+* **pir:** implement push for pir motion ([c1a3098](https://github.com/johannrichard/homebridge-dingz/commit/c1a3098397316e76ad5a996c860d50eed7d22c67))
 
 ## [1.7.0] - 2020-11-12
 ### Features
@@ -195,6 +224,7 @@ The format is based on [Keep a Changelog][Keep a Changelog] and this project adh
 <!-- Versions -->
 [Unreleased]: https://github.com/johannrichard/homebridge-dingz/compare/v1.6.1...HEAD
 [Released]: https://github.com/johannrichard/homebridge-dingz/releases
+[1.8.0]: https://github.com/johannrichard/homebridge-dingz/compare/v1.7.1..v1.8.0
 [1.7.1]: https://github.com/johannrichard/homebridge-dingz/compare/v1.7.0..v1.7.1
 [1.7.0]: https://github.com/johannrichard/homebridge-dingz/compare/v1.6.1..v1.7.0
 [1.6.1]: https://github.com/johannrichard/homebridge-dingz/compare/v1.6.0..v1.6.1
