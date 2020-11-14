@@ -92,6 +92,7 @@ export class DingzDaAccessory extends EventEmitter {
     Temperature: 0 as number,
     Motion: false as boolean,
     Brightness: 0 as number,
+    Reachable: true as boolean,
   };
 
   private motionTimer?: NodeJS.Timer;
@@ -130,11 +131,20 @@ export class DingzDaAccessory extends EventEmitter {
       },
     );
 
+    // Initialize reachability service
+    const bridgingService: Service =
+      this.accessory.getService(this.platform.Service.BridgingState) ??
+      this.accessory.addService(this.platform.Service.BridgingState);
+
+    bridgingService
+      .getCharacteristic(this.platform.Characteristic.Reachable)
+      .on(CharacteristicEventTypes.GET, this.getReachability.bind(this));
+
+    this.services.push(bridgingService);
     /****
      * How to discover Accessories:
      * - Check for UDP Packets and/or use manually configured accessories
      */
-
     // Add Dimmers, Blinds etc.
     this.platform.log.info(
       'Adding output devices for ',
@@ -156,10 +166,10 @@ export class DingzDaAccessory extends EventEmitter {
           // Now we have what we need and can create the services …
           this.addOutputServices();
           setInterval(() => {
-            // TODO: Set rechability if call times out too many times
             // Set up an interval to fetch Dimmer states
             this.getDeviceState().then((state) => {
               if (typeof state !== 'undefined' && state?.config) {
+                this.dingzStates.Reachable = true;
                 // Outputs
                 this.dingzStates.Dimmers = state.dimmers;
                 this.dingzStates.LED = state.led;
@@ -168,6 +178,7 @@ export class DingzDaAccessory extends EventEmitter {
                 this.dingzStates.Brightness = state.sensors.brightness;
                 this.platform.eb.emit(DingzEvent.STATE_UPDATE);
               } else {
+                this.dingzStates.Reachable = false;
                 this.platform.log.error('Can`t get device state');
               }
             });
@@ -303,6 +314,13 @@ export class DingzDaAccessory extends EventEmitter {
       DingzEvent.STATE_UPDATE,
       this.updateTemperature.bind(this, temperatureService),
     );
+  }
+
+  private getReachability(callback: CharacteristicGetCallback) {
+    const currentReachability = this.dingzStates.Reachable ? 1 : 0;
+
+    this.platform.log.debug('getReachablility:', currentReachability);
+    callback(null, currentReachability);
   }
 
   private updateTemperature(temperatureService: Service) {
@@ -1055,6 +1073,7 @@ export class DingzDaAccessory extends EventEmitter {
         this.getDeviceMotion()
           .then((data) => {
             if (data?.success) {
+              this.dingzStates.Reachable = true;
               const isMotion: boolean = data.motion;
               // Only update if motionService exists *and* if there's a change in motion'
               if (this.motionService && this.dingzStates.Motion !== isMotion) {
@@ -1067,6 +1086,8 @@ export class DingzDaAccessory extends EventEmitter {
                   .updateValue(isMotion);
               }
             } else {
+              // Not reachable
+              this.dingzStates.Reachable = false;
               throw new DeviceNotReachableError(
                 `Device can not be reached ->
               ${this.device.name}-> ${this.device.address}`,
@@ -1124,10 +1145,10 @@ export class DingzDaAccessory extends EventEmitter {
     let updatedDingzInputInfo: DingzInputInfoItem | undefined;
 
     try {
-    const currentDingzDeviceInfo: DingzDeviceInfo = this.accessory.context
-      .device.dingzDeviceInfo;
+      const currentDingzDeviceInfo: DingzDeviceInfo = this.accessory.context
+        .device.dingzDeviceInfo;
       updatedDingzDeviceInfo =
-      this._updatedDeviceInfo ?? currentDingzDeviceInfo;
+        this._updatedDeviceInfo ?? currentDingzDeviceInfo;
 
       if (
         currentDingzDeviceInfo &&
@@ -1197,12 +1218,12 @@ export class DingzDaAccessory extends EventEmitter {
       this.updateDimmerServices();
     } finally {
       if (updatedDingzDeviceInfo) {
-      this.accessory.context.device.dingzDeviceInfo = updatedDingzDeviceInfo;
+        this.accessory.context.device.dingzDeviceInfo = updatedDingzDeviceInfo;
       }
       if (updatedDingzInputInfo) {
-      this.accessory.context.device.dingzInputInfo = [updatedDingzInputInfo];
+        this.accessory.context.device.dingzInputInfo = [updatedDingzInputInfo];
+      }
     }
-  }
   }
 
   // Updates the Dimemr Services with their correct name
