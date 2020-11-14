@@ -247,7 +247,7 @@ export class DingzDaAccessory extends EventEmitter {
   private setAccessoryInformation() {
     // Sanity check for "empty" SerialNumber
     this.platform.log.debug(
-      `Attempting to set SerialNumber (which can not be empty) -> puck_sn: <${this.dingzDeviceInfo.puck_sn}>`,
+      `Attempting to set SerialNumber (which can not be empty) -> front_sn: <${this.dingzDeviceInfo.front_sn}>`,
     );
     const serialNumber: string =
       this.dingzDeviceInfo.front_sn === ''
