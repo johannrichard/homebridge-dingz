@@ -50,19 +50,7 @@ const retrySlow = Policy.handleAll()
   .orWhenResult((retry) => retry === true)
   .retry()
   .exponential({ initialDelay: 10000, maxDelay: 60 * 60 * 1000 });
-/**
- * Interfaces
- */
 
-interface Success {
-  name: string;
-  occupation: string;
-}
-
-interface Error {
-  code: number;
-  errors: string[];
-}
 /**
  * Platform Accessory
  * An instance of this class is created for each accessory your platform registers
@@ -78,7 +66,6 @@ export class DingzDaAccessory extends EventEmitter {
   private _updatedDeviceInfo?: DingzDeviceInfo;
   private _updatedDeviceInputConfig?: DingzInputInfoItem;
 
-  private switchOn = false;
   private device: DeviceInfo;
   private dingzDeviceInfo: DingzDeviceInfo;
   private baseUrl: string;
@@ -102,9 +89,9 @@ export class DingzDaAccessory extends EventEmitter {
       '4': { event: ButtonAction.SINGLE_PRESS, state: ButtonState.OFF },
     },
     // Sensors
-    Temperature: 0,
-    Motion: false,
-    Brightness: 0,
+    Temperature: 0 as number,
+    Motion: false as boolean,
+    Brightness: 0 as number,
   };
 
   // Take stock of intervals to dispose at the end of the life of the Accessory
