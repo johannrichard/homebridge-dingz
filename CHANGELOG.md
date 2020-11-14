@@ -195,6 +195,7 @@ The format is based on [Keep a Changelog][Keep a Changelog] and this project adh
 <!-- Versions -->
 [Unreleased]: https://github.com/johannrichard/homebridge-dingz/compare/v1.6.1...HEAD
 [Released]: https://github.com/johannrichard/homebridge-dingz/releases
+[1.7.1]: https://github.com/johannrichard/homebridge-dingz/compare/v1.7.0..v1.7.1
 [1.7.0]: https://github.com/johannrichard/homebridge-dingz/compare/v1.6.1..v1.7.0
 [1.6.1]: https://github.com/johannrichard/homebridge-dingz/compare/v1.6.0..v1.6.1
 [1.6.0]: https://github.com/johannrichard/homebridge-dingz/compare/v1.5.2..v1.6.0
