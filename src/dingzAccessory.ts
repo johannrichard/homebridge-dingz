@@ -668,7 +668,6 @@ export class DingzDaAccessory extends EventEmitter {
     });
   }
 
-  
   private addDimmerService({
     name,
     output,
