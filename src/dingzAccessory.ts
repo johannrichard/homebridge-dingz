@@ -398,7 +398,10 @@ export class DingzDaAccessory extends EventEmitter {
     switch (this.dingzDeviceInfo.dip_config) {
       case 3:
         // DIP = 0: D0, D1, D2, D3; (Subtypes) (Unless Input, then D1, D2, D3)
-        if (inputConfig && !inputConfig[0].active && dimmerConfig?.dimmers[0].output && dimmerConfig?.dimmers[0].output !== 'not_connected')
+        if (inputConfig &&
+          !inputConfig[0].active &&
+          dimmerConfig?.dimmers[0].output &&
+          dimmerConfig?.dimmers[0].output !== 'not_connected')
         {
           // D0
           dimmerServices.push(
@@ -411,7 +414,8 @@ export class DingzDaAccessory extends EventEmitter {
           );
         }
         // D1, D2, D3
-        if (dimmerConfig?.dimmers[1].output && dimmerConfig?.dimmers[1].output !== 'not_connected')
+        if (dimmerConfig?.dimmers[1].output &&
+          dimmerConfig?.dimmers[1].output !== 'not_connected')
         {
           dimmerServices.push(
             this.addDimmerService({
@@ -422,7 +426,8 @@ export class DingzDaAccessory extends EventEmitter {
             }),
           );
         }
-        if (dimmerConfig?.dimmers[2].output && dimmerConfig?.dimmers[2].output !== 'not_connected')
+        if (dimmerConfig?.dimmers[2].output &&
+          dimmerConfig?.dimmers[2].output !== 'not_connected')
         {
           dimmerServices.push(
             this.addDimmerService({
@@ -433,7 +438,8 @@ export class DingzDaAccessory extends EventEmitter {
             }),
           );
         }
-        if (dimmerConfig?.dimmers[3].output && dimmerConfig?.dimmers[3].output !== 'not_connected')
+        if (dimmerConfig?.dimmers[3].output &&
+          dimmerConfig?.dimmers[3].output !== 'not_connected')
         {
           dimmerServices.push(
             this.addDimmerService({
@@ -451,7 +457,8 @@ export class DingzDaAccessory extends EventEmitter {
         // Dimmers are always 0 based
         // i.e. if outputs 1 / 2 are for blinds, outputs 3/4 will be dimmer 0/1
         // We use the "index" value of the dingz to determine what to use
-        if (dimmerConfig?.dimmers[0].output && dimmerConfig?.dimmers[0].output !== 'not_connected')
+        if (dimmerConfig?.dimmers[0].output &&
+          dimmerConfig?.dimmers[0].output !== 'not_connected')
         {
           dimmerServices.push(
             this.addDimmerService({
@@ -462,7 +469,8 @@ export class DingzDaAccessory extends EventEmitter {
             }),
           );
         }
-        if (dimmerConfig?.dimmers[1].output && dimmerConfig?.dimmers[1].output !== 'not_connected')
+        if (dimmerConfig?.dimmers[1].output &&
+          dimmerConfig?.dimmers[1].output !== 'not_connected')
         {
           dimmerServices.push(
             this.addDimmerService({
@@ -476,7 +484,10 @@ export class DingzDaAccessory extends EventEmitter {
         break;
       case 1:
         // DIP = 2: D0, D1, M1; (Unless Input, then D1, M1);
-        if (inputConfig && !inputConfig[0].active && dimmerConfig?.dimmers[0].output && dimmerConfig?.dimmers[0].output !== 'not_connected')
+        if (inputConfig &&
+          !inputConfig[0].active &&
+          dimmerConfig?.dimmers[0].output &&
+          dimmerConfig?.dimmers[0].output !== 'not_connected')
         {
           // D0
           dimmerServices.push(
@@ -488,7 +499,8 @@ export class DingzDaAccessory extends EventEmitter {
             }),
           );
         }
-        if (dimmerConfig?.dimmers[1].output && dimmerConfig?.dimmers[1].output !== 'not_connected')
+        if (dimmerConfig?.dimmers[1].output &&
+          dimmerConfig?.dimmers[1].output !== 'not_connected')
         {
           dimmerServices.push(
             this.addDimmerService({
