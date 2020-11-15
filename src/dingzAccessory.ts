@@ -403,7 +403,7 @@ export class DingzDaAccessory extends EventEmitter {
           !inputConfig[0].active &&
           dimmerConfig?.dimmers[0].output &&
           dimmerConfig?.dimmers[0].output !== 'not_connected'
-        ){
+        ) {
           // D0
           dimmerServices.push(
             this.addDimmerService({
@@ -418,7 +418,7 @@ export class DingzDaAccessory extends EventEmitter {
         if (
           dimmerConfig?.dimmers[1].output &&
           dimmerConfig?.dimmers[1].output !== 'not_connected'
-        ){
+        ) {
           dimmerServices.push(
             this.addDimmerService({
               name: dimmerConfig?.dimmers[1].name,
@@ -431,7 +431,7 @@ export class DingzDaAccessory extends EventEmitter {
         if (
           dimmerConfig?.dimmers[2].output &&
           dimmerConfig?.dimmers[2].output !== 'not_connected'
-        ){
+        ) {
           dimmerServices.push(
             this.addDimmerService({
               name: dimmerConfig?.dimmers[2].name,
@@ -444,7 +444,7 @@ export class DingzDaAccessory extends EventEmitter {
         if (
           dimmerConfig?.dimmers[3].output &&
           dimmerConfig?.dimmers[3].output !== 'not_connected'
-        ){
+        ) {
           dimmerServices.push(
             this.addDimmerService({
               name: dimmerConfig?.dimmers[3].name,
@@ -464,7 +464,7 @@ export class DingzDaAccessory extends EventEmitter {
         if (
           dimmerConfig?.dimmers[0].output &&
           dimmerConfig?.dimmers[0].output !== 'not_connected'
-        ){
+        ) {
           dimmerServices.push(
             this.addDimmerService({
               name: dimmerConfig?.dimmers[0].name,
@@ -477,7 +477,7 @@ export class DingzDaAccessory extends EventEmitter {
         if (
           dimmerConfig?.dimmers[1].output &&
           dimmerConfig?.dimmers[1].output !== 'not_connected'
-        ){
+        ) {
           dimmerServices.push(
             this.addDimmerService({
               name: dimmerConfig?.dimmers[1].name,
@@ -495,7 +495,7 @@ export class DingzDaAccessory extends EventEmitter {
           !inputConfig[0].active &&
           dimmerConfig?.dimmers[0].output &&
           dimmerConfig?.dimmers[0].output !== 'not_connected'
-        ){
+        ) {
           // D0
           dimmerServices.push(
             this.addDimmerService({
@@ -509,7 +509,7 @@ export class DingzDaAccessory extends EventEmitter {
         if (
           dimmerConfig?.dimmers[1].output &&
           dimmerConfig?.dimmers[1].output !== 'not_connected'
-        ){
+        ) {
           dimmerServices.push(
             this.addDimmerService({
               name: dimmerConfig?.dimmers[1].name,
