@@ -167,21 +167,7 @@ export class DingzDaAccessory extends EventEmitter {
           this.addOutputServices();
           setInterval(() => {
             // Set up an interval to fetch Dimmer states
-            this.getDeviceState().then((state) => {
-              if (typeof state !== 'undefined' && state?.config) {
-                this.dingzStates.Reachable = true;
-                // Outputs
-                this.dingzStates.Dimmers = state.dimmers;
-                this.dingzStates.LED = state.led;
-                // Sensors
-                this.dingzStates.Temperature = state.sensors.room_temperature;
-                this.dingzStates.Brightness = state.sensors.brightness;
-                this.platform.eb.emit(DingzEvent.STATE_UPDATE);
-              } else {
-                this.dingzStates.Reachable = false;
-                this.platform.log.error('Can`t get device state');
-              }
-            });
+            this.updateDeviceState();
           }, 10000);
         }
       }) // FIXME: Don't chain this way, improve error handling
@@ -561,6 +547,10 @@ export class DingzDaAccessory extends EventEmitter {
             this.platform.log.info(
               `Button ${button} of ${this.device.name} (${service?.displayName}) pressed -> ${action}`,
             );
+
+            // immediately update states after button pressed
+            this.updateDeviceState();
+
             switch (action) {
               case ButtonAction.SINGLE_PRESS:
                 service
@@ -660,6 +650,25 @@ export class DingzDaAccessory extends EventEmitter {
     callback(null);
   }
 
+  private updateDeviceState() {
+    this.getDeviceState().then((state) => {
+      if (typeof state !== 'undefined' && state?.config) {
+        this.dingzStates.Reachable = true;
+        // Outputs
+        this.dingzStates.Dimmers = state.dimmers;
+        this.dingzStates.LED = state.led;
+        // Sensors
+        this.dingzStates.Temperature = state.sensors.room_temperature;
+        this.dingzStates.Brightness = state.sensors.brightness;
+        this.platform.eb.emit(DingzEvent.STATE_UPDATE);
+      } else {
+        this.dingzStates.Reachable = false;
+        this.platform.log.error('Can`t get device state');
+      }
+    });
+  }
+
+  
   private addDimmerService({
     name,
     output,
@@ -707,7 +716,7 @@ export class DingzDaAccessory extends EventEmitter {
     newService: Service,
     id: string,
   ) {
-    if (index) {
+    if (index !== null) {
       // index set
       const state = this.dingzStates.Dimmers[index];
       // Check that "state" is valid
