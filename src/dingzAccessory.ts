@@ -402,7 +402,8 @@ export class DingzDaAccessory extends EventEmitter {
           inputConfig &&
           !inputConfig[0].active &&
           dimmerConfig?.dimmers[0].output &&
-          dimmerConfig?.dimmers[0].output !== 'not_connected' )
+          dimmerConfig?.dimmers[0].output !== 'not_connected'
+        )
         {
           // D0
           dimmerServices.push(
