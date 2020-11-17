@@ -812,7 +812,7 @@ export class DingzDaAccessory extends EventEmitter {
       );
 
     // Set min/max Values
-    // FIXME: #24 different modes with/without lamella exist
+    // FIXME: Implement different lamella/blind modes #24
     service
       .getCharacteristic(this.platform.Characteristic.TargetHorizontalTiltAngle)
       .setProps({ minValue: 0, maxValue: 90 }) // dingz Maximum values
@@ -1119,7 +1119,7 @@ export class DingzDaAccessory extends EventEmitter {
     }
   }
 
-  // TODO: bigger refactoring
+  // FIXME: refactor dingz.updateAccessory #103
   // Updates the Accessory (e.g. if the config has changed)
   private async updateAccessory(): Promise<void> {
     this.platform.log.info(
