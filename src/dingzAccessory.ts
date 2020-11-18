@@ -164,21 +164,7 @@ export class DingzDaAccessory extends EventEmitter {
           this.addOutputServices();
           setInterval(() => {
             // Set up an interval to fetch Dimmer states
-            this.getDeviceState().then((state) => {
-              if (typeof state !== 'undefined' && state?.config) {
-                this.dingzStates.Reachable = true;
-                // Outputs
-                this.dingzStates.Dimmers = state.dimmers;
-                this.dingzStates.LED = state.led;
-                // Sensors
-                this.dingzStates.Temperature = state.sensors.room_temperature;
-                this.dingzStates.Brightness = state.sensors.brightness;
-                this.platform.eb.emit(DingzEvent.STATE_UPDATE);
-              } else {
-                this.dingzStates.Reachable = false;
-                this.platform.log.error('Can`t get device state');
-              }
-            });
+            this.updateDeviceState();
           }, 10000);
         }
       }) // FIXME: Don't chain this way, improve error handling
@@ -409,7 +395,12 @@ export class DingzDaAccessory extends EventEmitter {
     switch (this.dingzDeviceInfo.dip_config) {
       case 3:
         // DIP = 0: D0, D1, D2, D3; (Subtypes) (Unless Input, then D1, D2, D3)
-        if (inputConfig && !inputConfig[0].active) {
+        if (
+          inputConfig &&
+          !inputConfig[0].active &&
+          dimmerConfig?.dimmers[0].output &&
+          dimmerConfig?.dimmers[0].output !== 'not_connected'
+        ) {
           // D0
           dimmerServices.push(
             this.addDimmerService({
@@ -421,30 +412,45 @@ export class DingzDaAccessory extends EventEmitter {
           );
         }
         // D1, D2, D3
-        dimmerServices.push(
-          this.addDimmerService({
-            name: dimmerConfig?.dimmers[1].name,
-            output: dimmerConfig?.dimmers[1].output,
-            id: 'D2',
-            index: 1,
-          }),
-        );
-        dimmerServices.push(
-          this.addDimmerService({
-            name: dimmerConfig?.dimmers[2].name,
-            output: dimmerConfig?.dimmers[2].output,
-            id: 'D3',
-            index: 2,
-          }),
-        );
-        dimmerServices.push(
-          this.addDimmerService({
-            name: dimmerConfig?.dimmers[3].name,
-            output: dimmerConfig?.dimmers[3].output,
-            id: 'D4',
-            index: 3,
-          }),
-        );
+        if (
+          dimmerConfig?.dimmers[1].output &&
+          dimmerConfig?.dimmers[1].output !== 'not_connected'
+        ) {
+          dimmerServices.push(
+            this.addDimmerService({
+              name: dimmerConfig?.dimmers[1].name,
+              output: dimmerConfig?.dimmers[1].output,
+              id: 'D2',
+              index: 1,
+            }),
+          );
+        }
+        if (
+          dimmerConfig?.dimmers[2].output &&
+          dimmerConfig?.dimmers[2].output !== 'not_connected'
+        ) {
+          dimmerServices.push(
+            this.addDimmerService({
+              name: dimmerConfig?.dimmers[2].name,
+              output: dimmerConfig?.dimmers[2].output,
+              id: 'D3',
+              index: 2,
+            }),
+          );
+        }
+        if (
+          dimmerConfig?.dimmers[3].output &&
+          dimmerConfig?.dimmers[3].output !== 'not_connected'
+        ) {
+          dimmerServices.push(
+            this.addDimmerService({
+              name: dimmerConfig?.dimmers[3].name,
+              output: dimmerConfig?.dimmers[3].output,
+              id: 'D4',
+              index: 3,
+            }),
+          );
+        }
         break;
       case 2:
         // DIP = 1: M0, D2, D3;
@@ -452,26 +458,41 @@ export class DingzDaAccessory extends EventEmitter {
         // Dimmers are always 0 based
         // i.e. if outputs 1 / 2 are for blinds, outputs 3/4 will be dimmer 0/1
         // We use the "index" value of the dingz to determine what to use
-        dimmerServices.push(
-          this.addDimmerService({
-            name: dimmerConfig?.dimmers[0].name,
-            output: dimmerConfig?.dimmers[0].output,
-            id: 'D3',
-            index: 0,
-          }),
-        );
-        dimmerServices.push(
-          this.addDimmerService({
-            name: dimmerConfig?.dimmers[1].name,
-            output: dimmerConfig?.dimmers[1].output,
-            id: 'D4',
-            index: 1,
-          }),
-        );
+        if (
+          dimmerConfig?.dimmers[0].output &&
+          dimmerConfig?.dimmers[0].output !== 'not_connected'
+        ) {
+          dimmerServices.push(
+            this.addDimmerService({
+              name: dimmerConfig?.dimmers[0].name,
+              output: dimmerConfig?.dimmers[0].output,
+              id: 'D3',
+              index: 0,
+            }),
+          );
+        }
+        if (
+          dimmerConfig?.dimmers[1].output &&
+          dimmerConfig?.dimmers[1].output !== 'not_connected'
+        ) {
+          dimmerServices.push(
+            this.addDimmerService({
+              name: dimmerConfig?.dimmers[1].name,
+              output: dimmerConfig?.dimmers[1].output,
+              id: 'D4',
+              index: 1,
+            }),
+          );
+        }
         break;
       case 1:
         // DIP = 2: D0, D1, M1; (Unless Input, then D1, M1);
-        if (inputConfig && !inputConfig[0].active) {
+        if (
+          inputConfig &&
+          !inputConfig[0].active &&
+          dimmerConfig?.dimmers[0].output &&
+          dimmerConfig?.dimmers[0].output !== 'not_connected'
+        ) {
           // D0
           dimmerServices.push(
             this.addDimmerService({
@@ -482,14 +503,19 @@ export class DingzDaAccessory extends EventEmitter {
             }),
           );
         }
-        dimmerServices.push(
-          this.addDimmerService({
-            name: dimmerConfig?.dimmers[1].name,
-            output: dimmerConfig?.dimmers[1].output,
-            id: 'D2',
-            index: 1,
-          }),
-        );
+        if (
+          dimmerConfig?.dimmers[1].output &&
+          dimmerConfig?.dimmers[1].output !== 'not_connected'
+        ) {
+          dimmerServices.push(
+            this.addDimmerService({
+              name: dimmerConfig?.dimmers[1].name,
+              output: dimmerConfig?.dimmers[1].output,
+              id: 'D2',
+              index: 1,
+            }),
+          );
+        }
         windowCoverServices.push(this.addWindowCoveringService('Blind', 0));
         break;
       case 0:
@@ -558,6 +584,10 @@ export class DingzDaAccessory extends EventEmitter {
             this.platform.log.info(
               `Button ${button} of ${this.device.name} (${service?.displayName}) pressed -> ${action}`,
             );
+
+            // immediately update states after button pressed
+            this.updateDeviceState();
+
             switch (action) {
               case ButtonAction.SINGLE_PRESS:
                 service
@@ -657,6 +687,24 @@ export class DingzDaAccessory extends EventEmitter {
     callback(null);
   }
 
+  private updateDeviceState() {
+    this.getDeviceState().then((state) => {
+      if (typeof state !== 'undefined' && state?.config) {
+        this.dingzStates.Reachable = true;
+        // Outputs
+        this.dingzStates.Dimmers = state.dimmers;
+        this.dingzStates.LED = state.led;
+        // Sensors
+        this.dingzStates.Temperature = state.sensors.room_temperature;
+        this.dingzStates.Brightness = state.sensors.brightness;
+        this.platform.eb.emit(DingzEvent.STATE_UPDATE);
+      } else {
+        this.dingzStates.Reachable = false;
+        this.platform.log.error('Can`t get device state');
+      }
+    });
+  }
+
   private addDimmerService({
     name,
     output,
@@ -704,7 +752,7 @@ export class DingzDaAccessory extends EventEmitter {
     newService: Service,
     id: string,
   ) {
-    if (index) {
+    if (index !== null) {
       // index set
       const state = this.dingzStates.Dimmers[index];
       // Check that "state" is valid

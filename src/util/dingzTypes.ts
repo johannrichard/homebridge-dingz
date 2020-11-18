@@ -96,7 +96,8 @@ export type DingzDimmerConfigValue =
   | 'halogen'
   | 'led'
   | 'pulse'
-  | 'ohmic';
+  | 'ohmic'
+  | 'not_connected';
 
 export interface DingzDimmerConfig {
   dimmers: [
