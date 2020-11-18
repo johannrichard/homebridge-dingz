@@ -4,12 +4,6 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 ---
 ## [Released]
-# [1.9.0]
-* Update all dependencies
-* immediately update states after button pressed
-* Fix for updateDimmerState index 0
-
-## [Released]
 # [1.8.0](https://github.com/johannrichard/homebridge-dingz/compare/v1.7.1...v1.8.0) (2020-11-14)
 
 
