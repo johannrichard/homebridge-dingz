@@ -113,23 +113,20 @@ export class DingzDaAccessory extends EventEmitter {
     this.setAccessoryInformation();
 
     // Register listener for updated device info (e.g. on restore)
-    this.platform.eb.on(
-      DingzEvent.UPDATE_INFO,
-      (uuid: string, deviceInfo: DeviceInfo) => {
-        if (uuid === this.accessory.UUID) {
-          this.platform.log.debug(
-            'Updated device info received -> update accessory',
-          );
+    this.platform.eb.on(DingzEvent.UPDATE_INFO, (deviceInfo: DeviceInfo) => {
+      if (deviceInfo.mac === this.device.mac) {
+        this.platform.log.debug(
+          'Updated device info received -> update accessory',
+        );
 
-          // Persist updated info
-          this.accessory.context.device = deviceInfo;
-          this.device = deviceInfo;
-          this.dingzDeviceInfo = this.device.hwInfo as DingzDeviceInfo;
-          this.baseUrl = `http://${this.device.address}`;
-          this.setAccessoryInformation();
-        }
-      },
-    );
+        // Persist updated info
+        this.device = deviceInfo;
+        this.accessory.context.device = deviceInfo;
+        this.dingzDeviceInfo = this.device.hwInfo as DingzDeviceInfo;
+        this.baseUrl = `http://${this.device.address}`;
+        this.setAccessoryInformation();
+      }
+    });
 
     // Initialize reachability service
     const bridgingService: Service =
@@ -863,7 +860,7 @@ export class DingzDaAccessory extends EventEmitter {
       );
 
     // Set min/max Values
-    // FIXME: #24 different modes with/without lamella exist
+    // FIXME: Implement different lamella/blind modes #24
     service
       .getCharacteristic(this.platform.Characteristic.TargetHorizontalTiltAngle)
       .setProps({ minValue: 0, maxValue: 90 }) // dingz Maximum values
@@ -1170,6 +1167,7 @@ export class DingzDaAccessory extends EventEmitter {
     }
   }
 
+  // FIXME: refactor dingz.updateAccessory #103
   // Updates the Accessory (e.g. if the config has changed)
   private async updateAccessory(): Promise<void> {
     this.platform.log.info(

@@ -21,7 +21,7 @@ export declare interface DingzEventBus {
   ): this;
   on(
     event: DingzEvent.UPDATE_INFO,
-    listener: (uuid: string, deviceInfo: DeviceInfo) => void,
+    listener: (deviceInfo: DeviceInfo) => void,
   ): this;
   on(event: DingzEvent.STATE_UPDATE, listener: () => void): this;
 
@@ -37,11 +37,7 @@ export declare interface DingzEventBus {
     action: ButtonAction,
     button: ButtonId,
   ): boolean;
-  emit(
-    event: DingzEvent.UPDATE_INFO,
-    uuid: string,
-    deviceInfo: DeviceInfo,
-  ): boolean;
+  emit(event: DingzEvent.UPDATE_INFO, deviceInfo: DeviceInfo): boolean;
   emit(event: DingzEvent.STATE_UPDATE): boolean;
 }
 
