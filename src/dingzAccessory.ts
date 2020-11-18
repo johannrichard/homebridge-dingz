@@ -863,7 +863,7 @@ export class DingzDaAccessory extends EventEmitter {
     // FIXME: Implement different lamella/blind modes #24
     service
       .getCharacteristic(this.platform.Characteristic.TargetHorizontalTiltAngle)
-      .setProps({ minValue: 0, maxValue: 90 }) // dingz Maximum values
+      //.setProps({ minValue: 0, maxValue: 90 }) // dingz Maximum values
       .on(
         CharacteristicEventTypes.SET,
         this.setTiltAngle.bind(this, id as WindowCoveringId),
