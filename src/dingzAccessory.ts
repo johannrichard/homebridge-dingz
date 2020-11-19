@@ -31,6 +31,7 @@ import {
   WindowCoveringId,
   WindowCoveringTimer,
   WindowCoveringState,
+  WindowCoveringPosition,
 } from './util/dingzTypes';
 import {
   ButtonAction,
@@ -706,11 +707,11 @@ export class DingzDaAccessory extends EventEmitter {
         // Sensors
         this.dingzStates.Temperature = state.sensors.room_temperature;
         this.dingzStates.Brightness = state.sensors.brightness;
-        this.platform.eb.emit(DingzEvent.STATE_UPDATE);
       } else {
         this.dingzStates.Reachable = false;
         this.platform.log.error('Can`t get device state');
       }
+      this.platform.eb.emit(DingzEvent.STATE_UPDATE);
     });
   }
 
@@ -750,7 +751,7 @@ export class DingzDaAccessory extends EventEmitter {
     // Update State
     this.platform.eb.on(
       DingzEvent.STATE_UPDATE,
-      this.updateDimmerState.bind(this, index, output, newService, id),
+      this.updateDimmerState.bind(this, index, output, newService),
     );
     return newService;
   }
@@ -758,8 +759,7 @@ export class DingzDaAccessory extends EventEmitter {
   private updateDimmerState(
     index: number,
     output: string | undefined,
-    newService: Service,
-    id: string,
+    service: Service,
   ) {
     if (index !== null) {
       // index set
@@ -767,20 +767,13 @@ export class DingzDaAccessory extends EventEmitter {
       // Check that "state" is valid
       if (state) {
         if (output && output !== 'non_dimmable') {
-          newService
+          service
             .getCharacteristic(this.platform.Characteristic.Brightness)
             .updateValue(state.value);
         }
-        newService
+        service
           .getCharacteristic(this.platform.Characteristic.On)
           .updateValue(state.on);
-      } else {
-        this.platform.log.warn(
-          'We have an issue here: state should be non-empty but is undefined.',
-          'Continue here, not killing myself anymore.',
-          `For the records, device: ${this.device.address} - id: ${id},  index: ${index} and output is: `,
-          JSON.stringify(this.dingzStates),
-        );
       }
     }
   }
