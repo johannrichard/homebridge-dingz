@@ -1088,8 +1088,6 @@ export class DingzDaAccessory extends EventEmitter {
       } else {
         positionState = this.platform.Characteristic.PositionState.STOPPED;
       }
-      this.platform.log.debug('WindowCovering Position State:', positionState);
-
       this.platform.log.debug(
         'Get Characteristic for WindowCovering',
         id,
