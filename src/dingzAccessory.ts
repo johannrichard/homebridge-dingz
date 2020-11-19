@@ -1056,7 +1056,9 @@ export class DingzDaAccessory extends EventEmitter {
       'WindowCoverings: ',
       JSON.stringify(this.dingzStates.WindowCovers),
     );
-    const tiltAngle: number = this.dingzStates.WindowCovers[id].current.lamella;
+    const currentWindowCover: WindowCoveringPosition = this.dingzStates
+      .WindowCovers[id]?.current;
+    const tiltAngle: number = currentWindowCover?.lamella;
 
     this.platform.log.debug(
       'Get Characteristic for WindowCovering',
