@@ -669,7 +669,9 @@ export class DingzDaAccessory extends EventEmitter {
   ) {
     const currentState = this.dingzStates.Buttons[button].state;
     this.platform.log.info(
-      'Get Switch State ->',
+      'Get Switch State of',
+      this.device.name,
+      '->',
       button,
       '-> state:',
       currentState,
@@ -683,7 +685,14 @@ export class DingzDaAccessory extends EventEmitter {
     callback: CharacteristicSetCallback,
   ) {
     this.dingzStates.Buttons[button].state = value as ButtonState;
-    this.platform.log.info('Set Switch State ->', button, '-> state:', value);
+    this.platform.log.info(
+      'Set Switch State of',
+      this.device.name,
+      '->',
+      button,
+      '-> state:',
+      value,
+    );
     callback(null);
   }
 
