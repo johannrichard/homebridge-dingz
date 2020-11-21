@@ -4,8 +4,9 @@
 name: Node.js Nightly Package
 
 on:
-  schedule:
-    - cron:  '0 7 * * *'
+  push:
+    tags:
+      - "v*-nightly*"
   # enable users to manually trigger with workflow_dispatch
   workflow_dispatch: {}
   repository_dispatch:
@@ -33,7 +34,6 @@ jobs:
         with:
           node-version: 12
           registry-url: https://registry.npmjs.org/
-      - run: npm version prerelease --preid=nightly --no-git --no-git-tag-version
       - run: npm ci
       - run: npm run lint
       - run: npm run build
