@@ -33,7 +33,7 @@ jobs:
         with:
           node-version: 12
           registry-url: https://registry.npmjs.org/
-      - run: npm version prerelease --preid=nightly
+      - run: npm version prerelease --preid=nightly --no-git --no-git-tag-version
       - run: npm ci
       - run: npm run lint
       - run: npm run build
