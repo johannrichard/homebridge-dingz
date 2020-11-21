@@ -249,30 +249,33 @@ export class DingzDaAccessory extends EventEmitter {
         : this.dingzDeviceInfo.front_sn;
     this.accessory
       .getService(this.platform.Service.AccessoryInformation)!
-      .setCharacteristic(this.platform.Characteristic.Manufacturer, 'iolo AG')
-      .setCharacteristic(
+      .updateCharacteristic(
+        this.platform.Characteristic.Manufacturer,
+        'iolo AG',
+      )
+      .updateCharacteristic(
         this.platform.Characteristic.AppMatchingIdentifier,
         'ch.iolo.dingz.consumer',
       )
       // Update info from deviceInfo
-      .setCharacteristic(
+      .updateCharacteristic(
         this.platform.Characteristic.ConfiguredName,
         this.device.name,
       )
-      .setCharacteristic(this.platform.Characteristic.Name, this.device.name)
-      .setCharacteristic(
+      .updateCharacteristic(this.platform.Characteristic.Name, this.device.name)
+      .updateCharacteristic(
         this.platform.Characteristic.Model,
         this.device.model as string,
       )
-      .setCharacteristic(
+      .updateCharacteristic(
         this.platform.Characteristic.FirmwareRevision,
         this.dingzDeviceInfo.fw_version ?? 'Unknown',
       )
-      .setCharacteristic(
+      .updateCharacteristic(
         this.platform.Characteristic.HardwareRevision,
         this.dingzDeviceInfo.hw_version_puck ?? 'Unknown',
       )
-      .setCharacteristic(
+      .updateCharacteristic(
         this.platform.Characteristic.SerialNumber,
         serialNumber,
       );
