@@ -128,6 +128,14 @@ export class DingzDaAccessory extends EventEmitter {
       }
     });
 
+    // Remove Reachability service if still present
+    const bridgingService: Service | undefined = this.accessory.getService(
+      this.platform.Service.BridgingState,
+    );
+    if (bridgingService) {
+      this.accessory.removeService(bridgingService);
+    }
+
     /****
      * How to discover Accessories:
      * - Check for UDP Packets and/or use manually configured accessories
