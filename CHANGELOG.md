@@ -1,3 +1,13 @@
+#### 1.8.2 (2020-11-21)
+
+##### Build System / Dependencies
+
+* **changelog:**  automatically generate changelog ([85f06f22](https://github.com/johannrichard/homebridge-dingz/commit/85f06f22cf4a52a8703435801226f5dc42ce02b1))
+
+##### Other Changes
+
+* **deps:**  bump cockatiel from 1.1.1 to 2.0.0" ([a3dbd0c1](https://github.com/johannrichard/homebridge-dingz/commit/a3dbd0c1765f1c579f922d9a50be11a43dd1925e))
+
 #### 1.8.1 (2020-11-21)
 
 ##### Build System / Dependencies
