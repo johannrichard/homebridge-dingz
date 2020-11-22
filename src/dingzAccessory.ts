@@ -252,10 +252,7 @@ export class DingzDaAccessory extends EventEmitter {
 
   private setButtonCallbacks() {
     // Only necessary for firmware version < 1.2.x
-    if (
-      this.dingzDeviceInfo.fw_version.indexOf('1.1.') === 0 ||
-      this.dingzDeviceInfo.fw_version.indexOf('1.0.') === 0
-    ) {
+    if (semver.lt(this.dingzDeviceInfo.fw_version, '1.2.0')) {
       this.platform.log.debug(
         'Enable PIR callback for older firmware revisions',
       );
