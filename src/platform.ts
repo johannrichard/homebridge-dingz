@@ -15,12 +15,7 @@ import e = require('express');
 import * as os from 'os';
 
 // Internal Types
-import {
-  ButtonId,
-  DingzDevices,
-  DingzDeviceInfo,
-  DingzDeviceSystemConfig,
-} from './util/dingzTypes';
+import { ButtonId, DingzDeviceInfo } from './util/dingzTypes';
 import { MyStromDeviceInfo, MyStromSwitchTypes } from './util/myStromTypes';
 
 import {
@@ -247,8 +242,8 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
     // Run a diacovery of changed things every 10 seconds
     this.log.debug(`Add configured device -> ${name} (${address})`);
 
-    const success = this.getDingzDeviceInfo({ address, token }).then(
-      ([dingzDevices, dingzConfig]) => {
+    const success = DingzDaAccessory.getConfigs({ address, token }).then(
+      ({ dingzDevices, systemConfig: dingzConfig }) => {
         this.log.debug('Got Device ->', JSON.stringify(dingzDevices));
         if (typeof dingzDevices !== 'undefined') {
           const keys = Object.keys(dingzDevices);
@@ -869,7 +864,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
     this.log.debug('Setting the callback URL -> ', callbackUrl);
     endpoints.forEach((endpoint) => {
       this.log.debug(setActionUrl, 'Endpoint -> ', endpoint);
-      this.fetch({
+      DingzDaHomebridgePlatform.fetch({
         url: `${setActionUrl}${endpoint}`,
         method: 'POST',
         token: token,
@@ -945,34 +940,6 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
 
   /**
    * Device Methods -- these are used to retrieve the data from the dingz
-   * TODO: Refactor duplicate code into proper API caller
-   */
-  async getDingzDeviceInfo({
-    address,
-    token,
-  }: {
-    address: string;
-    token?: string;
-  }): Promise<[DingzDevices, DingzDeviceSystemConfig]> {
-    const deviceInfoUrl = `http://${address}/api/v1/device`;
-    const deviceConfigUrl = `http://${address}/api/v1/system_config`;
-
-    return Promise.all<DingzDevices, DingzDeviceSystemConfig>([
-      this.fetch({
-        url: deviceInfoUrl,
-        returnBody: true,
-        token,
-      }),
-      this.fetch({
-        url: deviceConfigUrl,
-        returnBody: true,
-        token,
-      }),
-    ]);
-  }
-
-  /**
-   * Device Methods -- these are used to retrieve the data from the dingz
    * FIXME: API Endpoint
    * Officially, the API is at /api/v1/info but there's
    * an undocumenten API at /info which also works for V1 switches
@@ -987,14 +954,14 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
     endpoint?: 'api/v1/info' | 'info';
   }): Promise<MyStromDeviceInfo> {
     const deviceInfoUrl = `http://${address}/${endpoint}`;
-    return await this.fetch({
+    return await DingzDaHomebridgePlatform.fetch({
       url: deviceInfoUrl,
       returnBody: true,
       token,
     });
   }
 
-  async fetch({
+  static async fetch({
     url,
     method = 'get',
     returnBody = false,
@@ -1016,15 +983,15 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
         Token: token ?? '',
       },
       data: body,
-    } as AxiosRequestConfig)
-      .then((response) => {
-        if (returnBody) {
-          return response.data;
-        } else {
-          return response.status;
-        }
-      })
-      .catch(this.handleError.bind(this));
+    } as AxiosRequestConfig).then((response) => {
+      if (returnBody) {
+        return response.data;
+      } else {
+        return response.status;
+      }
+    });
+    // FIXME: #103 Error handler at the wrong place
+    // .catch(this.handleError.bind(this));
     return data;
   }
 

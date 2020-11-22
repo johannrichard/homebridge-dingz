@@ -188,7 +188,7 @@ export class MyStromSwitchAccessory {
 
   private setDeviceState(isOn: boolean) {
     const relayUrl = `${this.baseUrl}/relay?state=${isOn ? '1' : '0'}`;
-    this.platform.fetch({
+    DingzDaHomebridgePlatform.fetch({
       url: relayUrl,
       token: this.device.token,
     });
@@ -196,7 +196,7 @@ export class MyStromSwitchAccessory {
 
   private async getDeviceReport(): Promise<MyStromSwitchReport> {
     const reportUrl = `${this.baseUrl}/report`;
-    return await this.platform.fetch({
+    return await DingzDaHomebridgePlatform.fetch({
       url: reportUrl,
       returnBody: true,
       token: this.device.token,

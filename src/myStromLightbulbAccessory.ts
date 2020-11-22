@@ -224,7 +224,7 @@ export class MyStromLightbulbAccessory {
   }): Promise<void> {
     // Weird URL :-)
     const setDimmerUrl = `${this.baseUrl}/api/v1/device/${this.device.mac}`;
-    await this.platform.fetch({
+    await DingzDaHomebridgePlatform.fetch({
       url: setDimmerUrl,
       method: 'POST',
       token: this.device.token,
@@ -241,14 +241,12 @@ export class MyStromLightbulbAccessory {
 
   private async getDeviceReport(mac: string): Promise<MyStromLightbulbReport> {
     const reportUrl = `${this.baseUrl}/api/v1/device/`;
-    return await this.platform
-      .fetch({
-        url: reportUrl,
-        returnBody: true,
-        token: this.device.token,
-      })
-      .then((response) => {
-        return response[mac];
-      });
+    return await DingzDaHomebridgePlatform.fetch({
+      url: reportUrl,
+      returnBody: true,
+      token: this.device.token,
+    }).then((response) => {
+      return response[mac];
+    });
   }
 }

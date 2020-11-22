@@ -21,9 +21,11 @@ import {
   DimmerState,
   DimmerTimer,
   DingzDeviceInfo,
-  DingzDimmerConfig,
+  DingzDevices,
+  DingzDeviceSystemConfig,
+  DingzDeviceDimmerConfig,
+  DingzDeviceInputConfig,
   DingzDimmerConfigValue,
-  DingzInputConfig,
   DingzInputInfoItem,
   DingzLEDState,
   DingzMotionData,
@@ -152,8 +154,11 @@ export class DingzDaAccessory extends EventEmitter {
     );
 
     // FIXME: Is there a better way to handle errors?
-    this.getConfigs()
-      .then(([inputConfig, dimmerConfig]) => {
+    DingzDaAccessory.getConfigs({
+      address: this.device.address,
+      token: this.device.token,
+    })
+      .then(({ dingzDevices, systemConfig, inputConfig, dimmerConfig }) => {
         if (
           inputConfig?.inputs &&
           dimmerConfig?.dimmers &&
@@ -402,7 +407,7 @@ export class DingzDaAccessory extends EventEmitter {
 
     const inputConfig: DingzInputInfoItem[] | undefined = this.device
       .dingzInputInfo;
-    const dimmerConfig: DingzDimmerConfig | undefined = this.device
+    const dimmerConfig: DingzDeviceDimmerConfig | undefined = this.device
       .dimmerConfig;
 
     /** DIP Switch
@@ -1151,7 +1156,11 @@ export class DingzDaAccessory extends EventEmitter {
       '-> Check for changed config.',
     );
 
-    this.getConfigs().then(([inputConfig, dimmerConfig]) => {
+    // FIXME: [FIX] refactor dingz.updateAccessory #103
+    DingzDaAccessory.getConfigs({
+      address: this.device.address,
+      token: this.device.token,
+    }).then(({ inputConfig, dimmerConfig }) => {
       if (inputConfig?.inputs[0]) {
         this._updatedDeviceInputConfig = inputConfig.inputs[0];
       }
@@ -1211,7 +1220,7 @@ export class DingzDaAccessory extends EventEmitter {
           updatedDingzDeviceInfo.dip_config === 3)
       ) {
         // Only add Dimmer 0 if we're not in "WindowCover" mode
-        const dimmerConfig: DingzDimmerConfig | undefined = this.device
+        const dimmerConfig: DingzDeviceDimmerConfig | undefined = this.device
           .dimmerConfig;
 
         this.platform.log.warn(
@@ -1436,12 +1445,13 @@ export class DingzDaAccessory extends EventEmitter {
    * TODO: Refactor duplicate code into proper API caller
    */
   private async getDingzDeviceInfo(): Promise<DingzDeviceInfo> {
-    const [dingzDevices] = await this.platform.getDingzDeviceInfo({
+    const dingzDevices = await DingzDaAccessory.getConfigs({
       address: this.device.address,
       token: this.device.token,
     });
     try {
-      const dingzDeviceInfo: DingzDeviceInfo = dingzDevices[this.device.mac];
+      const dingzDeviceInfo: DingzDeviceInfo =
+        dingzDevices.dingzDevices[this.device.mac];
       if (dingzDeviceInfo) {
         return dingzDeviceInfo;
       }
@@ -1452,29 +1462,68 @@ export class DingzDaAccessory extends EventEmitter {
   }
 
   // Get Input & Dimmer Config
-  private async getConfigs(): Promise<[DingzInputConfig, DingzDimmerConfig]> {
-    const getInputConfigUrl = `${this.baseUrl}/api/v1/input_config`;
-    const getDimmerConfigUrl = `${this.baseUrl}/api/v1/dimmer_config`;
+  public static async getConfigs({
+    address,
+    token,
+  }: {
+    address: string;
+    token?: string;
+  }): Promise<{
+    dingzDevices: DingzDevices;
+    systemConfig: DingzDeviceSystemConfig;
+    inputConfig: DingzDeviceInputConfig;
+    dimmerConfig: DingzDeviceDimmerConfig;
+  }> {
+    const deviceInfoUrl = `http://${address}/api/v1/device`;
+    const deviceConfigUrl = `http://${address}/api/v1/system_config`;
+    const inputConfigUrl = `http://${address}/api/v1/input_config`;
+    const dimmerConfigUrl = `http://${address}/api/v1/dimmer_config`;
 
-    return Promise.all<DingzInputConfig, DingzDimmerConfig>([
-      this.platform.fetch({
-        url: getInputConfigUrl,
+    const [
+      dingzDevices,
+      systemConfig,
+      inputConfig,
+      dimmerConfig,
+    ] = await Promise.all<
+      DingzDevices,
+      DingzDeviceSystemConfig,
+      DingzDeviceInputConfig,
+      DingzDeviceDimmerConfig
+    >([
+      DingzDaHomebridgePlatform.fetch({
+        url: deviceInfoUrl,
         returnBody: true,
-        token: this.device.token,
+        token: token,
       }),
-      this.platform.fetch({
-        url: getDimmerConfigUrl,
+      DingzDaHomebridgePlatform.fetch({
+        url: deviceConfigUrl,
         returnBody: true,
-        token: this.device.token,
+        token: token,
+      }),
+      DingzDaHomebridgePlatform.fetch({
+        url: inputConfigUrl,
+        returnBody: true,
+        token: token,
+      }),
+      DingzDaHomebridgePlatform.fetch({
+        url: dimmerConfigUrl,
+        returnBody: true,
+        token: token,
       }),
     ]);
+    return {
+      dingzDevices: dingzDevices,
+      systemConfig: systemConfig,
+      inputConfig: inputConfig,
+      dimmerConfig: dimmerConfig,
+    };
   }
 
   private async getDeviceMotion(): Promise<DingzMotionData> {
     const getMotionUrl = `${this.baseUrl}/api/v1/motion`;
     const release = await this.mutex.acquire();
     try {
-      return await this.platform.fetch({
+      return await DingzDaHomebridgePlatform.fetch({
         url: getMotionUrl,
         returnBody: true,
         token: this.device.token,
@@ -1494,7 +1543,7 @@ export class DingzDaAccessory extends EventEmitter {
     const setDimmerUrl = `${this.baseUrl}/api/v1/dimmer/${index}/${
       isOn ? 'on' : 'off'
     }/${level ? '?value=' + level : ''}`;
-    await this.platform.fetch({
+    await DingzDaHomebridgePlatform.fetch({
       url: setDimmerUrl,
       method: 'POST',
       token: this.device.token,
@@ -1514,7 +1563,7 @@ export class DingzDaAccessory extends EventEmitter {
     // The API says the parameters can be omitted. This is not true
     // {{ip}}/api/v1/shade/0?blind=<value>&lamella=<value>
     const setWindowCoveringUrl = `${this.baseUrl}/api/v1/shade/${id}`;
-    await this.platform.fetch({
+    await DingzDaHomebridgePlatform.fetch({
       url: setWindowCoveringUrl,
       method: 'POST',
       token: this.device.token,
@@ -1535,7 +1584,7 @@ export class DingzDaAccessory extends EventEmitter {
     const getWindowCoveringUrl = `${this.baseUrl}/api/v1/shade/${id}`;
     const release = await this.mutex.acquire();
     try {
-      return await this.platform.fetch({
+      return await DingzDaHomebridgePlatform.fetch({
         url: getWindowCoveringUrl,
         returnBody: true,
         token: this.device.token,
@@ -1554,7 +1603,7 @@ export class DingzDaAccessory extends EventEmitter {
     color: string;
   }): Promise<void> {
     const setLEDUrl = `${this.baseUrl}/api/v1/led/set`;
-    await this.platform.fetch({
+    await DingzDaHomebridgePlatform.fetch({
       url: setLEDUrl,
       method: 'POST',
       token: this.device.token,
@@ -1577,7 +1626,7 @@ export class DingzDaAccessory extends EventEmitter {
     const getDeviceStateUrl = `${this.baseUrl}/api/v1/state`;
     const release = await this.mutex.acquire();
     try {
-      return await this.platform.fetch({
+      return await DingzDaHomebridgePlatform.fetch({
         url: getDeviceStateUrl,
         returnBody: true,
         token: this.device.token,
@@ -1591,7 +1640,7 @@ export class DingzDaAccessory extends EventEmitter {
   public async getButtonCallbackUrl(): Promise<AccessoryActionUrl> {
     const getCallbackUrl = `${this.baseUrl}/api/v1/action/generic/generic`;
     this.platform.log.debug('Getting the callback URL -> ', getCallbackUrl);
-    return await this.platform.fetch({
+    return await DingzDaHomebridgePlatform.fetch({
       url: getCallbackUrl,
       method: 'GET',
       token: this.device.token,
@@ -1602,7 +1651,7 @@ export class DingzDaAccessory extends EventEmitter {
   async enablePIRCallback() {
     const setActionUrl = `${this.baseUrl}/api/v1/action/pir/press_release/enable`;
     this.platform.log.debug('Enabling the PIR callback -> ');
-    await this.platform.fetch({
+    await DingzDaHomebridgePlatform.fetch({
       url: setActionUrl,
       method: 'POST',
       token: this.device.token,

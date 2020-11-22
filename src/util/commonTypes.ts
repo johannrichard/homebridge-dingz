@@ -11,7 +11,7 @@ import { MyStromPIRAccessory } from '../myStromPIRAccessory';
 import {
   DingzDeviceInfo,
   DingzInputInfoItem,
-  DingzDimmerConfig,
+  DingzDeviceDimmerConfig,
 } from './dingzTypes';
 import { MyStromDeviceInfo } from './myStromTypes';
 
@@ -42,7 +42,7 @@ export interface DeviceInfo {
   model?: string;
   token?: string;
   hwInfo?: DingzDeviceInfo | MyStromDeviceInfo;
-  dimmerConfig?: DingzDimmerConfig;
+  dimmerConfig?: DingzDeviceDimmerConfig;
   dingzInputInfo?: DingzInputInfoItem[];
   lastUpdate?: Date;
   accessoryClass?:

@@ -14,7 +14,7 @@ export interface DingzLightData {
   state: 'night' | 'day';
 }
 
-export interface DingzInputConfig {
+export interface DingzDeviceInputConfig {
   inputs: DingzInputInfoItem[];
 }
 export interface DingzInputInfoItem {
@@ -99,7 +99,7 @@ export type DingzDimmerConfigValue =
   | 'ohmic'
   | 'not_connected';
 
-export interface DingzDimmerConfig {
+export interface DingzDeviceDimmerConfig {
   dimmers: [
     {
       output: DingzDimmerConfigValue;

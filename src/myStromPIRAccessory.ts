@@ -265,7 +265,7 @@ export class MyStromPIRAccessory {
     const getSensorsUrl = `${this.baseUrl}/api/v1/sensors`;
     const release = await this.mutex.acquire();
     try {
-      return await this.platform.fetch({
+      return await DingzDaHomebridgePlatform.fetch({
         url: getSensorsUrl,
         returnBody: true,
         token: this.device.token,
