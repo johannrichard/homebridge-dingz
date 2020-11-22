@@ -30,8 +30,6 @@ import {
   DingzState,
   WindowCoveringConfigIndex,
   WindowCoveringConfig,
-  WindowCoveringCalibrationState,
-  WindowCoveringType,
   WindowCoveringId,
   WindowCoveringTimer,
   WindowCoveringState,
@@ -869,21 +867,20 @@ export class DingzDaAccessory extends EventEmitter {
     id: 'M1' | 'M2';
     index: WindowCoveringId;
   }) {
-    let service: Service;
     // Service doesn't yet exist, create new one
-    service =
+    const newService =
       this.accessory.getServiceById(this.platform.Service.WindowCovering, id) ??
       this.accessory.addService(
         this.platform.Service.WindowCovering,
         name ?? `Motor ${id}`, // Name Blind according to WebUI, not API info
         id,
       );
- 
+
     // each service must implement at-minimum the "required characteristics" for the given service type
     // see https://developers.homebridge.io/#/service/Lightbulb
 
     // register handlers for the On/Off Characteristic
-    service
+    newService
       .getCharacteristic(this.platform.Characteristic.TargetPosition)
       .on(
         CharacteristicEventTypes.SET,
@@ -896,16 +893,20 @@ export class DingzDaAccessory extends EventEmitter {
       this.dingzDeviceInfo.fw_version.indexOf('1.1.') === 0 ||
       this.dingzDeviceInfo.fw_version.indexOf('1.0.') === 0
     ) {
-      service
-        .getCharacteristic(this.platform.Characteristic.TargetHorizontalTiltAngle)
+      newService
+        .getCharacteristic(
+          this.platform.Characteristic.TargetHorizontalTiltAngle,
+        )
         .setProps({ minValue: 0, maxValue: 90}) // dingz Maximum values
         .on(
           CharacteristicEventTypes.SET,
           this.setTiltAngle.bind(this, index as WindowCoveringId),
         );
     } else {
-      service
-        .getCharacteristic(this.platform.Characteristic.TargetHorizontalTiltAngle)
+      newService
+        .getCharacteristic(
+          this.platform.Characteristic.TargetHorizontalTiltAngle,
+        )
         .setProps({ minValue: 0, maxValue: 100, minStep: 10 }) // dingz Maximum values & less steps
         .on(
           CharacteristicEventTypes.SET,
@@ -913,13 +914,13 @@ export class DingzDaAccessory extends EventEmitter {
         );
     }
 
-    service
+    newService
       .getCharacteristic(this.platform.Characteristic.CurrentPosition)
       .on(
         CharacteristicEventTypes.GET,
         this.getPosition.bind(this, index as WindowCoveringId),
       );
-    service
+      newService
       .getCharacteristic(
         this.platform.Characteristic.CurrentHorizontalTiltAngle,
       )
@@ -927,7 +928,7 @@ export class DingzDaAccessory extends EventEmitter {
         CharacteristicEventTypes.GET,
         this.getTiltAngle.bind(this, index as WindowCoveringId),
       );
-    service
+      newService
       .getCharacteristic(this.platform.Characteristic.PositionState)
       .on(
         CharacteristicEventTypes.GET,
@@ -940,18 +941,18 @@ export class DingzDaAccessory extends EventEmitter {
           if (typeof state !== 'undefined' && typeof index === 'number') {
             // push the new value to HomeKit
             this.dingzStates.WindowCovers[index] = state;
-            service
+            newService
               .getCharacteristic(this.platform.Characteristic.TargetPosition)
               .updateValue(state.target.blind);
-            service
+            newService
               .getCharacteristic(
                 this.platform.Characteristic.TargetHorizontalTiltAngle,
               )
               .updateValue(state.target.lamella);
-            service
+            newService
               .getCharacteristic(this.platform.Characteristic.CurrentPosition)
               .updateValue(state.current.blind);
-            service
+            newService
               .getCharacteristic(
                 this.platform.Characteristic.CurrentHorizontalTiltAngle,
               )
@@ -959,7 +960,7 @@ export class DingzDaAccessory extends EventEmitter {
 
             this.platform.log.debug(
               'Pushed updated current WindowCovering state of',
-              service.getCharacteristic(this.platform.Characteristic.Name)
+              newService.getCharacteristic(this.platform.Characteristic.Name)
                 .value,
               'with index',
               index,
@@ -994,7 +995,7 @@ export class DingzDaAccessory extends EventEmitter {
     //     service,
     //   ),
     // );
-    return service;
+    return newService;
   }
 
   // Window Covering functions
