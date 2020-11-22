@@ -13,6 +13,7 @@ import qs from 'qs';
 import { DingzDaHomebridgePlatform } from './platform';
 import { MyStromDeviceInfo, MyStromLightbulbReport } from './util/myStromTypes';
 import { DeviceInfo } from './util/commonTypes';
+import { DingzEvent } from './util/dingzEventBus';
 
 /**
  * Platform Accessory
@@ -52,7 +53,7 @@ export class MyStromLightbulbAccessory {
     );
     this.accessory
       .getService(this.platform.Service.AccessoryInformation)!
-      .setCharacteristic(
+      .updateCharacteristic(
         this.platform.Characteristic.Manufacturer,
         'MyStrom AG',
       )
@@ -60,15 +61,15 @@ export class MyStromLightbulbAccessory {
         this.platform.Characteristic.AppMatchingIdentifier,
         'ch.mystrom.iOSApp',
       )
-      .setCharacteristic(
+      .updateCharacteristic(
         this.platform.Characteristic.Model,
         this.device.model as string,
       )
-      .setCharacteristic(
+      .updateCharacteristic(
         this.platform.Characteristic.FirmwareRevision,
         this.mystromDeviceInfo.version ?? 'N/A',
       )
-      .setCharacteristic(
+      .updateCharacteristic(
         this.platform.Characteristic.SerialNumber,
         this.device.mac,
       );
@@ -77,7 +78,7 @@ export class MyStromLightbulbAccessory {
       this.accessory.getService(this.platform.Service.Lightbulb) ??
       this.accessory.addService(this.platform.Service.Lightbulb);
 
-    this.lightbulbService.setCharacteristic(
+    this.lightbulbService.updateCharacteristic(
       this.platform.Characteristic.Name,
       this.device.name ?? `${accessory.context.device.model} Bulb`,
     );
@@ -103,44 +104,49 @@ export class MyStromLightbulbAccessory {
       .getCharacteristic(this.platform.Characteristic.Saturation)
       .on(CharacteristicEventTypes.SET, this.setSaturation.bind(this)); // SET - bind to the 'setBrightness` method below
 
-    // Here we change update the brightness to a random value every 5 seconds using
-    // the `updateCharacteristic` method.
-    setInterval(() => {
-      this.getDeviceReport(this.device.mac)
-        .then((report) => {
-          // push the new value to HomeKit
-          this.lightbulbState = report;
-          // FIXME: Add 'mono' as well
-          if (report.mode === 'hsv') {
-            const hsv = report.color.split(';');
-            this.lightbulbState.hue = parseInt(hsv[0]);
-            this.lightbulbState.saturation = parseInt(hsv[1]);
-            this.lightbulbState.value = parseInt(hsv[2]);
-          } else {
-            // rgbw
-            const hsv = new simpleColorConverter({
-              color: `hex #${report.color}`, // Should be the most compatible form
-              to: 'hsv',
-            });
-            this.lightbulbState.hue = hsv.c;
-            this.lightbulbState.saturation = hsv.s;
-            this.lightbulbState.value = hsv.i;
-          }
+    // Subscribe to the REQUEST_STATE_UPDATE event
+    this.platform.eb.on(
+      DingzEvent.REQUEST_STATE_UPDATE,
+      this.getDeviceStateUpdate.bind(this),
+    );
+  }
 
-          this.lightbulbService
-            .getCharacteristic(this.platform.Characteristic.Hue)
+  // Get updated device info and update the corresponding values
+  private getDeviceStateUpdate() {
+    this.getDeviceReport(this.device.mac)
+      .then((report) => {
+        // push the new value to HomeKit
+        this.lightbulbState = report;
+        // FIXME: Add 'mono' as well
+        if (report.mode === 'hsv') {
+          const hsv = report.color.split(';');
+          this.lightbulbState.hue = parseInt(hsv[0]);
+          this.lightbulbState.saturation = parseInt(hsv[1]);
+          this.lightbulbState.value = parseInt(hsv[2]);
+        } else {
+          // rgbw
+          const hsv = new simpleColorConverter({
+            color: `hex #${report.color}`,
+            to: 'hsv',
+          });
+          this.lightbulbState.hue = hsv.c;
+          this.lightbulbState.saturation = hsv.s;
+          this.lightbulbState.value = hsv.i;
+        }
+
+        this.lightbulbService
+          .getCharacteristic(this.platform.Characteristic.Hue)
           .updateValue(this.lightbulbState.hue);
-          this.lightbulbService
-            .getCharacteristic(this.platform.Characteristic.Saturation)
+        this.lightbulbService
+          .getCharacteristic(this.platform.Characteristic.Saturation)
           .updateValue(this.lightbulbState.saturation);
-          this.lightbulbService
-            .getCharacteristic(this.platform.Characteristic.Brightness)
+        this.lightbulbService
+          .getCharacteristic(this.platform.Characteristic.Brightness)
           .updateValue(this.lightbulbState.value);
-        })
-        .catch((e) => {
-          this.platform.log.debug('Error while retrieving Device Report ->', e);
-        });
-    }, 2000);
+      })
+      .catch((e) => {
+        this.platform.log.debug('Error while retrieving Device Report ->', e);
+      });
   }
 
   identify(): void {

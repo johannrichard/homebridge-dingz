@@ -31,7 +31,7 @@ import {
   WindowCoveringId,
   WindowCoveringTimer,
   WindowCoveringState,
-  WindowCoveringPosition,
+  WindowCoveringStates,
 } from './util/dingzTypes';
 import {
   ButtonAction,
@@ -75,7 +75,7 @@ export class DingzDaAccessory extends EventEmitter {
   private dingzStates = {
     // Outputs
     Dimmers: [] as DimmerState[],
-    WindowCovers: [] as WindowCoveringState[],
+    WindowCovers: [] as WindowCoveringStates[],
     LED: {
       on: false,
       hsv: '0;0;100',
@@ -113,20 +113,23 @@ export class DingzDaAccessory extends EventEmitter {
     this.setAccessoryInformation();
 
     // Register listener for updated device info (e.g. on restore)
-    this.platform.eb.on(DingzEvent.UPDATE_INFO, (deviceInfo: DeviceInfo) => {
-      if (deviceInfo.mac === this.device.mac) {
-        this.platform.log.debug(
-          'Updated device info received -> update accessory',
-        );
+    this.platform.eb.on(
+      DingzEvent.UPDATE_DEVICE_INFO,
+      (deviceInfo: DeviceInfo) => {
+        if (deviceInfo.mac === this.device.mac) {
+          this.platform.log.debug(
+            'Updated device info received -> update accessory',
+          );
 
-        // Persist updated info
-        this.device = deviceInfo;
-        this.accessory.context.device = deviceInfo;
-        this.dingzDeviceInfo = this.device.hwInfo as DingzDeviceInfo;
-        this.baseUrl = `http://${this.device.address}`;
-        this.setAccessoryInformation();
-      }
-    });
+          // Persist updated info
+          this.device = deviceInfo;
+          this.accessory.context.device = deviceInfo;
+          this.dingzDeviceInfo = this.device.hwInfo as DingzDeviceInfo;
+          this.baseUrl = `http://${this.device.address}`;
+          this.setAccessoryInformation();
+        }
+      },
+    );
 
     // Remove Reachability service if still present
     const bridgingService: Service | undefined = this.accessory.getService(
@@ -161,11 +164,10 @@ export class DingzDaAccessory extends EventEmitter {
 
           // Now we have what we need and can create the services …
           this.addOutputServices();
-          setInterval(() => {
-            // TODO: Set rechability if call times out too many times
-            // Set up an interval to fetch Dimmer states
-            this.updateDeviceState();
-          }, 10000);
+          this.platform.eb.on(
+            DingzEvent.REQUEST_STATE_UPDATE,
+            this.getDeviceStateUpdate.bind(this),
+          );
         }
       }) // FIXME: Don't chain this way, improve error handling
       .then(() => {
@@ -281,6 +283,28 @@ export class DingzDaAccessory extends EventEmitter {
       );
   }
 
+  // Get updated device info and update the corresponding values
+  // TODO: #103, #116, #120, #123 -- fetch state for all device elements
+  private getDeviceStateUpdate() {
+    this.getDeviceState().then((state) => {
+      if (typeof state !== 'undefined') {
+        // Outputs
+        this.dingzStates.Dimmers = state.dimmers;
+        this.dingzStates.LED = state.led;
+        // Sensors
+        this.dingzStates.Temperature = state.sensors.room_temperature;
+        this.dingzStates.Brightness = state.sensors.brightness;
+        // Lamellas
+        this.dingzStates.WindowCovers = state.blinds;
+
+        // Push the Update to HomeBridge
+        this.platform.eb.emit(DingzEvent.PUSH_STATE_UPDATE);
+      } else {
+        this.platform.log.error('Can`t get device state');
+      }
+    });
+  }
+
   private addTemperatureService() {
     const temperatureService: Service =
       this.accessory.getService(this.platform.Service.TemperatureSensor) ??
@@ -297,7 +321,7 @@ export class DingzDaAccessory extends EventEmitter {
     this.services.push(temperatureService);
 
     this.platform.eb.on(
-      DingzEvent.STATE_UPDATE,
+      DingzEvent.PUSH_STATE_UPDATE,
       this.updateTemperature.bind(this, temperatureService),
     );
   }
@@ -355,7 +379,7 @@ export class DingzDaAccessory extends EventEmitter {
     this.services.push(lightService);
 
     this.platform.eb.on(
-      DingzEvent.STATE_UPDATE,
+      DingzEvent.PUSH_STATE_UPDATE,
       this.updateLightSensor.bind(this, lightService),
     );
   }
@@ -581,8 +605,8 @@ export class DingzDaAccessory extends EventEmitter {
               `Button ${button} of ${this.device.name} (${service?.displayName}) pressed -> ${action}`,
             );
 
-            // immediately update states after button pressed
-            this.updateDeviceState();
+            // Immediately update states after button pressed
+            this.getDeviceStateUpdate();
 
             switch (action) {
               case ButtonAction.SINGLE_PRESS:
@@ -692,22 +716,6 @@ export class DingzDaAccessory extends EventEmitter {
     callback(null);
   }
 
-  private updateDeviceState() {
-    this.getDeviceState().then((state) => {
-      if (typeof state !== 'undefined' && state?.config) {
-        // Outputs
-        this.dingzStates.Dimmers = state.dimmers;
-        this.dingzStates.LED = state.led;
-        // Sensors
-        this.dingzStates.Temperature = state.sensors.room_temperature;
-        this.dingzStates.Brightness = state.sensors.brightness;
-      } else {
-        this.platform.log.error('Can`t get device state');
-      }
-      this.platform.eb.emit(DingzEvent.STATE_UPDATE);
-    });
-  }
-
   private addDimmerService({
     name,
     output,
@@ -743,7 +751,7 @@ export class DingzDaAccessory extends EventEmitter {
 
     // Update State
     this.platform.eb.on(
-      DingzEvent.STATE_UPDATE,
+      DingzEvent.PUSH_STATE_UPDATE,
       this.updateDimmerState.bind(this, index, output, newService),
     );
     return newService;
@@ -858,6 +866,7 @@ export class DingzDaAccessory extends EventEmitter {
     // FIXME: Implement different lamella/blind modes #24
     service
       .getCharacteristic(this.platform.Characteristic.TargetHorizontalTiltAngle)
+      // FIXME: #124 remove percentage / angle conversion
       .setProps({ minValue: 0, maxValue: 90 }) // dingz Maximum values
       .on(
         CharacteristicEventTypes.SET,
@@ -885,118 +894,88 @@ export class DingzDaAccessory extends EventEmitter {
         this.getPositionState.bind(this, id as WindowCoveringId),
       );
 
-    const updateInterval: NodeJS.Timer = setInterval(() => {
-      try {
-        this.getWindowCovering(id as WindowCoveringId).then((state) => {
-          if (typeof state !== 'undefined' && typeof id === 'number') {
-            // push the new value to HomeKit
-            this.dingzStates.WindowCovers[id] = state;
-            service
-              .getCharacteristic(this.platform.Characteristic.TargetPosition)
-              .updateValue(state.target.blind);
-            service
-              .getCharacteristic(
-                this.platform.Characteristic.TargetHorizontalTiltAngle,
-              )
-              .updateValue(state.target.lamella);
-            service
-              .getCharacteristic(this.platform.Characteristic.CurrentPosition)
-              .updateValue(state.current.blind);
-            service
-              .getCharacteristic(
-                this.platform.Characteristic.CurrentHorizontalTiltAngle,
-              )
-              .updateValue(state.current.lamella);
-
-            this.platform.log.debug(
-              'Pushed updated current WindowCovering state of',
-              service.getCharacteristic(this.platform.Characteristic.Name)
-                .value,
-              'to HomeKit:',
-              state,
-            );
-          } else {
-            this.platform.log.warn(
-              'Failed to push updated Window Covering',
-              state,
-            );
-          }
-        });
-      } catch (e) {
-        this.platform.log.error(
-          'Error -> unable to fetch WindowCovering data',
-          e.name,
-          e.toString(),
-        );
-      }
-    }, 5000);
-
-    if (id && updateInterval) {
-      this.windowCoveringTimers[id as number] = updateInterval;
-    }
-
-    // this.platform.eb.on(
-    //   DingzEvent.STATE_UPDATE,
-    //   this.updateWindowCoveringState.bind(
-    //     this,
-    //     id as WindowCoveringId,
-    //     service,
-    //   ),
-    // );
+    // Subscribe to the update event
+    this.platform.eb.on(
+      DingzEvent.PUSH_STATE_UPDATE,
+      this.updateWindowCoveringState.bind(
+        this,
+        id as WindowCoveringId,
+        service,
+      ),
+    );
     return service;
   }
 
   // Window Covering functions
   // TODO: Use available information to more accurately set WindowCovering State
   private updateWindowCoveringState(id: WindowCoveringId, service: Service) {
-    const state: WindowCoveringState = this.dingzStates.WindowCovers[id];
-
+    const state: WindowCoveringStates = this.dingzStates.WindowCovers[id];
     if (state) {
+      /**
+       * TODO: Fix Hardware Buttons and UI buttons
+       * It can be complicated:
+       * - We're moving by setting new positions in the UI [x]
+       * - We're moving by pressing the "up/down" buttons in the UI or Hardware [x]
+       */
       service
         .getCharacteristic(this.platform.Characteristic.TargetPosition)
-        .updateValue(state.target.blind);
+        .updateValue(state.position);
       service
         .getCharacteristic(
           this.platform.Characteristic.TargetHorizontalTiltAngle,
         )
-        .updateValue(state.target.lamella);
-      service
-        .getCharacteristic(this.platform.Characteristic.CurrentPosition)
-        .updateValue(state.current.blind);
-      service
-        .getCharacteristic(
-          this.platform.Characteristic.CurrentHorizontalTiltAngle,
-        )
-        .updateValue((state.current.lamella / 100) * 90); // Set in °, Get in % (...)
+        // FIXME: #124 remove percentage / angle conversion
+        .updateValue((state.lamella / 100) * 90); // Set in °, Get in % (...)
 
       let positionState: number;
-      if (state.target.blind > state.current.blind) {
-        positionState = this.platform.Characteristic.PositionState.DECREASING;
-      } else if (state.target.blind < state.current.blind) {
-        positionState = this.platform.Characteristic.PositionState.INCREASING;
-      } else {
-        positionState = this.platform.Characteristic.PositionState.STOPPED;
+      switch (state.moving) {
+        case 'up':
+          positionState = this.platform.Characteristic.PositionState.INCREASING;
+          break;
+        case 'down':
+          positionState = this.platform.Characteristic.PositionState.DECREASING;
+          break;
+        case 'stop':
+          positionState = this.platform.Characteristic.PositionState.STOPPED;
+          service
+            .getCharacteristic(this.platform.Characteristic.CurrentPosition)
+            .updateValue(state.position);
+          service
+            .getCharacteristic(
+              this.platform.Characteristic.CurrentHorizontalTiltAngle,
+            )
+            .updateValue((state.lamella / 100) * 90); // Set in °, Get in % (...)
+          break;
       }
-      this.platform.log.debug('WindowCovering Position State:', positionState);
       service
         .getCharacteristic(this.platform.Characteristic.PositionState)
-        .setValue(positionState);
-      // .updateValue(positionState);
+        .updateValue(positionState);
     }
   }
 
   private async setPosition(
     id: WindowCoveringId,
-    value: CharacteristicValue,
+    position: CharacteristicValue,
     callback: CharacteristicSetCallback,
   ) {
-    const blind: number = value as number;
-
     if (this.dingzStates.WindowCovers[id]) {
-      const lamella: number = this.dingzStates.WindowCovers[id].target.lamella;
-      this.dingzStates.WindowCovers[id].target.blind = blind;
+      const windowCovering: WindowCoveringStates = this.dingzStates
+        .WindowCovers[id];
 
-      await this.setWindowCovering(id, blind, lamella);
+      // Make sure we're setting motion when changing the position
+      if (position > windowCovering.position) {
+        this.dingzStates.WindowCovers[id].moving = 'down';
+      } else if (position < windowCovering.position) {
+        this.dingzStates.WindowCovers[id].moving = 'up';
+      } else {
+        this.dingzStates.WindowCovers[id].moving = 'stop';
+      }
+
+      await this.setWindowCovering({
+        id,
+        blind: position as number,
+        lamella: windowCovering.lamella,
+      });
     }
     callback(null);
   }
@@ -1009,7 +988,7 @@ export class DingzDaAccessory extends EventEmitter {
       'WindowCoverings: ',
       JSON.stringify(this.dingzStates.WindowCovers),
     );
-    const blind: number = this.dingzStates.WindowCovers[id]?.current.blind;
+    const blind: number = this.dingzStates.WindowCovers[id]?.position;
 
     this.platform.log.debug(
       'Get Characteristic for WindowCovering',
@@ -1023,20 +1002,22 @@ export class DingzDaAccessory extends EventEmitter {
 
   private async setTiltAngle(
     id: WindowCoveringId,
-    value: CharacteristicValue,
+    angle: CharacteristicValue,
     callback: CharacteristicSetCallback,
   ) {
-    const blind: number = this.dingzStates.WindowCovers[id].target.blind;
-    const lamella: number = value as number;
-    this.dingzStates.WindowCovers[id].target.lamella = lamella;
-
     this.platform.log.debug(
       'Set Characteristic TargetHorizontalTiltAngle on ',
       id,
       '->',
-      value,
+      angle,
     );
-    await this.setWindowCovering(id, blind, lamella);
+    if (this.dingzStates.WindowCovers[id]) {
+      await this.setWindowCovering({
+        id,
+        blind: this.dingzStates.WindowCovers[id].lamella,
+        lamella: angle as number,
+      });
+    }
     callback(null);
   }
 
@@ -1051,9 +1032,7 @@ export class DingzDaAccessory extends EventEmitter {
       'WindowCoverings: ',
       JSON.stringify(this.dingzStates.WindowCovers),
     );
-    const currentWindowCover: WindowCoveringPosition = this.dingzStates
-      .WindowCovers[id]?.current;
-    const tiltAngle: number = currentWindowCover?.lamella;
+    const tiltAngle: number = this.dingzStates.WindowCovers[id]?.lamella;
 
     this.platform.log.debug(
       'Get Characteristic for WindowCovering',
@@ -1074,15 +1053,20 @@ export class DingzDaAccessory extends EventEmitter {
       JSON.stringify(this.dingzStates.WindowCovers),
     );
     let positionState = 0;
-    const state = this.dingzStates.WindowCovers[id];
-    if (state) {
-      if (state.target.blind > state.current.blind) {
-        positionState = this.platform.Characteristic.PositionState.DECREASING;
-      } else if (state.target.blind < state.current.blind) {
-        positionState = this.platform.Characteristic.PositionState.INCREASING;
-      } else {
-        positionState = this.platform.Characteristic.PositionState.STOPPED;
+    const moving = this.dingzStates.WindowCovers[id].moving;
+    if (moving) {
+      switch (moving) {
+        case 'down':
+          positionState = this.platform.Characteristic.PositionState.DECREASING;
+          break;
+        case 'up':
+          positionState = this.platform.Characteristic.PositionState.INCREASING;
+          break;
+        case 'stop':
+          positionState = this.platform.Characteristic.PositionState.STOPPED;
+          break;
       }
+
       this.platform.log.debug(
         'Get Characteristic for WindowCovering',
         id,
@@ -1090,7 +1074,6 @@ export class DingzDaAccessory extends EventEmitter {
         positionState,
       );
     }
-
     callback(null, positionState);
   }
 
@@ -1350,7 +1333,7 @@ export class DingzDaAccessory extends EventEmitter {
     // Here we change update the brightness to a random value every 5 seconds using
     // the `updateCharacteristic` method.
     this.platform.eb.on(
-      DingzEvent.STATE_UPDATE,
+      DingzEvent.PUSH_STATE_UPDATE,
       this.updateLEDState.bind(this, ledService),
     );
   }
@@ -1500,13 +1483,18 @@ export class DingzDaAccessory extends EventEmitter {
   }
 
   // Set individual dimmer
-  private async setWindowCovering(
-    id: WindowCoveringId,
-    blind: number,
-    lamella: number,
-  ): Promise<void> {
+  private async setWindowCovering({
+    id,
+    blind,
+    lamella,
+  }: {
+    id: WindowCoveringId;
+    blind: number;
+    lamella: number;
+  }): Promise<void> {
+    // The API says the parameters can be omitted. This is not true
     // {{ip}}/api/v1/shade/0?blind=<value>&lamella=<value>
-    const setWindowCoveringUrl = `${this.baseUrl}/api/v1/shade/${id}/`;
+    const setWindowCoveringUrl = `${this.baseUrl}/api/v1/shade/${id}`;
     await this.platform.fetch({
       url: setWindowCoveringUrl,
       method: 'POST',

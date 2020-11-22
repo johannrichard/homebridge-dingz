@@ -5,9 +5,10 @@ import { ButtonId } from './dingzTypes';
 // Platform elements
 // EVENT TYPES
 export const enum DingzEvent {
-  UPDATE_INFO = 'updateDingzInfo',
+  UPDATE_DEVICE_INFO = 'updateDeviceInfo',
   ACTION = 'deviceAction',
-  STATE_UPDATE = 'stateUpdate',
+  REQUEST_STATE_UPDATE = 'requestStateUpdate',
+  PUSH_STATE_UPDATE = 'pushStateUpdate',
 }
 
 export declare interface DingzEventBus {
@@ -20,10 +21,11 @@ export declare interface DingzEventBus {
     listener: (mac: string, action: ButtonAction, button: ButtonId) => void,
   ): this;
   on(
-    event: DingzEvent.UPDATE_INFO,
+    event: DingzEvent.UPDATE_DEVICE_INFO,
     listener: (deviceInfo: DeviceInfo) => void,
   ): this;
-  on(event: DingzEvent.STATE_UPDATE, listener: () => void): this;
+  on(event: DingzEvent.REQUEST_STATE_UPDATE, listener: () => void): this;
+  on(event: DingzEvent.PUSH_STATE_UPDATE, listener: () => void): this;
 
   emit(
     event: DingzEvent.ACTION,
@@ -37,8 +39,9 @@ export declare interface DingzEventBus {
     action: ButtonAction,
     button: ButtonId,
   ): boolean;
-  emit(event: DingzEvent.UPDATE_INFO, deviceInfo: DeviceInfo): boolean;
-  emit(event: DingzEvent.STATE_UPDATE): boolean;
+  emit(event: DingzEvent.UPDATE_DEVICE_INFO, deviceInfo: DeviceInfo): boolean;
+  emit(event: DingzEvent.REQUEST_STATE_UPDATE): boolean;
+  emit(event: DingzEvent.PUSH_STATE_UPDATE): boolean;
 }
 
 export class DingzEventBus extends EventEmitter {

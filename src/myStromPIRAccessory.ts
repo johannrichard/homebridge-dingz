@@ -123,57 +123,11 @@ export class MyStromPIRAccessory {
       'Motion',
     );
 
-    // Only check for motion if we have a PIR and set the Interval
-    setInterval(() => {
-      this.getDeviceReport()
-        .then((report) => {
-          if (report) {
-            // If we are in motion polling mode, update motion from poller
-            if (this.platform.config.motionPoller ?? true) {
-              this.platform.log.info(
-                'Motion POLLING of',
-                this.device.name,
-                'enabled',
-              );
-              const isMotion: boolean = report.motion;
-              // Only update if motionService exists *and* if there's a change in motion'
-              if (this.pirState.motion !== isMotion) {
-                this.platform.log.debug('Motion Update from POLLER');
-                this.pirState.motion = isMotion;
-                this.motionService.updateCharacteristic(
-                  this.platform.Characteristic.MotionDetected,
-                  this.pirState.motion,
-                );
-              }
-            }
-
-            // Update temperature and light in any case
-            this.pirState.temperature = report.temperature;
-            this.temperatureService.updateCharacteristic(
-              this.platform.Characteristic.CurrentTemperature,
-              this.pirState.temperature,
-            );
-
-            this.pirState.light = report.light ?? 0;
-            this.lightService.updateCharacteristic(
-              this.platform.Characteristic.CurrentAmbientLightLevel,
-              this.pirState.light,
-            );
-          } else {
-            throw new DeviceNotReachableError(
-              `Device can not be reached ->
-              ${this.device.name}-> ${this.device.address}`,
-            );
-          }
-        })
-        .catch((e: Error) => {
-          this.platform.log.error(
-            'Error -> unable to fetch DeviceMotion data',
-            e.name,
-            e.toString(),
-          );
-        });
-    }, 2000); // Shorter term updates for motion sensor
+    // Subscribe to the REQUEST_STATE_UPDATE event
+    this.platform.eb.on(
+      DingzEvent.REQUEST_STATE_UPDATE,
+      this.getDeviceStateUpdate.bind(this),
+    );
 
     if (!(this.platform.config.motionPoller ?? true)) {
       // Implement *push* event handling
@@ -213,6 +167,58 @@ export class MyStromPIRAccessory {
         endpoints: ['pir/generic'], // Buttons need the 'generic' endpoint specifically set
       });
     });
+  }
+
+  // Get updated device info and update the corresponding values
+  private getDeviceStateUpdate() {
+    this.getDeviceReport()
+      .then((report) => {
+        if (report) {
+          // If we are in motion polling mode, update motion from poller
+          // TODO: remove this -- doesn't make sense at all
+          if (this.platform.config.motionPoller ?? true) {
+            this.platform.log.info(
+              'Motion POLLING of',
+              this.device.name,
+              'enabled',
+            );
+            const isMotion: boolean = report.motion;
+            // Only update if motionService exists *and* if there's a change in motion'
+            if (this.pirState.motion !== isMotion) {
+              this.platform.log.debug('Motion Update from POLLER');
+              this.pirState.motion = isMotion;
+              this.motionService
+                .getCharacteristic(this.platform.Characteristic.MotionDetected)
+                .updateValue(this.pirState.motion);
+            }
+          }
+
+          // Update temperature and light in any case
+          this.pirState.temperature = report.temperature;
+          this.temperatureService
+            .getCharacteristic(this.platform.Characteristic.CurrentTemperature)
+            .updateValue(this.pirState.temperature);
+
+          this.pirState.light = report.light ?? 0;
+          this.lightService
+            .getCharacteristic(
+              this.platform.Characteristic.CurrentAmbientLightLevel,
+            )
+            .updateValue(this.pirState.light);
+        } else {
+          throw new DeviceNotReachableError(
+            `Device can not be reached ->
+              ${this.device.name}-> ${this.device.address}`,
+          );
+        }
+      })
+      .catch((e: Error) => {
+        this.platform.log.error(
+          'Error -> unable to fetch DeviceMotion data',
+          e.name,
+          e.toString(),
+        );
+      });
   }
 
   /**

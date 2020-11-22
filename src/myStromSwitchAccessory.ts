@@ -10,6 +10,7 @@ import type {
 import { DingzDaHomebridgePlatform } from './platform';
 import { MyStromDeviceInfo, MyStromSwitchReport } from './util/myStromTypes';
 import { DeviceInfo } from './util/commonTypes';
+import { DingzEvent } from './util/dingzEventBus';
 
 /**
  * Platform Accessory
@@ -47,7 +48,7 @@ export class MyStromSwitchAccessory {
     );
     this.accessory
       .getService(this.platform.Service.AccessoryInformation)!
-      .setCharacteristic(
+      .updateCharacteristic(
         this.platform.Characteristic.Manufacturer,
         'MyStrom AG',
       )
@@ -55,19 +56,19 @@ export class MyStromSwitchAccessory {
         this.platform.Characteristic.AppMatchingIdentifier,
         'ch.mystrom.iOSApp',
       )
-      .setCharacteristic(
+      .updateCharacteristic(
         this.platform.Characteristic.Model,
         this.device.model as string,
       )
-      .setCharacteristic(
+      .updateCharacteristic(
         this.platform.Characteristic.FirmwareRevision,
         this.mystromDeviceInfo.version ?? 'N/A',
       )
-      .setCharacteristic(
+      .updateCharacteristic(
         this.platform.Characteristic.HardwareRevision,
         this.mystromDeviceInfo ? 'EU/CH v2' : 'CH v1',
       )
-      .setCharacteristic(
+      .updateCharacteristic(
         this.platform.Characteristic.SerialNumber,
         this.device.mac,
       );
@@ -76,7 +77,7 @@ export class MyStromSwitchAccessory {
       this.accessory.getService(this.platform.Service.Outlet) ??
       this.accessory.addService(this.platform.Service.Outlet);
 
-    this.outletService.setCharacteristic(
+    this.outletService.updateCharacteristic(
       this.platform.Characteristic.Name,
       this.device.name ?? `${accessory.context.device.model} Outlet`,
     );
@@ -109,32 +110,11 @@ export class MyStromSwitchAccessory {
         .on(CharacteristicEventTypes.GET, this.getTemperature.bind(this));
     }
 
-    setInterval(() => {
-      this.getDeviceReport()
-        .then((report) => {
-          // push the new value to HomeKit
-          this.outletState = report;
-          this.outletService
-          .getCharacteristic(this.platform.Characteristic.On)
-          .updateValue(this.outletState.relay);
-
-        this.outletService
-          .getCharacteristic(this.platform.Characteristic.OutletInUse)
-          .updateValue(this.outletState.power > 0);
-
-          if (this.temperatureService) {
-          this.temperatureService
-            .getCharacteristic(this.platform.Characteristic.CurrentTemperature)
-            .updateValue(this.outletState.temperature);
-          }
-        })
-        .catch((e) => {
-          this.platform.log.error(
-            'Error while retrieving Device Report ->',
-            e.toString(),
-          );
-        });
-    }, 2000);
+    // Subscribe to the REQUEST_STATE_UPDATE event
+    this.platform.eb.on(
+      DingzEvent.REQUEST_STATE_UPDATE,
+      this.getDeviceStateUpdate.bind(this),
+    );
   }
 
   identify(): void {
@@ -142,6 +122,34 @@ export class MyStromSwitchAccessory {
       'Identify! -> Who am I? I am',
       this.accessory.displayName,
     );
+  }
+
+  // Get updated device info and update the corresponding values
+  private getDeviceStateUpdate() {
+    this.getDeviceReport()
+      .then((report) => {
+        // push the new value to HomeKit
+        this.outletState = report;
+        this.outletService
+          .getCharacteristic(this.platform.Characteristic.On)
+          .updateValue(this.outletState.relay);
+
+        this.outletService
+          .getCharacteristic(this.platform.Characteristic.OutletInUse)
+          .updateValue(this.outletState.power > 0);
+
+        if (this.temperatureService) {
+          this.temperatureService
+            .getCharacteristic(this.platform.Characteristic.CurrentTemperature)
+            .updateValue(this.outletState.temperature);
+        }
+      })
+      .catch((e) => {
+        this.platform.log.error(
+          'Error while retrieving Device Report ->',
+          e.toString(),
+        );
+      });
   }
 
   private setOn(

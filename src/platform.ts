@@ -107,7 +107,20 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
         this.setupDeviceDiscovery();
       }
 
+      // set-up the callback server ...
       this.callbackServer();
+
+      // .. and finally set-up the interval that triggers updates
+      this.eb.on(DingzEvent.REQUEST_STATE_UPDATE, () => {
+        this.log.debug('Event -> DingzEvent.REQUEST_STATE_UPDATE');
+      });
+      this.eb.on(DingzEvent.PUSH_STATE_UPDATE, () => {
+        this.log.debug('Event -> DingzEvent.PUSH_STATE_UPDATE');
+      });
+
+      setInterval(() => {
+        this.eb.emit(DingzEvent.REQUEST_STATE_UPDATE);
+      }, 5000);
     });
   }
 
@@ -291,7 +304,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
             this.log.warn('Accessory already initialized');
 
             // Update Names et al. from new device info
-            this.eb.emit(DingzEvent.UPDATE_INFO, deviceInfo);
+            this.eb.emit(DingzEvent.UPDATE_DEVICE_INFO, deviceInfo);
             this.accessories[uuid].identify();
             return true;
           }
