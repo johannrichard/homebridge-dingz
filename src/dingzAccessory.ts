@@ -7,6 +7,7 @@ import {
   Service,
 } from 'homebridge';
 
+import { AxiosError } from 'axios';
 import { EventEmitter } from 'events';
 import { Policy } from 'cockatiel';
 import { Mutex } from 'async-mutex';
@@ -47,7 +48,6 @@ import {
 } from './util/errors';
 import { DingzDaHomebridgePlatform } from './platform';
 import { DingzEvent } from './util/dingzEventBus';
-import { AxiosError } from 'axios';
 
 // Policy for long running tasks, retry every hour
 const retrySlow = Policy.handleAll()
@@ -244,7 +244,7 @@ export class DingzDaAccessory extends EventEmitter {
           return true;
         });
       })
-      .catch(this.handleError.bind(this));
+      .catch(this.handleFetchError.bind(this));
   }
 
   private setAccessoryInformation() {
@@ -1166,7 +1166,7 @@ export class DingzDaAccessory extends EventEmitter {
         }
         this.device.dimmerConfig = dimmerConfig;
       })
-      .catch(this.handleError.bind(this));
+      .catch(this.handleFetchError.bind(this));
 
     this.getDingzDeviceInfo().then((deviceInfo) => {
       this._updatedDeviceInfo = deviceInfo;
@@ -1526,7 +1526,7 @@ export class DingzDaAccessory extends EventEmitter {
         url: getMotionUrl,
         returnBody: true,
         token: this.device.token,
-      });
+      }).catch(this.handleFetchError.bind(this));
     } finally {
       release();
     }
@@ -1546,7 +1546,7 @@ export class DingzDaAccessory extends EventEmitter {
       url: setDimmerUrl,
       method: 'POST',
       token: this.device.token,
-    });
+    }).catch(this.handleFetchError.bind(this));
   }
 
   // Set individual dimmer
@@ -1573,7 +1573,7 @@ export class DingzDaAccessory extends EventEmitter {
         },
         { encode: false },
       ),
-    });
+    }).catch(this.handleFetchError.bind(this));
   }
 
   // We need Target vs Current to accurately update WindowCoverings
@@ -1587,7 +1587,7 @@ export class DingzDaAccessory extends EventEmitter {
         url: getWindowCoveringUrl,
         returnBody: true,
         token: this.device.token,
-      });
+      }).catch(this.handleFetchError.bind(this));
     } finally {
       release();
     }
@@ -1615,7 +1615,7 @@ export class DingzDaAccessory extends EventEmitter {
         },
         { encode: false },
       ),
-    });
+    }).catch(this.handleFetchError.bind(this));
   }
 
   // Get the current state
@@ -1629,7 +1629,7 @@ export class DingzDaAccessory extends EventEmitter {
         url: getDeviceStateUrl,
         returnBody: true,
         token: this.device.token,
-      });
+      }).catch(this.handleFetchError.bind(this));
     } finally {
       release();
     }
@@ -1644,7 +1644,7 @@ export class DingzDaAccessory extends EventEmitter {
       method: 'GET',
       token: this.device.token,
       returnBody: true,
-    });
+    }).catch(this.handleFetchError.bind(this));
   }
 
   async enablePIRCallback() {
@@ -1654,10 +1654,10 @@ export class DingzDaAccessory extends EventEmitter {
       url: setActionUrl,
       method: 'POST',
       token: this.device.token,
-    });
+    }).catch(this.handleFetchError.bind(this));
   }
 
-  private handleError = (error: AxiosError) => {
+  private handleFetchError = (error: AxiosError) => {
     if (error.response) {
       this.platform.log.error('HTTP Response Error ->' + error.config.url);
       this.platform.log.error(error.message);
