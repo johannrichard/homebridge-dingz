@@ -47,6 +47,7 @@ import {
 } from './util/errors';
 import { DingzDaHomebridgePlatform } from './platform';
 import { DingzEvent } from './util/dingzEventBus';
+import { AxiosError } from 'axios';
 
 // Policy for long running tasks, retry every hour
 const retrySlow = Policy.handleAll()
@@ -242,7 +243,8 @@ export class DingzDaAccessory extends EventEmitter {
           this.updateAccessory();
           return true;
         });
-      });
+      })
+      .catch(this.handleError.bind(this));
   }
 
   private setAccessoryInformation() {
@@ -1160,12 +1162,14 @@ export class DingzDaAccessory extends EventEmitter {
     DingzDaAccessory.getConfigs({
       address: this.device.address,
       token: this.device.token,
-    }).then(({ inputConfig, dimmerConfig }) => {
+    })
+      .then(({ inputConfig, dimmerConfig }) => {
       if (inputConfig?.inputs[0]) {
         this._updatedDeviceInputConfig = inputConfig.inputs[0];
       }
       this.device.dimmerConfig = dimmerConfig;
-    });
+      })
+      .catch(this.handleError.bind(this));
 
     this.getDingzDeviceInfo().then((deviceInfo) => {
       this._updatedDeviceInfo = deviceInfo;
