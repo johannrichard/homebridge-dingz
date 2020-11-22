@@ -13,6 +13,7 @@ import { Policy } from 'cockatiel';
 import { Mutex } from 'async-mutex';
 import simpleColorConverter from 'simple-color-converter';
 import qs from 'qs';
+import semver from 'semver';
 
 // Internal types
 import {
@@ -864,10 +865,13 @@ export class DingzDaAccessory extends EventEmitter {
 
     // Set min/max Values
     // FIXME: Implement different lamella/blind modes #24
+    const maxTiltValue = semver.gt(this.dingzDeviceInfo.fw_version, '1.2.0')
+      ? 100
+      : 90;
     service
       .getCharacteristic(this.platform.Characteristic.TargetHorizontalTiltAngle)
       // FIXME: #124 remove percentage / angle conversion
-      .setProps({ minValue: 0, maxValue: 90 }) // dingz Maximum values
+      .setProps({ minValue: 0, maxValue: maxTiltValue }) // dingz Maximum values
       .on(
         CharacteristicEventTypes.SET,
         this.setTiltAngle.bind(this, id as WindowCoveringId),
@@ -917,6 +921,11 @@ export class DingzDaAccessory extends EventEmitter {
        * - We're moving by setting new positions in the UI [x]
        * - We're moving by pressing the "up/down" buttons in the UI or Hardware [x]
        */
+
+      const maxTiltValue = semver.gt(this.dingzDeviceInfo.fw_version, '1.2.0')
+        ? 100
+        : 90;
+
       service
         .getCharacteristic(this.platform.Characteristic.TargetPosition)
         .updateValue(state.position);
@@ -925,7 +934,7 @@ export class DingzDaAccessory extends EventEmitter {
           this.platform.Characteristic.TargetHorizontalTiltAngle,
         )
         // FIXME: #124 remove percentage / angle conversion
-        .updateValue((state.lamella / 100) * 90); // Set in °, Get in % (...)
+        .updateValue((state.lamella / 100) * maxTiltValue); // Old FW: Set in °, Get in % (...)
 
       let positionState: number;
       switch (state.moving) {
