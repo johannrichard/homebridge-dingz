@@ -897,7 +897,7 @@ export class DingzDaAccessory extends EventEmitter {
         .getCharacteristic(
           this.platform.Characteristic.TargetHorizontalTiltAngle,
         )
-        .setProps({ minValue: 0, maxValue: 90}) // dingz Maximum values
+        .setProps({ minValue: 0, maxValue: 90 }) // dingz Maximum values
         .on(
           CharacteristicEventTypes.SET,
           this.setTiltAngle.bind(this, index as WindowCoveringId),
@@ -920,7 +920,7 @@ export class DingzDaAccessory extends EventEmitter {
         CharacteristicEventTypes.GET,
         this.getPosition.bind(this, index as WindowCoveringId),
       );
-      newService
+    newService
       .getCharacteristic(
         this.platform.Characteristic.CurrentHorizontalTiltAngle,
       )
@@ -928,7 +928,7 @@ export class DingzDaAccessory extends EventEmitter {
         CharacteristicEventTypes.GET,
         this.getTiltAngle.bind(this, index as WindowCoveringId),
       );
-      newService
+     newService
       .getCharacteristic(this.platform.Characteristic.PositionState)
       .on(
         CharacteristicEventTypes.GET,
@@ -1226,13 +1226,15 @@ export class DingzDaAccessory extends EventEmitter {
       '-> Check for changed config.',
     );
 
-    this.getConfigs().then(([inputConfig, dimmerConfig, windowCoveringConfig]) => {
-      if (inputConfig?.inputs[0]) {
-        this._updatedDeviceInputConfig = inputConfig.inputs[0];
-      }
-      this.device.dimmerConfig = dimmerConfig;
-      this.device.windowCoveringConfig = windowCoveringConfig;
-    });
+    this.getConfigs().then(
+      ([inputConfig, dimmerConfig, windowCoveringConfig]) => {
+        if (inputConfig?.inputs[0]) {
+          this._updatedDeviceInputConfig = inputConfig.inputs[0];
+        }
+        this.device.dimmerConfig = dimmerConfig;
+        this.device.windowCoveringConfig = windowCoveringConfig;
+      },
+    );
 
     this.getDingzDeviceInfo().then((deviceInfo) => {
       this._updatedDeviceInfo = deviceInfo;
@@ -1338,17 +1340,16 @@ export class DingzDaAccessory extends EventEmitter {
         this.setDimmerConfig('D3', 0);
         this.setDimmerConfig('D4', 1);
         break;
-        case 1:
+      case 1:
         this.setDimmerConfig('D1', 0);
         this.setDimmerConfig('D2', 1);
         this.setWindowCoveringConfig('M2', 1);
         break;
       case 0:
-        this.platform.log.debug(
-          'UpdateDimmerBlindServices for M1 & M2',
-        );
+        this.platform.log.debug('UpdateDimmerBlindServices for M1 & M2');
         this.setWindowCoveringConfig('M1', 0);
         this.setWindowCoveringConfig('M2', 1);
+        break;
       default:
         break;
     }
@@ -1384,14 +1385,14 @@ export class DingzDaAccessory extends EventEmitter {
     }
   }
 
-  private setWindowCoveringConfig(id: 'M1' | 'M2', index: WindowCoveringConfigIndex) {
+  private setWindowCoveringConfig(
+    id: 'M1' | 'M2', index: WindowCoveringConfigIndex,
+    ) {
     const service: Service | undefined = this.accessory.getServiceById(
       this.platform.Service.WindowCovering,
       id,
     );
-    this.platform.log.debug(
-      'setWindowCoveringConfig'
-    );
+    this.platform.log.debug('setWindowCoveringConfig');
     if (service) {
       const windowCoveringConfig = this.device.windowCoveringConfig;
       this.platform.log.debug(
@@ -1658,12 +1659,16 @@ export class DingzDaAccessory extends EventEmitter {
   }
 
   // Get Input & Dimmer & WindowCovering Config
-  private async getConfigs(): Promise<[DingzInputConfig, DingzDimmerConfig, WindowCoveringConfig]> {
+  private async getConfigs(): Promise<
+  [DingzInputConfig, DingzDimmerConfig, WindowCoveringConfig]
+  > {
     const getInputConfigUrl = `${this.baseUrl}/api/v1/input_config`;
     const getDimmerConfigUrl = `${this.baseUrl}/api/v1/dimmer_config`;
     const getBlindConfigUrl = `${this.baseUrl}/api/v1/blind_config`;
 
-    return Promise.all<DingzInputConfig, DingzDimmerConfig, WindowCoveringConfig>([
+    return Promise.all<
+    DingzInputConfig, DingzDimmerConfig, WindowCoveringConfig
+    >([
       this.platform.fetch({
         url: getInputConfigUrl,
         returnBody: true,
