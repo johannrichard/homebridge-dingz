@@ -1057,7 +1057,7 @@ export class DingzDaAccessory extends EventEmitter {
       JSON.stringify(this.dingzStates.WindowCovers),
     );
     let positionState = 0;
-    const moving = this.dingzStates.WindowCovers[id].moving;
+    const moving = this.dingzStates.WindowCovers[id]?.moving;
     if (moving) {
       switch (moving) {
         case 'down':
