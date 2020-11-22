@@ -35,6 +35,7 @@ import {
   WindowCoveringId,
   WindowCoveringTimer,
   WindowCoveringState,
+  WindowCoveringPosition,
 } from './util/dingzTypes';
 import {
   ButtonAction,
@@ -96,7 +97,6 @@ export class DingzDaAccessory extends EventEmitter {
     Temperature: 0 as number,
     Motion: false as boolean,
     Brightness: 0 as number,
-    Reachable: true as boolean,
   };
 
   private motionTimer?: NodeJS.Timer;
@@ -132,20 +132,19 @@ export class DingzDaAccessory extends EventEmitter {
       }
     });
 
-    // Initialize reachability service
-    const bridgingService: Service =
-      this.accessory.getService(this.platform.Service.BridgingState) ??
-      this.accessory.addService(this.platform.Service.BridgingState);
+    // Remove Reachability service if still present
+    const bridgingService: Service | undefined = this.accessory.getService(
+      this.platform.Service.BridgingState,
+    );
+    if (bridgingService) {
+      this.accessory.removeService(bridgingService);
+    }
 
-    bridgingService
-      .getCharacteristic(this.platform.Characteristic.Reachable)
-      .on(CharacteristicEventTypes.GET, this.getReachability.bind(this));
-
-    this.services.push(bridgingService);
     /****
      * How to discover Accessories:
      * - Check for UDP Packets and/or use manually configured accessories
      */
+
     // Add Dimmers, Blinds etc.
     this.platform.log.info(
       'Adding output devices for ',
@@ -170,6 +169,7 @@ export class DingzDaAccessory extends EventEmitter {
           // Now we have what we need and can create the services …
           this.addOutputServices();
           setInterval(() => {
+            // TODO: Set rechability if call times out too many times
             // Set up an interval to fetch Dimmer states
             this.updateDeviceState();
           }, 10000);
@@ -256,30 +256,33 @@ export class DingzDaAccessory extends EventEmitter {
         : this.dingzDeviceInfo.front_sn;
     this.accessory
       .getService(this.platform.Service.AccessoryInformation)!
-      .setCharacteristic(this.platform.Characteristic.Manufacturer, 'iolo AG')
-      .setCharacteristic(
+      .updateCharacteristic(
+        this.platform.Characteristic.Manufacturer,
+        'iolo AG',
+      )
+      .updateCharacteristic(
         this.platform.Characteristic.AppMatchingIdentifier,
         'ch.iolo.dingz.consumer',
       )
       // Update info from deviceInfo
-      .setCharacteristic(
+      .updateCharacteristic(
         this.platform.Characteristic.ConfiguredName,
         this.device.name,
       )
-      .setCharacteristic(this.platform.Characteristic.Name, this.device.name)
-      .setCharacteristic(
+      .updateCharacteristic(this.platform.Characteristic.Name, this.device.name)
+      .updateCharacteristic(
         this.platform.Characteristic.Model,
         this.device.model as string,
       )
-      .setCharacteristic(
+      .updateCharacteristic(
         this.platform.Characteristic.FirmwareRevision,
         this.dingzDeviceInfo.fw_version ?? 'Unknown',
       )
-      .setCharacteristic(
+      .updateCharacteristic(
         this.platform.Characteristic.HardwareRevision,
         this.dingzDeviceInfo.hw_version_puck ?? 'Unknown',
       )
-      .setCharacteristic(
+      .updateCharacteristic(
         this.platform.Characteristic.SerialNumber,
         serialNumber,
       );
@@ -304,13 +307,6 @@ export class DingzDaAccessory extends EventEmitter {
       DingzEvent.STATE_UPDATE,
       this.updateTemperature.bind(this, temperatureService),
     );
-  }
-
-  private getReachability(callback: CharacteristicGetCallback) {
-    const currentReachability = this.dingzStates.Reachable ? 1 : 0;
-
-    this.platform.log.debug('getReachablility:', currentReachability);
-    callback(null, currentReachability);
   }
 
   private updateTemperature(temperatureService: Service) {
@@ -702,7 +698,9 @@ export class DingzDaAccessory extends EventEmitter {
   ) {
     const currentState = this.dingzStates.Buttons[button].state;
     this.platform.log.info(
-      'Get Switch State ->',
+      'Get Switch State of',
+      this.device.name,
+      '->',
       button,
       '-> state:',
       currentState,
@@ -716,25 +714,30 @@ export class DingzDaAccessory extends EventEmitter {
     callback: CharacteristicSetCallback,
   ) {
     this.dingzStates.Buttons[button].state = value as ButtonState;
-    this.platform.log.info('Set Switch State ->', button, '-> state:', value);
+    this.platform.log.info(
+      'Set Switch State of',
+      this.device.name,
+      '->',
+      button,
+      '-> state:',
+      value,
+    );
     callback(null);
   }
 
   private updateDeviceState() {
     this.getDeviceState().then((state) => {
       if (typeof state !== 'undefined' && state?.config) {
-        this.dingzStates.Reachable = true;
         // Outputs
         this.dingzStates.Dimmers = state.dimmers;
         this.dingzStates.LED = state.led;
         // Sensors
         this.dingzStates.Temperature = state.sensors.room_temperature;
         this.dingzStates.Brightness = state.sensors.brightness;
-        this.platform.eb.emit(DingzEvent.STATE_UPDATE);
       } else {
-        this.dingzStates.Reachable = false;
         this.platform.log.error('Can`t get device state');
       }
+      this.platform.eb.emit(DingzEvent.STATE_UPDATE);
     });
   }
 
@@ -774,7 +777,7 @@ export class DingzDaAccessory extends EventEmitter {
     // Update State
     this.platform.eb.on(
       DingzEvent.STATE_UPDATE,
-      this.updateDimmerState.bind(this, index, output, newService, id),
+      this.updateDimmerState.bind(this, index, output, newService),
     );
     return newService;
   }
@@ -782,8 +785,7 @@ export class DingzDaAccessory extends EventEmitter {
   private updateDimmerState(
     index: number,
     output: string | undefined,
-    newService: Service,
-    id: string,
+    service: Service,
   ) {
     if (this.dingzStates.Dimmers.length !== 0 && index !== null) {
       //this.platform.log.debug('updateDimmerState Array length: ', ${this.dingzStates.Dimmers.length});
@@ -793,20 +795,13 @@ export class DingzDaAccessory extends EventEmitter {
       if (state) {
         this.platform.log.debug('updateDimmerState: OK');
         if (output && output !== 'non_dimmable') {
-          newService
+          service
             .getCharacteristic(this.platform.Characteristic.Brightness)
             .updateValue(state.value);
         }
-        newService
+        service
           .getCharacteristic(this.platform.Characteristic.On)
           .updateValue(state.on);
-      } else {
-        this.platform.log.warn(
-          'We have an issue here: state should be non-empty but is undefined.',
-          'Continue here, not killing myself anymore.',
-          `For the records, device: ${this.device.address} - id: ${id},  index: ${index} and output is: `,
-          JSON.stringify(this.dingzStates),
-        );
       }
     }
   }
@@ -1113,7 +1108,9 @@ export class DingzDaAccessory extends EventEmitter {
       'WindowCoverings: ',
       JSON.stringify(this.dingzStates.WindowCovers),
     );
-    const tiltAngle: number = this.dingzStates.WindowCovers[id].current.lamella;
+    const currentWindowCover: WindowCoveringPosition = this.dingzStates
+      .WindowCovers[id]?.current;
+    const tiltAngle: number = currentWindowCover?.lamella;
 
     this.platform.log.debug(
       'Get Characteristic for WindowCovering',
@@ -1143,8 +1140,6 @@ export class DingzDaAccessory extends EventEmitter {
       } else {
         positionState = this.platform.Characteristic.PositionState.STOPPED;
       }
-      this.platform.log.debug('WindowCovering Position State:', positionState);
-
       this.platform.log.debug(
         'Get Characteristic for WindowCovering',
         id,
@@ -1175,7 +1170,6 @@ export class DingzDaAccessory extends EventEmitter {
         this.getDeviceMotion()
           .then((data) => {
             if (data?.success) {
-              this.dingzStates.Reachable = true;
               const isMotion: boolean = data.motion;
               // Only update if motionService exists *and* if there's a change in motion'
               if (this.motionService && this.dingzStates.Motion !== isMotion) {
@@ -1188,8 +1182,6 @@ export class DingzDaAccessory extends EventEmitter {
                   .updateValue(isMotion);
               }
             } else {
-              // Not reachable
-              this.dingzStates.Reachable = false;
               throw new DeviceNotReachableError(
                 `Device can not be reached ->
               ${this.device.name}-> ${this.device.address}`,

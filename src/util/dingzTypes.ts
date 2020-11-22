@@ -161,13 +161,13 @@ export type WindowCoveringCalibrationState =
 }
 
 export type WindowCoveringId = 0 | 1;
-export interface WindowCoveringPositon {
+export interface WindowCoveringPosition {
   blind: number;
   lamella: number;
 }
 export interface WindowCoveringState {
-  target: WindowCoveringPositon;
-  current: WindowCoveringPositon;
+  target: WindowCoveringPosition;
+  current: WindowCoveringPosition;
 }
 
 export interface WindowCoveringStates {

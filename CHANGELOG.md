@@ -1,9 +1,55 @@
-# Changelog
-All notable changes to this project will be documented in this file.
+#### 1.8.2 (2020-11-21)
 
-## [Unreleased]
----
-## [Released]
+##### Build System / Dependencies
+
+* **changelog:**  automatically generate changelog ([85f06f22](https://github.com/johannrichard/homebridge-dingz/commit/85f06f22cf4a52a8703435801226f5dc42ce02b1))
+
+##### Other Changes
+
+* **deps:**  bump cockatiel from 1.1.1 to 2.0.0" ([a3dbd0c1](https://github.com/johannrichard/homebridge-dingz/commit/a3dbd0c1765f1c579f922d9a50be11a43dd1925e))
+
+#### 1.8.1 (2020-11-21)
+
+##### Build System / Dependencies
+
+* **deps-dev:**
+  *  add generate-changelog ([40f3c2e4](https://github.com/johannrichard/homebridge-dingz/commit/40f3c2e418abcee009ecb723949e90fd1d85ee7b))
+  *  bump @types/qs from 6.9.4 to 6.9.5 ([36726175](https://github.com/johannrichard/homebridge-dingz/commit/36726175a421ab4800555d76e2f39977908cbdc9))
+  *  bump prettier from 2.1.1 to 2.1.2 ([ef3b4605](https://github.com/johannrichard/homebridge-dingz/commit/ef3b4605658feb64a0b8beeb6080eb548a896814))
+  *  bump prettier from 2.1.1 to 2.1.2 ([148ecba7](https://github.com/johannrichard/homebridge-dingz/commit/148ecba7f00435f1746753d2d62176d83f7190de))
+  *  bump @types/qs from 6.9.4 to 6.9.5 ([75ae3a9c](https://github.com/johannrichard/homebridge-dingz/commit/75ae3a9cbde9646e883d4f314c9fa14909ace6ad))
+* **deps:**
+  *  bump cockatiel from 1.1.1 to 2.0.0 ([16c13f5e](https://github.com/johannrichard/homebridge-dingz/commit/16c13f5e205ba5f775e6f1860674585f1d7bca04))
+  *  bump cockatiel from 1.1.1 to 2.0.0 ([1ba9bdf2](https://github.com/johannrichard/homebridge-dingz/commit/1ba9bdf2941c2ac5feb7dc971f89722d08ecf59d))
+
+##### Bug Fixes
+
+* **dingz:**
+  *  update characteristics ([561d6464](https://github.com/johannrichard/homebridge-dingz/commit/561d64648bc7d17c40d975a44266afec68f9618e))
+  *  make sure we don't schlepp along the reachability service ([fddbfad2](https://github.com/johannrichard/homebridge-dingz/commit/fddbfad2926bfa28bff580da562db6ae6d3e1c4c))
+  *  fix variable name ([f1fae162](https://github.com/johannrichard/homebridge-dingz/commit/f1fae162fa1d5ff2d546362ea7c13bd477749355))
+  *  fix crash for undefined value - also fix the variable name ([1a58cb9f](https://github.com/johannrichard/homebridge-dingz/commit/1a58cb9f6975b72f066106133f5f0e8ac658d637))
+
+##### Other Changes
+
+* **dingz:**  merge pull request [#114](https://github.com/johannrichard/homebridge-dingz/pull/114) from granturism0/develop-granturismo ([67d761e7](https://github.com/johannrichard/homebridge-dingz/commit/67d761e7e1ec323170e830b2f89019c4de241e27))
+
+##### Refactors
+
+* **dingz:**
+  *  better debug logging ([901c051b](https://github.com/johannrichard/homebridge-dingz/commit/901c051b59a3fc37c95543bb2573085394f5147c))
+  *  remove spurious log entry ([758db980](https://github.com/johannrichard/homebridge-dingz/commit/758db980e601faeb4576de5f10114d6db4a55274))
+* **platform:**  simplify event bus listener signature ([8077f36a](https://github.com/johannrichard/homebridge-dingz/commit/8077f36a3e0ce78ae4fcbbd7c357d67de031d5a4))
+
+##### Reverts
+
+* **commit:**  73298a58f2cfbf3dff2a12e146ab1d137b2aac64 ([c6207c8a](https://github.com/johannrichard/homebridge-dingz/commit/c6207c8a28c2a17003f8329df3a93147c82050a4))
+
+##### Code Style Changes
+
+* **code:**  add issue references in fixme/todo ([97264a23](https://github.com/johannrichard/homebridge-dingz/commit/97264a23f90bd3d3d156ccc9423addb8f8f3e665))
+
+
 # [1.8.0](https://github.com/johannrichard/homebridge-dingz/compare/v1.7.1...v1.8.0) (2020-11-14)
 
 
