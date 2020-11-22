@@ -869,7 +869,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
         method: 'POST',
         token: token,
         body: callbackUrl,
-      });
+      }).catch(this.handleError.bind(this));
     });
   }
 
@@ -958,7 +958,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
       url: deviceInfoUrl,
       returnBody: true,
       token,
-    });
+    }).catch(this.handleError.bind(this));
   }
 
   static async fetch({
@@ -990,8 +990,6 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
         return response.status;
       }
     });
-    // FIXME: #103 Error handler at the wrong place
-    // .catch(this.handleError.bind(this));
     return data;
   }
 
