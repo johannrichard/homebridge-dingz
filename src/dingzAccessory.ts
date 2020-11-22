@@ -870,7 +870,6 @@ export class DingzDaAccessory extends EventEmitter {
       : 90;
     service
       .getCharacteristic(this.platform.Characteristic.TargetHorizontalTiltAngle)
-      // FIXME: #124 remove percentage / angle conversion
       .setProps({ minValue: 0, maxValue: maxTiltValue }) // dingz Maximum values
       .on(
         CharacteristicEventTypes.SET,
@@ -933,7 +932,6 @@ export class DingzDaAccessory extends EventEmitter {
         .getCharacteristic(
           this.platform.Characteristic.TargetHorizontalTiltAngle,
         )
-        // FIXME: #124 remove percentage / angle conversion
         .updateValue((state.lamella / 100) * maxTiltValue); // Old FW: Set in °, Get in % (...)
 
       let positionState: number;
