@@ -143,6 +143,9 @@ export class MyStromLightbulbAccessory {
         this.lightbulbService
           .getCharacteristic(this.platform.Characteristic.Brightness)
           .updateValue(this.lightbulbState.value);
+        this.lightbulbService
+          .getCharacteristic(this.platform.Characteristic.On)
+          .updateValue(this.lightbulbState.on);
       })
       .catch((e) => {
         this.platform.log.debug('Error while retrieving Device Report ->', e);
