@@ -12,6 +12,7 @@ import {
   DingzDeviceInfo,
   DingzInputInfoItem,
   DingzDimmerConfig,
+  WindowCoveringConfig,
 } from './dingzTypes';
 import { MyStromDeviceInfo } from './myStromTypes';
 
@@ -44,6 +45,7 @@ export interface DeviceInfo {
   hwInfo?: DingzDeviceInfo | MyStromDeviceInfo;
   dimmerConfig?: DingzDimmerConfig;
   dingzInputInfo?: DingzInputInfoItem[];
+  windowCoveringConfig?: WindowCoveringConfig;
   lastUpdate?: Date;
   accessoryClass?:
     | 'DingzDaAccessory'

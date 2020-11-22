@@ -28,6 +28,9 @@ import {
   DingzLEDState,
   DingzMotionData,
   DingzState,
+  WindowCoveringConfig,
+  WindowCoveringCalibrationState,
+  WindowCoveringType,
   WindowCoveringId,
   WindowCoveringTimer,
   WindowCoveringState,
@@ -151,14 +154,17 @@ export class DingzDaAccessory extends EventEmitter {
 
     // FIXME: Is there a better way to handle errors?
     this.getConfigs()
-      .then(([inputConfig, dimmerConfig]) => {
+      .then(([inputConfig, dimmerConfig, windowCoveringConfig]) => {
         if (
           inputConfig?.inputs &&
           dimmerConfig?.dimmers &&
-          dimmerConfig?.dimmers.length === 4
+          dimmerConfig?.dimmers.length === 4 &&
+          windowCoveringConfig?.blinds &&
+          windowCoveringConfig?.blinds.length === 2
         ) {
           this.device.dingzInputInfo = inputConfig.inputs;
           this.device.dimmerConfig = dimmerConfig;
+          this.device.windowCoveringConfig = windowCoveringConfig;
 
           // Now we have what we need and can create the services …
           this.addOutputServices();
@@ -384,6 +390,8 @@ export class DingzDaAccessory extends EventEmitter {
       .dingzInputInfo;
     const dimmerConfig: DingzDimmerConfig | undefined = this.device
       .dimmerConfig;
+    const windowCoveringConfig: WindowCoveringConfig | undefined = this.device
+      .windowCoveringConfig;
 
     /** DIP Switch
      * 0			M1& M2		(2 blinds)
@@ -454,7 +462,12 @@ export class DingzDaAccessory extends EventEmitter {
         break;
       case 2:
         // DIP = 1: M0, D2, D3;
-        windowCoverServices.push(this.addWindowCoveringService('Blind', 0));
+        windowCoverServices.push(
+          this.addWindowCoveringService(
+            windowCoveringConfig?.blinds[0].name,
+            0,
+          ),
+        );
         // Dimmers are always 0 based
         // i.e. if outputs 1 / 2 are for blinds, outputs 3/4 will be dimmer 0/1
         // We use the "index" value of the dingz to determine what to use
@@ -516,12 +529,27 @@ export class DingzDaAccessory extends EventEmitter {
             }),
           );
         }
-        windowCoverServices.push(this.addWindowCoveringService('Blind', 0));
+        windowCoverServices.push(
+          this.addWindowCoveringService(
+            windowCoveringConfig?.blinds[1].name,
+            0,
+          ),
+        );
         break;
       case 0:
         // DIP = 3: M0, M1;
-        windowCoverServices.push(this.addWindowCoveringService('Blind', 0));
-        windowCoverServices.push(this.addWindowCoveringService('Blind', 1));
+        windowCoverServices.push(
+          this.addWindowCoveringService(
+            windowCoveringConfig?.blinds[0].name,
+            0,
+          ),
+        );
+        windowCoverServices.push(
+          this.addWindowCoveringService(
+            windowCoveringConfig?.blinds[1].name,
+            1,
+          ),
+        );
         break;
       default:
         break;
@@ -752,11 +780,13 @@ export class DingzDaAccessory extends EventEmitter {
     newService: Service,
     id: string,
   ) {
-    if (index !== null) {
+    if (this.dingzStates.Dimmers.length !== 0 && index !== null) {
+      //this.platform.log.debug('updateDimmerState Array length: ', ${this.dingzStates.Dimmers.length});
       // index set
       const state = this.dingzStates.Dimmers[index];
       // Check that "state" is valid
       if (state) {
+        this.platform.log.debug('updateDimmerState: OK');
         if (output && output !== 'non_dimmable') {
           newService
             .getCharacteristic(this.platform.Characteristic.Brightness)
@@ -830,7 +860,7 @@ export class DingzDaAccessory extends EventEmitter {
   }
 
   // Add WindowCovering (Blinds)
-  private addWindowCoveringService(name: string, id?: WindowCoveringId) {
+  private addWindowCoveringService(name?: string, id?: WindowCoveringId) {
     let service: Service;
     if (id) {
       service =
@@ -840,7 +870,7 @@ export class DingzDaAccessory extends EventEmitter {
         ) ??
         this.accessory.addService(
           this.platform.Service.WindowCovering,
-          `${name} B${id}`,
+          `${name}`,
           id.toString(),
         );
     } else {
@@ -861,13 +891,26 @@ export class DingzDaAccessory extends EventEmitter {
 
     // Set min/max Values
     // FIXME: Implement different lamella/blind modes #24
-    service
-      .getCharacteristic(this.platform.Characteristic.TargetHorizontalTiltAngle)
-      //.setProps({ minValue: 0, maxValue: 90 }) // dingz Maximum values
-      .on(
-        CharacteristicEventTypes.SET,
-        this.setTiltAngle.bind(this, id as WindowCoveringId),
-      );
+    if (
+      this.dingzDeviceInfo.fw_version.indexOf('1.1.') === 0 ||
+      this.dingzDeviceInfo.fw_version.indexOf('1.0.') === 0
+    ) {
+      service
+        .getCharacteristic(this.platform.Characteristic.TargetHorizontalTiltAngle)
+        .setProps({ minValue: 0, maxValue: 90}) // dingz Maximum values
+        .on(
+          CharacteristicEventTypes.SET,
+          this.setTiltAngle.bind(this, id as WindowCoveringId),
+        );
+    } else {
+      service
+        .getCharacteristic(this.platform.Characteristic.TargetHorizontalTiltAngle)
+        .setProps({ minValue: 0, maxValue: 100, minStep: 10 }) // dingz Maximum values
+        .on(
+          CharacteristicEventTypes.SET,
+          this.setTiltAngle.bind(this, id as WindowCoveringId),
+        );
+    }
 
     service
       .getCharacteristic(this.platform.Characteristic.CurrentPosition)
@@ -934,7 +977,7 @@ export class DingzDaAccessory extends EventEmitter {
           e.toString(),
         );
       }
-    }, 5000);
+    }, 2000);
 
     if (id && updateInterval) {
       this.windowCoveringTimers[id as number] = updateInterval;
@@ -1176,11 +1219,12 @@ export class DingzDaAccessory extends EventEmitter {
       '-> Check for changed config.',
     );
 
-    this.getConfigs().then(([inputConfig, dimmerConfig]) => {
+    this.getConfigs().then(([inputConfig, dimmerConfig, windowCoveringConfig]) => {
       if (inputConfig?.inputs[0]) {
         this._updatedDeviceInputConfig = inputConfig.inputs[0];
       }
       this.device.dimmerConfig = dimmerConfig;
+      this.device.windowCoveringConfig = windowCoveringConfig;
     });
 
     this.getDingzDeviceInfo().then((deviceInfo) => {
@@ -1261,7 +1305,7 @@ export class DingzDaAccessory extends EventEmitter {
         );
       }
 
-      this.updateDimmerServices();
+      this.updateDimmerBlindServices();
     } finally {
       if (updatedDingzDeviceInfo) {
         this.accessory.context.device.dingzDeviceInfo = updatedDingzDeviceInfo;
@@ -1272,8 +1316,8 @@ export class DingzDaAccessory extends EventEmitter {
     }
   }
 
-  // Updates the Dimemr Services with their correct name
-  private updateDimmerServices() {
+  // Updates the Dimmer Services with their correct name
+  private updateDimmerBlindServices() {
     // Figure out what we have here
     switch (this.dingzDeviceInfo.dip_config) {
       case 3:
@@ -1283,11 +1327,21 @@ export class DingzDaAccessory extends EventEmitter {
         this.setDimmerConfig('D4', 3);
         break;
       case 2:
-      case 1:
+        //this.setWindowCoveringConfig('M1',0);
+        this.setDimmerConfig('D3', 0);
+        this.setDimmerConfig('D4', 1);
+        break;
+        case 1:
         this.setDimmerConfig('D1', 0);
         this.setDimmerConfig('D2', 1);
+        //this.setWindowCoveringConfig('M2',0);
         break;
       case 0:
+        this.platform.log.debug(
+          'UpdateDimmerBlindServices for M1 & M2',
+        );
+        //this.setWindowCoveringConfig('M1', 0);
+        //this.setWindowCoveringConfig('M2', 1);
       default:
         break;
     }
@@ -1320,6 +1374,27 @@ export class DingzDaAccessory extends EventEmitter {
             this.setBrightness.bind(this, index),
           ); // SET - bind to the 'setBrightness` method below
       }
+    }
+  }
+
+  private setWindowCoveringConfig(id: 'M1' | 'M2', index: WindowCoveringId) {
+    const service: Service | undefined = this.accessory.getServiceById(
+      this.platform.Service.WindowCovering,
+      id.toString(),
+    );
+    this.platform.log.debug(
+      'setWindowCoveringConfig'
+    );
+    if (service) {
+      const windowCoveringConfig = this.device.windowCoveringConfig;
+      this.platform.log.debug(
+        'setWindowCoveringConfig for Config ',
+        JSON.stringify(this.dingzStates),
+      );
+      service.setCharacteristic(
+        this.platform.Characteristic.Name,
+        windowCoveringConfig?.blinds[index].name ?? `Motor ${id}`,
+      );
     }
   }
 
@@ -1571,12 +1646,13 @@ export class DingzDaAccessory extends EventEmitter {
     });
   }
 
-  // Get Input & Dimmer Config
-  private async getConfigs(): Promise<[DingzInputConfig, DingzDimmerConfig]> {
+  // Get Input & Dimmer & WindowCovering Config
+  private async getConfigs(): Promise<[DingzInputConfig, DingzDimmerConfig, WindowCoveringConfig]> {
     const getInputConfigUrl = `${this.baseUrl}/api/v1/input_config`;
     const getDimmerConfigUrl = `${this.baseUrl}/api/v1/dimmer_config`;
+    const getBlindConfigUrl = `${this.baseUrl}/api/v1/blind_config`;
 
-    return Promise.all<DingzInputConfig, DingzDimmerConfig>([
+    return Promise.all<DingzInputConfig, DingzDimmerConfig, WindowCoveringConfig>([
       this.platform.fetch({
         url: getInputConfigUrl,
         returnBody: true,
@@ -1584,6 +1660,11 @@ export class DingzDaAccessory extends EventEmitter {
       }),
       this.platform.fetch({
         url: getDimmerConfigUrl,
+        returnBody: true,
+        token: this.device.token,
+      }),
+      this.platform.fetch({
+        url: getBlindConfigUrl,
         returnBody: true,
         token: this.device.token,
       }),

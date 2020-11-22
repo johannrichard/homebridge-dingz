@@ -120,6 +120,45 @@ export interface DingzDimmerConfig {
   ];
 }
 
+export type WindowCoveringCalibrationState =
+  | 'Initialised'
+  | 'Not initialised'
+  | 'Initialising'
+  | 'Unknown';
+
+  export type WindowCoveringType =
+  | 'lamella_90'
+  | 'canvas';
+
+export interface WindowCoveringConfig {
+  blinds: [
+    {
+      auto_calibration: boolean;
+      state: WindowCoveringCalibrationState;
+      invert_direction: boolean;
+      lamella_time: number;
+      shade_up_time: number;
+      shade_down_time: number;
+      type: WindowCoveringType;
+      min_value: number;
+      max_value: number;
+      name: string;
+    },
+    {
+      auto_calibration: boolean;
+      state: WindowCoveringCalibrationState;
+      invert_direction: boolean;
+      lamella_time: number;
+      shade_up_time: number;
+      shade_down_time: number;
+      type: WindowCoveringType;
+      min_value: number;
+      max_value: number;
+      name: string;
+   },
+  ];
+}
+
 export type WindowCoveringId = 0 | 1;
 export interface WindowCoveringPositon {
   blind: number;
