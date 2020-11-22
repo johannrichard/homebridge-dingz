@@ -862,9 +862,9 @@ export class DingzDaAccessory extends EventEmitter {
 
     // Set min/max Values
     // FIXME: Implement different lamella/blind modes #24
-    const maxTiltValue = semver.gt(this.dingzDeviceInfo.fw_version, '1.2.0')
-      ? 100
-      : 90;
+    const maxTiltValue = semver.lt(this.dingzDeviceInfo.fw_version, '1.2.0')
+      ? 90
+      : 100;
     service
       .getCharacteristic(this.platform.Characteristic.TargetHorizontalTiltAngle)
       .setProps({ minValue: 0, maxValue: maxTiltValue }) // dingz Maximum values
@@ -918,9 +918,9 @@ export class DingzDaAccessory extends EventEmitter {
        * - We're moving by pressing the "up/down" buttons in the UI or Hardware [x]
        */
 
-      const maxTiltValue = semver.gt(this.dingzDeviceInfo.fw_version, '1.2.0')
-        ? 100
-        : 90;
+      const maxTiltValue = semver.lt(this.dingzDeviceInfo.fw_version, '1.2.0')
+        ? 90
+        : 100;
 
       service
         .getCharacteristic(this.platform.Characteristic.TargetPosition)
