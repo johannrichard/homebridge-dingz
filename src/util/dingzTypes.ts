@@ -130,7 +130,8 @@ export type WindowCoveringCalibrationState =
   | 'lamella_90'
   | 'canvas';
 
-export interface WindowCoveringConfig {
+  export type WindowCoveringConfigIndex = 0 | 1;
+  export interface WindowCoveringConfig {
   blinds: [
     {
       auto_calibration: boolean;

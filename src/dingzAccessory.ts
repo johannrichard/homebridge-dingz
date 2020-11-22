@@ -28,6 +28,7 @@ import {
   DingzLEDState,
   DingzMotionData,
   DingzState,
+  WindowCoveringConfigIndex,
   WindowCoveringConfig,
   WindowCoveringCalibrationState,
   WindowCoveringType,
@@ -409,7 +410,7 @@ export class DingzDaAccessory extends EventEmitter {
           dimmerConfig?.dimmers[0].output &&
           dimmerConfig?.dimmers[0].output !== 'not_connected'
         ) {
-          // D0
+          // D1
           dimmerServices.push(
             this.addDimmerService({
               name: dimmerConfig?.dimmers[0].name,
@@ -419,7 +420,7 @@ export class DingzDaAccessory extends EventEmitter {
             }),
           );
         }
-        // D1, D2, D3
+        // D2, D3, D4
         if (
           dimmerConfig?.dimmers[1].output &&
           dimmerConfig?.dimmers[1].output !== 'not_connected'
@@ -461,12 +462,13 @@ export class DingzDaAccessory extends EventEmitter {
         }
         break;
       case 2:
-        // DIP = 1: M0, D2, D3;
+        // DIP = 1: M1, D3, D4;
         windowCoverServices.push(
-          this.addWindowCoveringService(
-            windowCoveringConfig?.blinds[0].name,
-            0,
-          ),
+          this.addWindowCoveringService({
+            name: windowCoveringConfig?.blinds[0].name,
+            id: 'M1',
+            index: 0,
+          }),
         );
         // Dimmers are always 0 based
         // i.e. if outputs 1 / 2 are for blinds, outputs 3/4 will be dimmer 0/1
@@ -499,14 +501,14 @@ export class DingzDaAccessory extends EventEmitter {
         }
         break;
       case 1:
-        // DIP = 2: D0, D1, M1; (Unless Input, then D1, M1);
+        // DIP = 2: D1, D2, M2; (Unless Input, then D1, M2);
         if (
           inputConfig &&
           !inputConfig[0].active &&
           dimmerConfig?.dimmers[0].output &&
           dimmerConfig?.dimmers[0].output !== 'not_connected'
         ) {
-          // D0
+          // D1
           dimmerServices.push(
             this.addDimmerService({
               name: dimmerConfig?.dimmers[0].name,
@@ -530,25 +532,28 @@ export class DingzDaAccessory extends EventEmitter {
           );
         }
         windowCoverServices.push(
-          this.addWindowCoveringService(
-            windowCoveringConfig?.blinds[1].name,
-            0,
-          ),
+          this.addWindowCoveringService({
+            name: windowCoveringConfig?.blinds[1].name,
+            id: 'M2',
+            index: 0,
+          }),
         );
         break;
       case 0:
-        // DIP = 3: M0, M1;
+        // DIP = 3: M1, M2;
         windowCoverServices.push(
-          this.addWindowCoveringService(
-            windowCoveringConfig?.blinds[0].name,
-            0,
-          ),
+          this.addWindowCoveringService({
+            name: windowCoveringConfig?.blinds[0].name,
+            id: 'M1',
+            index: 0,
+          }),
         );
         windowCoverServices.push(
-          this.addWindowCoveringService(
-            windowCoveringConfig?.blinds[1].name,
-            1,
-          ),
+          this.addWindowCoveringService({
+            name: windowCoveringConfig?.blinds[1].name,
+            id: 'M2',
+            index: 1,
+          }),
         );
         break;
       default:
@@ -860,24 +865,25 @@ export class DingzDaAccessory extends EventEmitter {
   }
 
   // Add WindowCovering (Blinds)
-  private addWindowCoveringService(name?: string, id?: WindowCoveringId) {
+  private addWindowCoveringService({
+    name,
+    id,
+    index,
+  }: {
+    name?: string;
+    id: 'M1' | 'M2';
+    index: WindowCoveringId;
+  }) {
     let service: Service;
-    if (id) {
-      service =
-        this.accessory.getServiceById(
-          this.platform.Service.WindowCovering,
-          id.toString(),
-        ) ??
-        this.accessory.addService(
-          this.platform.Service.WindowCovering,
-          `${name}`,
-          id.toString(),
-        );
-    } else {
-      service =
-        this.accessory.getService(this.platform.Service.WindowCovering) ??
-        this.accessory.addService(this.platform.Service.WindowCovering, name);
-    }
+    // Service doesn't yet exist, create new one
+    service =
+      this.accessory.getServiceById(this.platform.Service.WindowCovering, id) ??
+      this.accessory.addService(
+        this.platform.Service.WindowCovering,
+        name ?? `Motor ${id}`, // Name Blind according to WebUI, not API info
+        id,
+      );
+ 
     // each service must implement at-minimum the "required characteristics" for the given service type
     // see https://developers.homebridge.io/#/service/Lightbulb
 
@@ -886,7 +892,7 @@ export class DingzDaAccessory extends EventEmitter {
       .getCharacteristic(this.platform.Characteristic.TargetPosition)
       .on(
         CharacteristicEventTypes.SET,
-        this.setPosition.bind(this, id as WindowCoveringId),
+        this.setPosition.bind(this, index as WindowCoveringId),
       );
 
     // Set min/max Values
@@ -900,15 +906,15 @@ export class DingzDaAccessory extends EventEmitter {
         .setProps({ minValue: 0, maxValue: 90}) // dingz Maximum values
         .on(
           CharacteristicEventTypes.SET,
-          this.setTiltAngle.bind(this, id as WindowCoveringId),
+          this.setTiltAngle.bind(this, index as WindowCoveringId),
         );
     } else {
       service
         .getCharacteristic(this.platform.Characteristic.TargetHorizontalTiltAngle)
-        .setProps({ minValue: 0, maxValue: 100, minStep: 10 }) // dingz Maximum values
+        .setProps({ minValue: 0, maxValue: 100, minStep: 10 }) // dingz Maximum values & less steps
         .on(
           CharacteristicEventTypes.SET,
-          this.setTiltAngle.bind(this, id as WindowCoveringId),
+          this.setTiltAngle.bind(this, index as WindowCoveringId),
         );
     }
 
@@ -916,7 +922,7 @@ export class DingzDaAccessory extends EventEmitter {
       .getCharacteristic(this.platform.Characteristic.CurrentPosition)
       .on(
         CharacteristicEventTypes.GET,
-        this.getPosition.bind(this, id as WindowCoveringId),
+        this.getPosition.bind(this, index as WindowCoveringId),
       );
     service
       .getCharacteristic(
@@ -924,21 +930,21 @@ export class DingzDaAccessory extends EventEmitter {
       )
       .on(
         CharacteristicEventTypes.GET,
-        this.getTiltAngle.bind(this, id as WindowCoveringId),
+        this.getTiltAngle.bind(this, index as WindowCoveringId),
       );
     service
       .getCharacteristic(this.platform.Characteristic.PositionState)
       .on(
         CharacteristicEventTypes.GET,
-        this.getPositionState.bind(this, id as WindowCoveringId),
+        this.getPositionState.bind(this, index as WindowCoveringId),
       );
 
     const updateInterval: NodeJS.Timer = setInterval(() => {
       try {
-        this.getWindowCovering(id as WindowCoveringId).then((state) => {
-          if (typeof state !== 'undefined' && typeof id === 'number') {
+        this.getWindowCovering(index as WindowCoveringId).then((state) => {
+          if (typeof state !== 'undefined' && typeof index === 'number') {
             // push the new value to HomeKit
-            this.dingzStates.WindowCovers[id] = state;
+            this.dingzStates.WindowCovers[index] = state;
             service
               .getCharacteristic(this.platform.Characteristic.TargetPosition)
               .updateValue(state.target.blind);
@@ -960,6 +966,8 @@ export class DingzDaAccessory extends EventEmitter {
               'Pushed updated current WindowCovering state of',
               service.getCharacteristic(this.platform.Characteristic.Name)
                 .value,
+              'with index',
+              index,
               'to HomeKit:',
               state,
             );
@@ -980,7 +988,7 @@ export class DingzDaAccessory extends EventEmitter {
     }, 2000);
 
     if (id && updateInterval) {
-      this.windowCoveringTimers[id as number] = updateInterval;
+      this.windowCoveringTimers[index as number] = updateInterval;
     }
 
     // this.platform.eb.on(
@@ -1044,6 +1052,12 @@ export class DingzDaAccessory extends EventEmitter {
       const lamella: number = this.dingzStates.WindowCovers[id].target.lamella;
       this.dingzStates.WindowCovers[id].target.blind = blind;
 
+      this.platform.log.debug(
+        'Set Characteristic TargetPosition on ',
+        id,
+        '->',
+        value,
+      );
       await this.setWindowCovering(id, blind, lamella);
     }
     callback(null);
@@ -1327,21 +1341,21 @@ export class DingzDaAccessory extends EventEmitter {
         this.setDimmerConfig('D4', 3);
         break;
       case 2:
-        //this.setWindowCoveringConfig('M1',0);
+        this.setWindowCoveringConfig('M1', 0);
         this.setDimmerConfig('D3', 0);
         this.setDimmerConfig('D4', 1);
         break;
         case 1:
         this.setDimmerConfig('D1', 0);
         this.setDimmerConfig('D2', 1);
-        //this.setWindowCoveringConfig('M2',0);
+        this.setWindowCoveringConfig('M2', 1);
         break;
       case 0:
         this.platform.log.debug(
           'UpdateDimmerBlindServices for M1 & M2',
         );
-        //this.setWindowCoveringConfig('M1', 0);
-        //this.setWindowCoveringConfig('M2', 1);
+        this.setWindowCoveringConfig('M1', 0);
+        this.setWindowCoveringConfig('M2', 1);
       default:
         break;
     }
@@ -1377,10 +1391,10 @@ export class DingzDaAccessory extends EventEmitter {
     }
   }
 
-  private setWindowCoveringConfig(id: 'M1' | 'M2', index: WindowCoveringId) {
+  private setWindowCoveringConfig(id: 'M1' | 'M2', index: WindowCoveringConfigIndex) {
     const service: Service | undefined = this.accessory.getServiceById(
       this.platform.Service.WindowCovering,
-      id.toString(),
+      id,
     );
     this.platform.log.debug(
       'setWindowCoveringConfig'
@@ -1389,7 +1403,11 @@ export class DingzDaAccessory extends EventEmitter {
       const windowCoveringConfig = this.device.windowCoveringConfig;
       this.platform.log.debug(
         'setWindowCoveringConfig for Config ',
-        JSON.stringify(this.dingzStates),
+        JSON.stringify(windowCoveringConfig),
+      );
+      this.platform.log.debug(
+        'setCharacteristic to Name ',
+        windowCoveringConfig?.blinds[index].name,
       );
       service.setCharacteristic(
         this.platform.Characteristic.Name,

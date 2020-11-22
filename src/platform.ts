@@ -582,71 +582,8 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
   }): boolean {
     // Run a diacovery of changed things every 10 seconds
     this.log.debug(
-      `Add configured/discovered myStrom Button device -> ${name} (${address})`,
+      `Add configured/discovered Button device -> ${name} (${address})`,
     );
-
-    const uuid = this.api.hap.uuid.generate(mac.toUpperCase());
-
-    // check that the device has not already been registered by checking the
-    // cached devices we stored in the `configureAccessory` method above
-    if (!this.accessories[uuid]) {
-      this.log.info('Registering new accessory:', name);
-      // create a new accessory
-      const accessory = new this.api.platformAccessory(name, uuid);
-
-      const deviceInfo: DeviceInfo = {
-        name: name,
-        address: address,
-        mac: mac?.toUpperCase(),
-        token: token,
-        model: '104',
-        accessoryClass: 'MyStromButtonAccessory',
-      };
-      // store a copy of the device object in the `accessory.context`
-      // the `context` property can be used to store any data about the accessory you may need
-      accessory.context.device = deviceInfo;
-
-      // create the accessory handler (which will add services as needed)
-      // this is imported from `dingzDaAccessory.ts`
-      const myStromButtonAccessory = new MyStromButtonAccessory(
-        this,
-        accessory,
-      );
-
-      // link the accessory to your platform
-      this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [
-        accessory,
-      ]);
-
-      // push into accessory cache
-      this.accessories[uuid] = myStromButtonAccessory;
-
-      // Buttons can be initialized without fetching all Info -- however it would be good to fetch it anyway
-      this.getMyStromDeviceInfo({
-        address,
-        token,
-      }).then((data) => {
-        if (typeof data !== 'undefined') {
-          const info = data as MyStromDeviceInfo;
-
-          if (info.type !== 104) {
-            throw new InvalidTypeError(
-              `Device ${name} at ${address} is of the wrong type (${info.type} instead of "myStrom Button")`,
-            );
-          }
-          accessory.context.device.hwInfo = info;
-        }
-      });
-
-      return true;
-    } else {
-      this.log.warn('Accessory already initialized');
-      this.accessories[uuid].identify();
-      return true;
-    }
-
-    return false;
-    // Won't work ...
     const success = this.getMyStromDeviceInfo({
       address,
       token,
@@ -654,6 +591,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
       if (typeof data !== 'undefined') {
         const info = data as MyStromDeviceInfo;
 
+        // Need this to identify the right type
         if (info.type !== 104) {
           throw new InvalidTypeError(
             `Device ${name} at ${address} is of the wrong type (${info.type} instead of "myStrom Lightbulb")`,
@@ -663,11 +601,12 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
         const deviceInfo: DeviceInfo = {
           name: info.name ?? name,
           address: address,
-          mac: info.mac.toUpperCase(),
+          mac: mac?.toUpperCase(),
+          //mac: info.mac.toUpperCase(),
           token: token,
-          model: '102',
+          model: '104',
           hwInfo: info,
-          accessoryClass: 'MyStromLightbulbAccessory',
+          accessoryClass: 'MyStromButtonAccessory',
         };
 
         const uuid = this.api.hap.uuid.generate(deviceInfo.mac);
@@ -688,10 +627,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
 
           // create the accessory handler (which will add services as needed)
           // this is imported from `dingzDaAccessory.ts`
-          const myStromLightbulbAccessory = new MyStromLightbulbAccessory(
-            this,
-            accessory,
-          );
+          const myStromButtonAccessory = new MyStromButtonAccessory(this, accessory);
 
           // link the accessory to your platform
           this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [
@@ -699,7 +635,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
           ]);
 
           // push into accessory cache
-          this.accessories[uuid] = myStromLightbulbAccessory;
+          this.accessories[uuid] = myStromButtonAccessory;
           return true;
         } else {
           this.log.warn('Accessory already initialized');
