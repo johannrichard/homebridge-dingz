@@ -57,27 +57,24 @@ export class MyStromPIRAccessory {
     );
     this.accessory
       .getService(this.platform.Service.AccessoryInformation)!
-      .updateCharacteristic(
+      .setCharacteristic(
         this.platform.Characteristic.Manufacturer,
         'MyStrom AG',
       )
-      .updateCharacteristic(
+      .setCharacteristic(
         this.platform.Characteristic.AppMatchingIdentifier,
         'ch.mystrom.iOSApp',
       )
-      .updateCharacteristic(
+      .setCharacteristic(
         this.platform.Characteristic.Model,
         this.device.model as string,
       )
-      .updateCharacteristic(
-        this.platform.Characteristic.FirmwareRevision,
-        'N/A',
-      )
-      .updateCharacteristic(
+      .setCharacteristic(this.platform.Characteristic.FirmwareRevision, 'N/A')
+      .setCharacteristic(
         this.platform.Characteristic.HardwareRevision,
         'PQWBB1',
       )
-      .updateCharacteristic(
+      .setCharacteristic(
         this.platform.Characteristic.SerialNumber,
         this.device.mac,
       );
@@ -89,7 +86,7 @@ export class MyStromPIRAccessory {
     this.temperatureService =
       this.accessory.getService(this.platform.Service.TemperatureSensor) ??
       this.accessory.addService(this.platform.Service.TemperatureSensor);
-    this.temperatureService.updateCharacteristic(
+    this.temperatureService.setCharacteristic(
       this.platform.Characteristic.Name,
       'Temperature',
     );
@@ -151,7 +148,7 @@ export class MyStromPIRAccessory {
 
           this.platform.log.debug('Motion Update from PUSH');
           this.pirState.motion = isMotion;
-          this.motionService.updateCharacteristic(
+          this.motionService.setCharacteristic(
             this.platform.Characteristic.MotionDetected,
             this.pirState.motion,
           );

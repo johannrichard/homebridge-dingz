@@ -48,27 +48,27 @@ export class MyStromSwitchAccessory {
     );
     this.accessory
       .getService(this.platform.Service.AccessoryInformation)!
-      .updateCharacteristic(
+      .setCharacteristic(
         this.platform.Characteristic.Manufacturer,
         'MyStrom AG',
       )
-      .updateCharacteristic(
+      .setCharacteristic(
         this.platform.Characteristic.AppMatchingIdentifier,
         'ch.mystrom.iOSApp',
       )
-      .updateCharacteristic(
+      .setCharacteristic(
         this.platform.Characteristic.Model,
         this.device.model as string,
       )
-      .updateCharacteristic(
+      .setCharacteristic(
         this.platform.Characteristic.FirmwareRevision,
         this.mystromDeviceInfo.version ?? 'N/A',
       )
-      .updateCharacteristic(
+      .setCharacteristic(
         this.platform.Characteristic.HardwareRevision,
         this.mystromDeviceInfo ? 'EU/CH v2' : 'CH v1',
       )
-      .updateCharacteristic(
+      .setCharacteristic(
         this.platform.Characteristic.SerialNumber,
         this.device.mac,
       );
@@ -77,7 +77,7 @@ export class MyStromSwitchAccessory {
       this.accessory.getService(this.platform.Service.Outlet) ??
       this.accessory.addService(this.platform.Service.Outlet);
 
-    this.outletService.updateCharacteristic(
+    this.outletService.setCharacteristic(
       this.platform.Characteristic.Name,
       this.device.name ?? `${accessory.context.device.model} Outlet`,
     );

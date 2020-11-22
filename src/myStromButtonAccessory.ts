@@ -48,27 +48,24 @@ export class MyStromButtonAccessory {
     );
     this.accessory
       .getService(this.platform.Service.AccessoryInformation)!
-      .updateCharacteristic(
+      .setCharacteristic(
         this.platform.Characteristic.Manufacturer,
         'MyStrom AG',
       )
-      .updateCharacteristic(
+      .setCharacteristic(
         this.platform.Characteristic.AppMatchingIdentifier,
         'ch.mystrom.iOSApp',
       )
-      .updateCharacteristic(
+      .setCharacteristic(
         this.platform.Characteristic.Model,
         this.device.model as string,
       )
-      .updateCharacteristic(
-        this.platform.Characteristic.FirmwareRevision,
-        'N/A',
-      )
-      .updateCharacteristic(
+      .setCharacteristic(this.platform.Characteristic.FirmwareRevision, 'N/A')
+      .setCharacteristic(
         this.platform.Characteristic.HardwareRevision,
         'PQWBB1',
       )
-      .updateCharacteristic(
+      .setCharacteristic(
         this.platform.Characteristic.SerialNumber,
         this.device.mac,
       );
@@ -87,7 +84,7 @@ export class MyStromButtonAccessory {
         this.platform.Service.StatelessProgrammableSwitch,
       );
 
-    buttonService.updateCharacteristic(
+    buttonService.setCharacteristic(
       this.platform.Characteristic.Name,
       this.device.name ?? `${accessory.context.device.model}`,
     );

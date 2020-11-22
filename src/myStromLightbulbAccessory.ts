@@ -53,23 +53,23 @@ export class MyStromLightbulbAccessory {
     );
     this.accessory
       .getService(this.platform.Service.AccessoryInformation)!
-      .updateCharacteristic(
+      .setCharacteristic(
         this.platform.Characteristic.Manufacturer,
         'MyStrom AG',
       )
-      .updateCharacteristic(
+      .setCharacteristic(
         this.platform.Characteristic.AppMatchingIdentifier,
         'ch.mystrom.iOSApp',
       )
-      .updateCharacteristic(
+      .setCharacteristic(
         this.platform.Characteristic.Model,
         this.device.model as string,
       )
-      .updateCharacteristic(
+      .setCharacteristic(
         this.platform.Characteristic.FirmwareRevision,
         this.mystromDeviceInfo.version ?? 'N/A',
       )
-      .updateCharacteristic(
+      .setCharacteristic(
         this.platform.Characteristic.SerialNumber,
         this.device.mac,
       );
@@ -78,7 +78,7 @@ export class MyStromLightbulbAccessory {
       this.accessory.getService(this.platform.Service.Lightbulb) ??
       this.accessory.addService(this.platform.Service.Lightbulb);
 
-    this.lightbulbService.updateCharacteristic(
+    this.lightbulbService.setCharacteristic(
       this.platform.Characteristic.Name,
       this.device.name ?? `${accessory.context.device.model} Bulb`,
     );

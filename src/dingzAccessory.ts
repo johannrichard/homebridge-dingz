@@ -258,33 +258,30 @@ export class DingzDaAccessory extends EventEmitter {
         : this.dingzDeviceInfo.front_sn;
     this.accessory
       .getService(this.platform.Service.AccessoryInformation)!
-      .updateCharacteristic(
-        this.platform.Characteristic.Manufacturer,
-        'iolo AG',
-      )
-      .updateCharacteristic(
+      .setCharacteristic(this.platform.Characteristic.Manufacturer, 'iolo AG')
+      .setCharacteristic(
         this.platform.Characteristic.AppMatchingIdentifier,
         'ch.iolo.dingz.consumer',
       )
       // Update info from deviceInfo
-      .updateCharacteristic(
+      .setCharacteristic(
         this.platform.Characteristic.ConfiguredName,
         this.device.name,
       )
-      .updateCharacteristic(this.platform.Characteristic.Name, this.device.name)
-      .updateCharacteristic(
+      .setCharacteristic(this.platform.Characteristic.Name, this.device.name)
+      .setCharacteristic(
         this.platform.Characteristic.Model,
         this.device.model as string,
       )
-      .updateCharacteristic(
+      .setCharacteristic(
         this.platform.Characteristic.FirmwareRevision,
         this.dingzDeviceInfo.fw_version ?? 'Unknown',
       )
-      .updateCharacteristic(
+      .setCharacteristic(
         this.platform.Characteristic.HardwareRevision,
         this.dingzDeviceInfo.hw_version_puck ?? 'Unknown',
       )
-      .updateCharacteristic(
+      .setCharacteristic(
         this.platform.Characteristic.SerialNumber,
         serialNumber,
       );
@@ -1164,10 +1161,10 @@ export class DingzDaAccessory extends EventEmitter {
       token: this.device.token,
     })
       .then(({ inputConfig, dimmerConfig }) => {
-      if (inputConfig?.inputs[0]) {
-        this._updatedDeviceInputConfig = inputConfig.inputs[0];
-      }
-      this.device.dimmerConfig = dimmerConfig;
+        if (inputConfig?.inputs[0]) {
+          this._updatedDeviceInputConfig = inputConfig.inputs[0];
+        }
+        this.device.dimmerConfig = dimmerConfig;
       })
       .catch(this.handleError.bind(this));
 
@@ -1343,8 +1340,6 @@ export class DingzDaAccessory extends EventEmitter {
       .on(CharacteristicEventTypes.SET, this.setLEDSaturation.bind(this)); // SET - bind to the 'setBrightness` method below
 
     this.services.push(ledService);
-    // Here we change update the brightness to a random value every 5 seconds using
-    // the `updateCharacteristic` method.
     this.platform.eb.on(
       DingzEvent.PUSH_STATE_UPDATE,
       this.updateLEDState.bind(this, ledService),
@@ -1661,4 +1656,17 @@ export class DingzDaAccessory extends EventEmitter {
       token: this.device.token,
     });
   }
+
+  private handleError = (error: AxiosError) => {
+    if (error.response) {
+      this.platform.log.error('HTTP Response Error ->' + error.config.url);
+      this.platform.log.error(error.message);
+      this.platform.log.error(error.response.data);
+      this.platform.log.error(error.response.status.toString());
+      this.platform.log.error(error.response.headers);
+    } else {
+      this.platform.log.error('HTTP Response Error ->' + error.config.url);
+      this.platform.log.error(error.message);
+    }
+  };
 }
