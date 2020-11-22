@@ -299,7 +299,6 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
             this.log.warn('Accessory already initialized');
 
             // Update Names et al. from new device info
-            this.eb.emit(DingzEvent.UPDATE_DEVICE_INFO, deviceInfo);
             this.accessories[uuid].identify();
             return true;
           }
@@ -953,6 +952,8 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
     token?: string;
     endpoint?: 'api/v1/info' | 'info';
   }): Promise<MyStromDeviceInfo> {
+    this.log.debug('Fetching myStrom Device Info:', address);
+
     const deviceInfoUrl = `http://${address}/${endpoint}`;
     return await DingzDaHomebridgePlatform.fetch({
       url: deviceInfoUrl,

@@ -113,27 +113,6 @@ export class DingzDaAccessory extends EventEmitter {
     this.dingzDeviceInfo = this.device.hwInfo as DingzDeviceInfo;
     this.baseUrl = `http://${this.device.address}`;
 
-    this.setAccessoryInformation();
-
-    // Register listener for updated device info (e.g. on restore)
-    this.platform.eb.on(
-      DingzEvent.UPDATE_DEVICE_INFO,
-      (deviceInfo: DeviceInfo) => {
-        if (deviceInfo.mac === this.device.mac) {
-          this.platform.log.debug(
-            'Updated device info received -> update accessory',
-          );
-
-          // Persist updated info
-          this.device = deviceInfo;
-          this.accessory.context.device = deviceInfo;
-          this.dingzDeviceInfo = this.device.hwInfo as DingzDeviceInfo;
-          this.baseUrl = `http://${this.device.address}`;
-          this.setAccessoryInformation();
-        }
-      },
-    );
-
     // Remove Reachability service if still present
     const bridgingService: Service | undefined = this.accessory.getService(
       this.platform.Service.BridgingState,
@@ -159,7 +138,7 @@ export class DingzDaAccessory extends EventEmitter {
       address: this.device.address,
       token: this.device.token,
     })
-      .then(({ dingzDevices, systemConfig, inputConfig, dimmerConfig }) => {
+      .then(({ dingzDevices, inputConfig, dimmerConfig }) => {
         if (
           inputConfig?.inputs &&
           dimmerConfig?.dimmers &&
@@ -168,81 +147,64 @@ export class DingzDaAccessory extends EventEmitter {
           this.device.dingzInputInfo = inputConfig.inputs;
           this.device.dimmerConfig = dimmerConfig;
 
+          if (dingzDevices[this.device.mac]) {
+            this.platform.log.debug(
+              'Updated device info received -> update accessory',
+              dingzDevices[this.device.mac],
+            );
+
+            // Persist updated info
+            this.device.hwInfo = dingzDevices[this.device.mac];
+            this.accessory.context.device = this.device;
+            this.dingzDeviceInfo = this.device.hwInfo as DingzDeviceInfo;
+            this.baseUrl = `http://${this.device.address}`;
+            this.setAccessoryInformation();
+          }
+          this.setAccessoryInformation();
+          this.setButtonCallbacks();
+
           // Now we have what we need and can create the services …
           this.addOutputServices();
+
           this.platform.eb.on(
             DingzEvent.REQUEST_STATE_UPDATE,
             this.getDeviceStateUpdate.bind(this),
           );
-        }
-      }) // FIXME: Don't chain this way, improve error handling
-      .then(() => {
-        /**
-         * Add auxiliary services (Motion, Temperature)
-         */
-        if (this.dingzDeviceInfo.has_pir) {
-          // dingz has a Motion sensor -- let's create it
-          this.addMotionService();
-        } else {
-          this.platform.log.info(
-            'Your dingz',
-            this.accessory.displayName,
-            'has no Motion sensor.',
-          );
-        }
-        // dingz has a temperature sensor and an LED,
-        // make these available here
-        this.addTemperatureService();
-        this.addLEDService();
-        this.addLightSensorService();
-        this.addButtonServices();
 
-        this.services.forEach((service) => {
-          this.platform.log.info(
-            'Service created ->',
-            service.getCharacteristic(this.platform.Characteristic.Name).value,
-          );
-        });
-
-        // Only necessary for firmware version < 1.2.x
-        if (
-          this.dingzDeviceInfo.fw_version.indexOf('1.1.') === 0 ||
-          this.dingzDeviceInfo.fw_version.indexOf('1.0.') === 0
-        ) {
-          this.platform.log.debug(
-            'Enable PIR callback for older firmware revisions',
-          );
-          this.enablePIRCallback();
-        }
-        this.getButtonCallbackUrl().then((callBackUrl) => {
-          if (!callBackUrl?.url.includes(this.platform.getCallbackUrl())) {
-            this.platform.log.warn(
-              'Update existing callback URL ->',
-              callBackUrl,
-            );
-            // Set the callback URL (Override!)
-            const endpoints = this.dingzDeviceInfo.has_pir
-              ? ['generic', 'pir/single']
-              : ['generic'];
-            this.platform.setButtonCallbackUrl({
-              baseUrl: this.baseUrl,
-              token: this.device.token,
-              oldUrl: callBackUrl.url,
-              endpoints: endpoints,
-            });
+          /**
+           * Add auxiliary services (Motion, Temperature)
+           */
+          if (this.dingzDeviceInfo.has_pir) {
+            // dingz has a Motion sensor -- let's create it
+            this.addMotionService();
           } else {
-            this.platform.log.debug(
-              'Callback URL already set ->',
-              callBackUrl?.url,
+            this.platform.log.info(
+              'Your dingz',
+              this.accessory.displayName,
+              'has no Motion sensor.',
             );
           }
-        });
+          // dingz has a temperature sensor and an LED,
+          // make these available here
+          this.addTemperatureService();
+          this.addLEDService();
+          this.addLightSensorService();
+          this.addButtonServices();
 
-        // Retry at least once every day
-        retrySlow.execute(() => {
-          this.updateAccessory();
-          return true;
-        });
+          this.services.forEach((service) => {
+            this.platform.log.info(
+              'Service created ->',
+              service.getCharacteristic(this.platform.Characteristic.Name)
+                .value,
+            );
+          });
+
+          // Retry at least once every day
+          retrySlow.execute(() => {
+            this.updateAccessory();
+            return true;
+          });
+        }
       })
       .catch(this.handleFetchError.bind(this));
   }
@@ -285,6 +247,40 @@ export class DingzDaAccessory extends EventEmitter {
         this.platform.Characteristic.SerialNumber,
         serialNumber,
       );
+  }
+
+  private setButtonCallbacks() {
+    // Only necessary for firmware version < 1.2.x
+    if (
+      this.dingzDeviceInfo.fw_version.indexOf('1.1.') === 0 ||
+      this.dingzDeviceInfo.fw_version.indexOf('1.0.') === 0
+    ) {
+      this.platform.log.debug(
+        'Enable PIR callback for older firmware revisions',
+      );
+      this.enablePIRCallback();
+    }
+
+    this.getButtonCallbackUrl().then((callBackUrl) => {
+      if (!callBackUrl?.url.includes(this.platform.getCallbackUrl())) {
+        this.platform.log.warn('Update existing callback URL ->', callBackUrl);
+        // Set the callback URL (Override!)
+        const endpoints = this.dingzDeviceInfo.has_pir
+          ? ['generic', 'pir/single']
+          : ['generic'];
+        this.platform.setButtonCallbackUrl({
+          baseUrl: this.baseUrl,
+          token: this.device.token,
+          oldUrl: callBackUrl.url,
+          endpoints: endpoints,
+        });
+      } else {
+        this.platform.log.debug(
+          'Callback URL already set ->',
+          callBackUrl?.url,
+        );
+      }
+    });
   }
 
   // Get updated device info and update the corresponding values
