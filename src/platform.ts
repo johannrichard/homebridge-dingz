@@ -628,8 +628,9 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
           // create the accessory handler (which will add services as needed)
           // this is imported from `dingzDaAccessory.ts`
           const myStromButtonAccessory = new MyStromButtonAccessory(
-            this, accessory,
-            );
+            this,
+            accessory,
+          );
 
           // link the accessory to your platform
           this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [

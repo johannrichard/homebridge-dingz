@@ -928,7 +928,7 @@ export class DingzDaAccessory extends EventEmitter {
         CharacteristicEventTypes.GET,
         this.getTiltAngle.bind(this, index as WindowCoveringId),
       );
-     newService
+    newService
       .getCharacteristic(this.platform.Characteristic.PositionState)
       .on(
         CharacteristicEventTypes.GET,
@@ -1386,8 +1386,9 @@ export class DingzDaAccessory extends EventEmitter {
   }
 
   private setWindowCoveringConfig(
-    id: 'M1' | 'M2', index: WindowCoveringConfigIndex,
-    ) {
+    id: 'M1' | 'M2',
+    index: WindowCoveringConfigIndex,
+  ) {
     const service: Service | undefined = this.accessory.getServiceById(
       this.platform.Service.WindowCovering,
       id,
@@ -1660,14 +1661,16 @@ export class DingzDaAccessory extends EventEmitter {
 
   // Get Input & Dimmer & WindowCovering Config
   private async getConfigs(): Promise<
-  [DingzInputConfig, DingzDimmerConfig, WindowCoveringConfig]
+    [DingzInputConfig, DingzDimmerConfig, WindowCoveringConfig]
   > {
     const getInputConfigUrl = `${this.baseUrl}/api/v1/input_config`;
     const getDimmerConfigUrl = `${this.baseUrl}/api/v1/dimmer_config`;
     const getBlindConfigUrl = `${this.baseUrl}/api/v1/blind_config`;
 
     return Promise.all<
-    DingzInputConfig, DingzDimmerConfig, WindowCoveringConfig
+      DingzInputConfig,
+      DingzDimmerConfig,
+      WindowCoveringConfig
     >([
       this.platform.fetch({
         url: getInputConfigUrl,
