@@ -13,20 +13,7 @@ on:
     types: publish-nightly
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
-        with:
-          node-version: 12
-      - run: npm ci
-      - run: npm run lint 
-      - run: npm run build
-#      - run: npm test
-
   publish-npm:
-    needs: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -34,9 +21,9 @@ jobs:
         with:
           node-version: 12
           registry-url: https://registry.npmjs.org/
-      - run: npm ci
-      - run: npm run lint
-      - run: npm run build
-      - run: npm publish --tag nightly
+      - run: yarn
+      - run: yarn run lint
+      - run: yarn run build
+      - run: yarn publish --tag nightly
         env:
-          NODE_AUTH_TOKEN: ${{secrets.npm_token}}
+          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
