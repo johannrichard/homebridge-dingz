@@ -57,24 +57,27 @@ export class MyStromPIRAccessory {
     );
     this.accessory
       .getService(this.platform.Service.AccessoryInformation)!
-      .setCharacteristic(
+      .updateCharacteristic(
         this.platform.Characteristic.Manufacturer,
         'MyStrom AG',
       )
-      .setCharacteristic(
+      .updateCharacteristic(
         this.platform.Characteristic.AppMatchingIdentifier,
         'ch.mystrom.iOSApp',
       )
-      .setCharacteristic(
+      .updateCharacteristic(
         this.platform.Characteristic.Model,
         this.device.model as string,
       )
-      .setCharacteristic(this.platform.Characteristic.FirmwareRevision, 'N/A')
-      .setCharacteristic(
+      .updateCharacteristic(
+        this.platform.Characteristic.FirmwareRevision,
+        'N/A',
+      )
+      .updateCharacteristic(
         this.platform.Characteristic.HardwareRevision,
         'PQWBB1',
       )
-      .setCharacteristic(
+      .updateCharacteristic(
         this.platform.Characteristic.SerialNumber,
         this.device.mac,
       );
@@ -86,7 +89,7 @@ export class MyStromPIRAccessory {
     this.temperatureService =
       this.accessory.getService(this.platform.Service.TemperatureSensor) ??
       this.accessory.addService(this.platform.Service.TemperatureSensor);
-    this.temperatureService.setCharacteristic(
+    this.temperatureService.updateCharacteristic(
       this.platform.Characteristic.Name,
       'Temperature',
     );

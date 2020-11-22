@@ -115,20 +115,17 @@ export class MyStromSwitchAccessory {
           // push the new value to HomeKit
           this.outletState = report;
           this.outletService
-            .updateCharacteristic(
-              this.platform.Characteristic.On,
-              this.outletState.relay,
-            )
-            .updateCharacteristic(
-              this.platform.Characteristic.OutletInUse,
-              this.outletState.power > 0,
-            );
+          .getCharacteristic(this.platform.Characteristic.On)
+          .updateValue(this.outletState.relay);
+
+        this.outletService
+          .getCharacteristic(this.platform.Characteristic.OutletInUse)
+          .updateValue(this.outletState.power > 0);
 
           if (this.temperatureService) {
-            this.temperatureService.updateCharacteristic(
-              this.platform.Characteristic.CurrentTemperature,
-              this.outletState.temperature,
-            );
+          this.temperatureService
+            .getCharacteristic(this.platform.Characteristic.CurrentTemperature)
+            .updateValue(this.outletState.temperature);
           }
         })
         .catch((e) => {

@@ -129,13 +129,13 @@ export class MyStromLightbulbAccessory {
 
           this.lightbulbService
             .getCharacteristic(this.platform.Characteristic.Hue)
-            .setValue(this.lightbulbState.hue);
+          .updateValue(this.lightbulbState.hue);
           this.lightbulbService
             .getCharacteristic(this.platform.Characteristic.Saturation)
-            .setValue(this.lightbulbState.saturation);
+          .updateValue(this.lightbulbState.saturation);
           this.lightbulbService
             .getCharacteristic(this.platform.Characteristic.Brightness)
-            .setValue(this.lightbulbState.value);
+          .updateValue(this.lightbulbState.value);
         })
         .catch((e) => {
           this.platform.log.debug('Error while retrieving Device Report ->', e);
