@@ -1451,6 +1451,25 @@ export class DingzDaAccessory extends EventEmitter {
     throw new Error('dingz Device update failed -> Empty data.');
   }
 
+  // Get Input & Dimmer Config
+  private async getConfigs(): Promise<[DingzInputConfig, DingzDimmerConfig]> {
+    const getInputConfigUrl = `${this.baseUrl}/api/v1/input_config`;
+    const getDimmerConfigUrl = `${this.baseUrl}/api/v1/dimmer_config`;
+
+    return Promise.all<DingzInputConfig, DingzDimmerConfig>([
+      this.platform.fetch({
+        url: getInputConfigUrl,
+        returnBody: true,
+        token: this.device.token,
+      }),
+      this.platform.fetch({
+        url: getDimmerConfigUrl,
+        returnBody: true,
+        token: this.device.token,
+      }),
+    ]);
+  }
+
   private async getDeviceMotion(): Promise<DingzMotionData> {
     const getMotionUrl = `${this.baseUrl}/api/v1/motion`;
     const release = await this.mutex.acquire();
@@ -1551,25 +1570,9 @@ export class DingzDaAccessory extends EventEmitter {
     });
   }
 
-  // Get Input & Dimmer Config
-  private async getConfigs(): Promise<[DingzInputConfig, DingzDimmerConfig]> {
-    const getInputConfigUrl = `${this.baseUrl}/api/v1/input_config`;
-    const getDimmerConfigUrl = `${this.baseUrl}/api/v1/dimmer_config`;
-
-    return Promise.all<DingzInputConfig, DingzDimmerConfig>([
-      this.platform.fetch({
-        url: getInputConfigUrl,
-        returnBody: true,
-        token: this.device.token,
-      }),
-      this.platform.fetch({
-        url: getDimmerConfigUrl,
-        returnBody: true,
-        token: this.device.token,
-      }),
-    ]);
-  }
-
+  // Get the current state
+  // This function is called regularly and contains all necessary
+  // information for an update of all sensors and states
   private async getDeviceState(): Promise<DingzState> {
     const getDeviceStateUrl = `${this.baseUrl}/api/v1/state`;
     const release = await this.mutex.acquire();
