@@ -1146,11 +1146,11 @@ export class DingzDaAccessory extends EventEmitter {
     }
   }
 
-  // FIXME: refactor dingz.updateAccessory #103
+  // FIXME: [FIX] refactor dingz.updateAccessory #103
   // Updates the Accessory (e.g. if the config has changed)
   private async updateAccessory(): Promise<void> {
     this.platform.log.info(
-      'Update accessory ',
+      'Update accessory',
       this.device.address,
       '-> Check for changed config.',
     );
