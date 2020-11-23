@@ -706,10 +706,10 @@ clone-response@^1.0.2:
   dependencies:
     mimic-response "^1.0.0"
 
-cockatiel@^1.1.1:
-  version "1.1.1"
-  resolved "https://registry.yarnpkg.com/cockatiel/-/cockatiel-1.1.1.tgz#851fcee67df9a824c7946cb0927c9351b552d26b"
-  integrity sha512-YO02ZhTcK2HOZodksWfg4tS1GYYt1j7R6U1unAkwcQf1uoIYKSBqPrfqXlLNbsyMvkDXMwa2nuwZDHbUkB1VbQ==
+cockatiel@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/cockatiel/-/cockatiel-2.0.0.tgz#8eb1479ad0c76e6f15ff0e12d6f60192a1c8aa7a"
+  integrity sha512-zEobgx9f8RGBpPAuR8/z0nXJCuz7lrk3KcbUNEo0QxE/5/EM3fvk9LoL+Egm2CmMwFONlQyOKYbXMDwY+sXKXw==
 
 color-convert@^1.9.0:
   version "1.9.3"
