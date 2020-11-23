@@ -768,7 +768,7 @@ export class DingzDaAccessory extends EventEmitter {
         if (output && output !== 'non_dimmable') {
           service
             .getCharacteristic(this.platform.Characteristic.Brightness)
-            .updateValue(state.value);
+            .updateValue(state.output);
         }
         service
           .getCharacteristic(this.platform.Characteristic.On)
@@ -823,7 +823,7 @@ export class DingzDaAccessory extends EventEmitter {
     callback: CharacteristicSetCallback,
   ) {
     const isOn: boolean = value > 0 ? true : false;
-    this.dingzStates.Dimmers[index].value = value as number;
+    this.dingzStates.Dimmers[index].output = value as number;
     this.dingzStates.Dimmers[index].on = isOn;
 
     await this.setDeviceDimmer(index, isOn, value as number);

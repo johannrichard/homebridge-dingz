@@ -69,7 +69,7 @@ export enum ButtonState {
 // Representation of dimmer in Dingz
 export interface DimmerState {
   on: boolean;
-  value: number;
+  output: number;
   ramp: number;
   disabled: boolean;
   index?: {
