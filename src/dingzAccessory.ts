@@ -948,7 +948,7 @@ export class DingzDaAccessory extends EventEmitter {
             .getCharacteristic(
               this.platform.Characteristic.CurrentHorizontalTiltAngle,
             )
-            .updateValue((state.lamella / 100) * 90); // Set in °, Get in % (...)
+            .updateValue((state.lamella / 100) * maxTiltValue); // Set in °, Get in % (...)
           break;
       }
       service
