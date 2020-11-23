@@ -2897,9 +2897,9 @@ signal-exit@^3.0.2:
   integrity sha512-VUJ49FC8U1OxwZLxIbTTrDvLnf/6TDgxZcK8wxR8zs13xpx7xbG60ndBlhNrFi2EMuFRoeDoJO7wthSLq42EjA==
 
 simple-color-converter@^2.1.5:
-  version "2.1.9"
-  resolved "https://registry.yarnpkg.com/simple-color-converter/-/simple-color-converter-2.1.9.tgz#c922b06eea462494be633e27245283f38e2c26ee"
-  integrity sha512-Xm5TUJzqLDHN+Agi1ueFZugCCUXPGMu/cVJLvjAnlWJeyIjApvc8LhN4VcQkboQrPOk113gw9baG8gpQ7D+YUw==
+  version "2.1.10"
+  resolved "https://registry.yarnpkg.com/simple-color-converter/-/simple-color-converter-2.1.10.tgz#931d3a8e04c29c375e7a13667f666722a30d9d53"
+  integrity sha512-yfIKEEZW284RI1TM27nglA0jGTHb2nw8p9pjfbzEU+fULiNnXoVEQa+zg5o9fepivVCrFX24q9uuaTx87e5+wg==
   dependencies:
     color_library "0.0.2"
 
