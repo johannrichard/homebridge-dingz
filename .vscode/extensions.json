@@ -1,5 +1,8 @@
 {
   "recommendations": [
-    "dbaeumer.vscode-eslint", "esbenp.prettier-vscode"
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "axetroy.vscode-changelog-generator",
+    "github.vscode-pull-request-github"
   ]
 }
