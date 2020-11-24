@@ -122,10 +122,33 @@ export class DingzDaAccessory extends EventEmitter {
       this.accessory.removeService(bridgingService);
     }
 
-    /****
-     * How to discover Accessories:
-     * - Check for UDP Packets and/or use manually configured accessories
-     */
+    // Register listener for updated device info (e.g. on restore with new IP)
+    this.platform.eb.on(
+      DingzEvent.UPDATE_DEVICE_INFO,
+      (deviceInfo: DeviceInfo) => {
+        if (deviceInfo.mac === this.device.mac) {
+          this.platform.log.debug(
+            'Updated device info received -> update accessory address',
+          );
+
+          // Update core info (mainly address)
+          if (this.device.address !== deviceInfo.address) {
+            this.platform.log.info(
+              'Accessory IP changed for',
+              this.device.name,
+              '-> Updating accessory from ->',
+              this.device.address,
+              'to',
+              deviceInfo.address,
+            );
+            this.device.address = deviceInfo.address;
+            this.baseUrl = `http://${this.device.address}`;
+            this.setAccessoryInformation();
+            this.updateAccessory();
+          }
+        }
+      },
+    );
 
     // Add Dimmers, Blinds etc.
     this.platform.log.info(

@@ -299,6 +299,8 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
             this.log.warn('Accessory already initialized');
 
             // Update Names et al. from new device info
+            // Might be needed e.g. when IP address changes
+            this.eb.emit(DingzEvent.UPDATE_DEVICE_INFO, deviceInfo);
             this.accessories[uuid].identify();
             return true;
           }
@@ -394,6 +396,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
           return true;
         } else {
           this.log.warn('Accessory already initialized');
+          this.eb.emit(DingzEvent.UPDATE_DEVICE_INFO, deviceInfo);
           this.accessories[uuid].identify();
           return true;
         }
@@ -477,6 +480,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
           return true;
         } else {
           this.log.warn('Accessory already initialized');
+          this.eb.emit(DingzEvent.UPDATE_DEVICE_INFO, deviceInfo);
           this.accessories[uuid].identify();
           return true;
         }
@@ -560,6 +564,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
           return true;
         } else {
           this.log.warn('Accessory already initialized');
+          this.eb.emit(DingzEvent.UPDATE_DEVICE_INFO, deviceInfo);
           this.accessories[uuid].identify();
           return true;
         }
@@ -592,7 +597,16 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
       `Add configured/discovered myStrom Button device -> ${name} (${address})`,
     );
 
-    const uuid = this.api.hap.uuid.generate(mac.toUpperCase());
+    const deviceInfo: DeviceInfo = {
+      name: name,
+      address: address,
+      mac: mac?.toUpperCase(),
+      token: token,
+      model: '104',
+      accessoryClass: 'MyStromButtonAccessory',
+    };
+
+    const uuid = this.api.hap.uuid.generate(deviceInfo.mac);
 
     // check that the device has not already been registered by checking the
     // cached devices we stored in the `configureAccessory` method above
@@ -601,14 +615,6 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
       // create a new accessory
       const accessory = new this.api.platformAccessory(name, uuid);
 
-      const deviceInfo: DeviceInfo = {
-        name: name,
-        address: address,
-        mac: mac?.toUpperCase(),
-        token: token,
-        model: '104',
-        accessoryClass: 'MyStromButtonAccessory',
-      };
       // store a copy of the device object in the `accessory.context`
       // the `context` property can be used to store any data about the accessory you may need
       accessory.context.device = deviceInfo;
@@ -648,6 +654,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
       return true;
     } else {
       this.log.warn('Accessory already initialized');
+      this.eb.emit(DingzEvent.UPDATE_DEVICE_INFO, deviceInfo);
       this.accessories[uuid].identify();
       return true;
     }
