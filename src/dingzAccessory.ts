@@ -76,7 +76,6 @@ export class DingzDaAccessory extends EventEmitter {
   private baseUrl: string;
 
   // Todo: Make proper internal representation
-  private oldBlindState: WindowCoveringStates[] = []; // FIXME: #133 Proper typing would help
   private dingzStates = {
     // Outputs
     Dimmers: [] as DimmerState[],
@@ -287,9 +286,6 @@ export class DingzDaAccessory extends EventEmitter {
   private getDeviceStateUpdate() {
     this.getDeviceState().then((state) => {
       if (typeof state !== 'undefined') {
-        // Save old state (mainly for blinds)
-        this.oldBlindState = this.dingzStates.WindowCovers;
-
         // Outputs
         this.dingzStates.Dimmers = state.dimmers;
         this.dingzStates.LED = state.led;
@@ -914,7 +910,6 @@ export class DingzDaAccessory extends EventEmitter {
   // TODO: Use available information to more accurately set WindowCovering State
   private updateWindowCoveringState(id: WindowCoveringId, service: Service) {
     const state: WindowCoveringStates = this.dingzStates.WindowCovers[id];
-    const oldState: WindowCoveringStates = this.oldBlindState[id];
     if (state) {
       /**
        * TODO: Fix Hardware Buttons and UI buttons
@@ -927,30 +922,25 @@ export class DingzDaAccessory extends EventEmitter {
         ? 90
         : 100;
 
-      let positionState: number;
-      let targetPosition: number = state.position;
+      service
+        .getCharacteristic(this.platform.Characteristic.TargetPosition)
+        .updateValue(state.position);
+      service
+        .getCharacteristic(
+          this.platform.Characteristic.TargetHorizontalTiltAngle,
+        )
+        .updateValue((state.lamella / 100) * maxTiltValue); // Old FW: Set in °, Get in % (...)
 
+      let positionState: number;
       switch (state.moving) {
         case 'up':
           positionState = this.platform.Characteristic.PositionState.INCREASING;
-          if (state.position === oldState?.position) {
-            // We're going UP (Button was pushed)
-            targetPosition = 100;
-          }
           break;
         case 'down':
           positionState = this.platform.Characteristic.PositionState.DECREASING;
-          if (
-            state.position === oldState?.position ||
-            oldState?.moving === 'up'
-          ) {
-            // We're going DOWN (Button was pushed / Direction was switched)
-            targetPosition = 0;
-          }
           break;
         case 'stop':
           positionState = this.platform.Characteristic.PositionState.STOPPED;
-          targetPosition = state.position;
           service
             .getCharacteristic(this.platform.Characteristic.CurrentPosition)
             .updateValue(state.position);
@@ -961,15 +951,6 @@ export class DingzDaAccessory extends EventEmitter {
             .updateValue((state.lamella / 100) * maxTiltValue); // Set in °, Get in % (...)
           break;
       }
-
-      service
-        .getCharacteristic(this.platform.Characteristic.TargetPosition)
-        .updateValue(targetPosition);
-      service
-        .getCharacteristic(
-          this.platform.Characteristic.TargetHorizontalTiltAngle,
-        )
-        .updateValue((state.lamella / 100) * maxTiltValue); // Old FW: Set in °, Get in % (...) FIX #124
       service
         .getCharacteristic(this.platform.Characteristic.PositionState)
         .updateValue(positionState);
