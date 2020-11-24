@@ -9,23 +9,21 @@ import type {
 
 import { DingzDaHomebridgePlatform } from './platform';
 import { MyStromDeviceInfo, MyStromSwitchReport } from './util/myStromTypes';
-import { DeviceInfo } from './util/commonTypes';
 import { DingzEvent } from './util/dingzEventBus';
+import { DingzDaBaseAccessory } from './dingzDaBaseAccessory';
 
 /**
  * Platform Accessory
  * An instance of this class is created for each accessory your platform registers
  * Each accessory may expose multiple services of different service types.
  */
-export class MyStromSwitchAccessory {
+export class MyStromSwitchAccessory extends DingzDaBaseAccessory {
   private outletService: Service;
   private temperatureService: Service | undefined = undefined;
 
   // Eventually replaced by:
   private switchOn = false;
-  private device: DeviceInfo;
   private mystromDeviceInfo: MyStromDeviceInfo;
-  private baseUrl: string;
 
   private outletState = {
     relay: false,
@@ -34,39 +32,12 @@ export class MyStromSwitchAccessory {
   } as MyStromSwitchReport;
 
   constructor(
-    private readonly platform: DingzDaHomebridgePlatform,
-    private readonly accessory: PlatformAccessory,
+    private readonly _platform: DingzDaHomebridgePlatform,
+    private readonly _accessory: PlatformAccessory,
   ) {
+    super(_platform, _accessory);
     // Set Base URL
-    this.device = this.accessory.context.device;
     this.mystromDeviceInfo = this.device.hwInfo as MyStromDeviceInfo;
-    this.baseUrl = `http://${this.device.address}`;
-
-    // Register listener for updated device info (e.g. on restore with new IP)
-    this.platform.eb.on(
-      DingzEvent.UPDATE_DEVICE_INFO,
-      (deviceInfo: DeviceInfo) => {
-        if (deviceInfo.mac === this.device.mac) {
-          this.platform.log.debug(
-            'Updated device info received -> update accessory address',
-          );
-
-          // Update core info (mainly address)
-          if (this.device.address !== deviceInfo.address) {
-            this.platform.log.info(
-              'Accessory IP changed for',
-              this.device.name,
-              '-> Updating accessory from ->',
-              this.device.address,
-              'to',
-              deviceInfo.address,
-            );
-            this.device.address = deviceInfo.address;
-            this.baseUrl = `http://${this.device.address}`;
-          }
-        }
-      },
-    );
 
     this.platform.log.debug(
       'Setting informationService Characteristics ->',
@@ -105,7 +76,7 @@ export class MyStromSwitchAccessory {
 
     this.outletService.setCharacteristic(
       this.platform.Characteristic.Name,
-      this.device.name ?? `${accessory.context.device.model} Outlet`,
+      this.device.name ?? `${this.accessory.context.device.model} Outlet`,
     );
 
     // register handlers for the On/Off Characteristic

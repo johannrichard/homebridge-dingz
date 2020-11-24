@@ -9,9 +9,10 @@ import { Mutex } from 'async-mutex';
 
 import { DingzDaHomebridgePlatform } from './platform';
 import { MyStromDeviceInfo, MyStromPIRReport } from './util/myStromTypes';
-import { ButtonAction, DeviceInfo } from './util/commonTypes';
+import { ButtonAction } from './util/commonTypes';
 import { DeviceNotReachableError } from './util/errors';
 import { DingzEvent } from './util/dingzEventBus';
+import { DingzDaBaseAccessory } from './dingzDaBaseAccessory';
 
 // Policy for long running tasks, retry every hour
 const retrySlow = Policy.handleAll()
@@ -24,7 +25,7 @@ const retrySlow = Policy.handleAll()
  * An instance of this class is created for each accessory your platform registers
  * Each accessory may expose multiple services of different service types.
  */
-export class MyStromPIRAccessory {
+export class MyStromPIRAccessory extends DingzDaBaseAccessory {
   private readonly mutex = new Mutex();
   private services: Service[] = [];
   private motionService: Service;
@@ -32,9 +33,7 @@ export class MyStromPIRAccessory {
   private lightService: Service;
 
   // Eventually replaced by:
-  private device: DeviceInfo;
   private mystromDeviceInfo: MyStromDeviceInfo;
-  private baseUrl: string;
 
   private pirState = {
     motion: false,
@@ -43,39 +42,12 @@ export class MyStromPIRAccessory {
   } as MyStromPIRReport;
 
   constructor(
-    private readonly platform: DingzDaHomebridgePlatform,
-    private readonly accessory: PlatformAccessory,
+    private readonly _platform: DingzDaHomebridgePlatform,
+    private readonly _accessory: PlatformAccessory,
   ) {
+    super(_platform, _accessory);
     // Set Base URL
-    this.device = this.accessory.context.device;
     this.mystromDeviceInfo = this.device.hwInfo as MyStromDeviceInfo;
-    this.baseUrl = `http://${this.device.address}`;
-
-    // Register listener for updated device info (e.g. on restore with new IP)
-    this.platform.eb.on(
-      DingzEvent.UPDATE_DEVICE_INFO,
-      (deviceInfo: DeviceInfo) => {
-        if (deviceInfo.mac === this.device.mac) {
-          this.platform.log.debug(
-            'Updated device info received -> update accessory address',
-          );
-
-          // Update core info (mainly address)
-          if (this.device.address !== deviceInfo.address) {
-            this.platform.log.info(
-              'Accessory IP changed for',
-              this.device.name,
-              '-> Updating accessory from ->',
-              this.device.address,
-              'to',
-              deviceInfo.address,
-            );
-            this.device.address = deviceInfo.address;
-            this.baseUrl = `http://${this.device.address}`;
-          }
-        }
-      },
-    );
 
     this.platform.log.debug(
       'Setting informationService Characteristics ->',

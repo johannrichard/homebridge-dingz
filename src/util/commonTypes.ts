@@ -66,4 +66,3 @@ export interface AccessoryTypes {
 export interface AccessoryActionUrl {
   url: string;
 }
-// export interface DingzDaAccessory {}

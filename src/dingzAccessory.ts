@@ -8,7 +8,6 @@ import {
 } from 'homebridge';
 
 import { AxiosError } from 'axios';
-import { EventEmitter } from 'events';
 import { Policy } from 'cockatiel';
 import { Mutex } from 'async-mutex';
 import simpleColorConverter from 'simple-color-converter';
@@ -37,11 +36,7 @@ import {
   WindowCoveringState,
   WindowCoveringStates,
 } from './util/dingzTypes';
-import {
-  ButtonAction,
-  DeviceInfo,
-  AccessoryActionUrl,
-} from './util/commonTypes';
+import { ButtonAction, AccessoryActionUrl } from './util/commonTypes';
 
 import {
   MethodNotImplementedError,
@@ -49,6 +44,7 @@ import {
 } from './util/errors';
 import { DingzDaHomebridgePlatform } from './platform';
 import { DingzEvent } from './util/dingzEventBus';
+import { DingzDaBaseAccessory } from './dingzDaBaseAccessory';
 
 // Policy for long running tasks, retry every hour
 const retrySlow = Policy.handleAll()
@@ -62,7 +58,7 @@ const retrySlow = Policy.handleAll()
  * Each accessory may expose multiple services of different service types.
  */
 
-export class DingzAccessory extends EventEmitter {
+export class DingzAccessory extends DingzDaBaseAccessory {
   private readonly mutex = new Mutex();
 
   private services: Service[] = [];
@@ -71,9 +67,7 @@ export class DingzAccessory extends EventEmitter {
   private _updatedDeviceInfo?: DingzDeviceInfo;
   private _updatedDeviceInputConfig?: DingzInputInfoItem;
 
-  private device: DeviceInfo;
   private dingzDeviceInfo: DingzDeviceInfo;
-  private baseUrl: string;
 
   // Todo: Make proper internal representation
   private dingzStates = {
@@ -104,15 +98,13 @@ export class DingzAccessory extends EventEmitter {
   private windowCoveringTimers = {} as WindowCoveringTimer;
 
   constructor(
-    private readonly platform: DingzDaHomebridgePlatform,
-    private readonly accessory: PlatformAccessory,
+    private readonly _platform: DingzDaHomebridgePlatform,
+    private readonly _accessory: PlatformAccessory,
   ) {
-    super();
+    super(_platform, _accessory);
 
     // Set base info
-    this.device = this.accessory.context.device;
     this.dingzDeviceInfo = this.device.hwInfo as DingzDeviceInfo;
-    this.baseUrl = `http://${this.device.address}`;
 
     // Remove Reachability service if still present
     const bridgingService: Service | undefined = this.accessory.getService(
@@ -121,34 +113,6 @@ export class DingzAccessory extends EventEmitter {
     if (bridgingService) {
       this.accessory.removeService(bridgingService);
     }
-
-    // Register listener for updated device info (e.g. on restore with new IP)
-    this.platform.eb.on(
-      DingzEvent.UPDATE_DEVICE_INFO,
-      (deviceInfo: DeviceInfo) => {
-        if (deviceInfo.mac === this.device.mac) {
-          this.platform.log.debug(
-            'Updated device info received -> update accessory address',
-          );
-
-          // Update core info (mainly address)
-          if (this.device.address !== deviceInfo.address) {
-            this.platform.log.info(
-              'Accessory IP changed for',
-              this.device.name,
-              '-> Updating accessory from ->',
-              this.device.address,
-              'to',
-              deviceInfo.address,
-            );
-            this.device.address = deviceInfo.address;
-            this.baseUrl = `http://${this.device.address}`;
-            this.setAccessoryInformation();
-            this.updateAccessory();
-          }
-        }
-      },
-    );
 
     // Add Dimmers, Blinds etc.
     this.platform.log.info(
@@ -233,7 +197,7 @@ export class DingzAccessory extends EventEmitter {
       .catch(this.handleFetchError.bind(this));
   }
 
-  private setAccessoryInformation() {
+  protected setAccessoryInformation() {
     // Sanity check for "empty" SerialNumber
     this.platform.log.debug(
       `Attempting to set SerialNumber (which can not be empty) -> front_sn: <${this.dingzDeviceInfo.front_sn}>`,
@@ -1161,7 +1125,7 @@ export class DingzAccessory extends EventEmitter {
 
   // FIXME: [FIX] refactor dingz.updateAccessory #103
   // Updates the Accessory (e.g. if the config has changed)
-  private async updateAccessory(): Promise<void> {
+  protected async updateAccessory(): Promise<void> {
     this.platform.log.info(
       'Update accessory',
       this.device.address,

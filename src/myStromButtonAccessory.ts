@@ -8,9 +8,10 @@ import { Policy } from 'cockatiel';
 
 import { DingzDaHomebridgePlatform } from './platform';
 import { MyStromDeviceInfo } from './util/myStromTypes';
-import { DeviceInfo, ButtonAction } from './util/commonTypes';
+import { ButtonAction } from './util/commonTypes';
 import { DingzEvent } from './util/dingzEventBus';
 import { ButtonState } from './util/dingzTypes';
+import { DingzDaBaseAccessory } from './dingzDaBaseAccessory';
 
 // Policy for long running tasks, retry every hour
 const retrySlow = Policy.handleAll()
@@ -23,50 +24,22 @@ const retrySlow = Policy.handleAll()
  * An instance of this class is created for each accessory your platform registers
  * Each accessory may expose multiple services of different service types.
  */
-export class MyStromButtonAccessory {
+export class MyStromButtonAccessory extends DingzDaBaseAccessory {
   // Eventually replaced by:
-  private device: DeviceInfo;
   private mystromDeviceInfo: MyStromDeviceInfo;
-  private baseUrl: string;
   private buttonState?: ButtonAction;
   private switchButtonState?: ButtonState;
   private batteryLevel: Nullable<number> = 0;
   private chargingState = false;
 
   constructor(
-    private readonly platform: DingzDaHomebridgePlatform,
-    private readonly accessory: PlatformAccessory,
+    private readonly _platform: DingzDaHomebridgePlatform,
+    private readonly _accessory: PlatformAccessory,
   ) {
+    super(_platform, _accessory);
+
     // Set Base URL
-    this.device = this.accessory.context.device;
     this.mystromDeviceInfo = this.device.hwInfo as MyStromDeviceInfo;
-    this.baseUrl = `http://${this.device.address}`;
-
-    // Register listener for updated device info (e.g. on restore with new IP)
-    this.platform.eb.on(
-      DingzEvent.UPDATE_DEVICE_INFO,
-      (deviceInfo: DeviceInfo) => {
-        if (deviceInfo.mac === this.device.mac) {
-          this.platform.log.debug(
-            'Updated device info received -> update accessory address',
-          );
-
-          // Update core info (mainly address)
-          if (this.device.address !== deviceInfo.address) {
-            this.platform.log.info(
-              'Accessory IP changed for',
-              this.device.name,
-              '-> Updating accessory from ->',
-              this.device.address,
-              'to',
-              deviceInfo.address,
-            );
-            this.device.address = deviceInfo.address;
-            this.baseUrl = `http://${this.device.address}`;
-          }
-        }
-      },
-    );
 
     this.platform.log.debug(
       'Setting informationService Characteristics ->',
@@ -112,7 +85,7 @@ export class MyStromButtonAccessory {
 
     buttonService.setCharacteristic(
       this.platform.Characteristic.Name,
-      this.device.name ?? `${accessory.context.device.model}`,
+      this.device.name ?? `${this.accessory.context.device.model}`,
     );
 
     buttonService
@@ -204,7 +177,7 @@ export class MyStromButtonAccessory {
                 .then((data) => {
                   if (typeof data !== 'undefined') {
                     const info = data as MyStromDeviceInfo;
-                    accessory.context.device.hwInfo = info;
+                    this.accessory.context.device.hwInfo = info;
                     if (batteryService) {
                       batteryService
                         .getCharacteristic(
