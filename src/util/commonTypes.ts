@@ -1,7 +1,7 @@
 // Various Type Definitions for the dingz Accessory
 // Based on the API definition
 
-import { DingzDaAccessory } from '../dingzAccessory';
+import { DingzAccessory } from '../dingzAccessory';
 import { MyStromSwitchAccessory } from '../myStromSwitchAccessory';
 import { MyStromLightbulbAccessory } from '../myStromLightbulbAccessory';
 import { MyStromButtonAccessory } from '../myStromButtonAccessory';
@@ -54,7 +54,7 @@ export interface DeviceInfo {
 }
 
 export type AccessoryType =
-  | DingzDaAccessory
+  | DingzAccessory
   | MyStromSwitchAccessory
   | MyStromLightbulbAccessory
   | MyStromButtonAccessory
@@ -66,3 +66,4 @@ export interface AccessoryTypes {
 export interface AccessoryActionUrl {
   url: string;
 }
+// export interface DingzDaAccessory {}

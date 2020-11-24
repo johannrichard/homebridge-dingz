@@ -62,7 +62,7 @@ const retrySlow = Policy.handleAll()
  * Each accessory may expose multiple services of different service types.
  */
 
-export class DingzDaAccessory extends EventEmitter {
+export class DingzAccessory extends EventEmitter {
   private readonly mutex = new Mutex();
 
   private services: Service[] = [];
@@ -158,7 +158,7 @@ export class DingzDaAccessory extends EventEmitter {
     );
 
     // FIXME: Is there a better way to handle errors?
-    DingzDaAccessory.getConfigs({
+    DingzAccessory.getConfigs({
       address: this.device.address,
       token: this.device.token,
     })
@@ -1169,7 +1169,7 @@ export class DingzDaAccessory extends EventEmitter {
     );
 
     // FIXME: [FIX] refactor dingz.updateAccessory #103
-    DingzDaAccessory.getConfigs({
+    DingzAccessory.getConfigs({
       address: this.device.address,
       token: this.device.token,
     })
@@ -1457,7 +1457,7 @@ export class DingzDaAccessory extends EventEmitter {
    * TODO: Refactor duplicate code into proper API caller
    */
   private async getDingzDeviceInfo(): Promise<DingzDeviceInfo> {
-    const dingzDevices = await DingzDaAccessory.getConfigs({
+    const dingzDevices = await DingzAccessory.getConfigs({
       address: this.device.address,
       token: this.device.token,
     });

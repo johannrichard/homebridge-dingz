@@ -43,7 +43,7 @@ import {
 import { DingzEventBus, DingzEvent } from './util/dingzEventBus';
 
 // Accessory classes
-import { DingzDaAccessory } from './dingzAccessory';
+import { DingzAccessory } from './dingzAccessory';
 import { MyStromSwitchAccessory } from './myStromSwitchAccessory';
 import { MyStromLightbulbAccessory } from './myStromLightbulbAccessory';
 import { MyStromButtonAccessory } from './myStromButtonAccessory';
@@ -143,7 +143,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
       switch (context.device.accessoryClass) {
         case 'DingzDaAccessory':
           // add the restored accessory to the accessories cache so we can track if it has already been registered
-          platformAccessory = new DingzDaAccessory(this, accessory);
+          platformAccessory = new DingzAccessory(this, accessory);
           break;
         case 'MyStromSwitchAccessory':
           // add the restored accessory to the accessories cache so we can track if it has already been registered
@@ -242,7 +242,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
     // Run a diacovery of changed things every 10 seconds
     this.log.debug(`Add configured device -> ${name} (${address})`);
 
-    const success = DingzDaAccessory.getConfigs({ address, token }).then(
+    const success = DingzAccessory.getConfigs({ address, token }).then(
       ({ dingzDevices, systemConfig: dingzConfig }) => {
         this.log.debug('Got Device ->', JSON.stringify(dingzDevices));
         if (typeof dingzDevices !== 'undefined') {
@@ -285,7 +285,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
 
             // create the accessory handler (which will add services as needed)
             // this is imported from `dingzDaAccessory.ts`
-            const dingzDaAccessory = new DingzDaAccessory(this, accessory);
+            const dingzDaAccessory = new DingzAccessory(this, accessory);
 
             // link the accessory to your platform
             this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [
