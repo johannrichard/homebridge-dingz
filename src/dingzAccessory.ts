@@ -365,16 +365,6 @@ export class DingzDaAccessory extends EventEmitter {
     callback(null, currentTemperature);
   }
 
-  /**
-   * Handle Handle the "GET" requests from HomeKit
-   * to get the current value of the "Motion Detected" characteristic
-   */
-  private getMotionDetected(callback: CharacteristicSetCallback) {
-    // set this to a valid value for MotionDetected
-    const isMotion = this.dingzStates.Motion;
-    callback(null, isMotion);
-  }
-
   /*
    * This method is optional to implement. It is called when HomeKit ask to identify the accessory.
    * Typical this only ever happens at the pairing process.
