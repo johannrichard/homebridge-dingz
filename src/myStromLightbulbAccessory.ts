@@ -89,17 +89,20 @@ export class MyStromLightbulbAccessory extends DingzDaBaseAccessory {
     // register handlers for the Brightness Characteristic
     this.lightbulbService
       .getCharacteristic(this.platform.Characteristic.Brightness)
-      .on(CharacteristicEventTypes.SET, this.setBrightness.bind(this)); // SET - bind to the 'setBrightness` method below
+      .on(CharacteristicEventTypes.SET, this.setBrightness.bind(this)) // SET - bind to the 'setBrightness` method below
+      .on(CharacteristicEventTypes.GET, this.getBrightness.bind(this)); // SET - bind to the 'setBrightness` method below
 
     // register handlers for the Brightness Characteristic
     this.lightbulbService
       .getCharacteristic(this.platform.Characteristic.Hue)
-      .on(CharacteristicEventTypes.SET, this.setHue.bind(this)); // SET - bind to the 'setBrightness` method below
+      .on(CharacteristicEventTypes.SET, this.setHue.bind(this)) // SET - bind to the 'setBrightness` method below
+      .on(CharacteristicEventTypes.GET, this.getHue.bind(this)); // SET - bind to the 'setBrightness` method below
 
     // register handlers for the Brightness Characteristic
     this.lightbulbService
       .getCharacteristic(this.platform.Characteristic.Saturation)
-      .on(CharacteristicEventTypes.SET, this.setSaturation.bind(this)); // SET - bind to the 'setBrightness` method below
+      .on(CharacteristicEventTypes.SET, this.setSaturation.bind(this)) // SET - bind to the 'setBrightness` method below
+      .on(CharacteristicEventTypes.GET, this.getSaturation.bind(this)); // SET - bind to the 'setBrightness` method below
 
     // Subscribe to the REQUEST_STATE_UPDATE event
     this.platform.eb.on(
@@ -186,19 +189,28 @@ export class MyStromLightbulbAccessory extends DingzDaBaseAccessory {
     callback(null);
   }
 
+  private getHue(callback: CharacteristicGetCallback) {
+    const hue: number = this.lightbulbState.hue;
+    callback(null, hue);
+  }
+
   private async setSaturation(
     value: CharacteristicValue,
     callback: CharacteristicSetCallback,
   ) {
     this.lightbulbState.saturation = value as number;
 
-    // Call setDimmerValue()
     const state: MyStromLightbulbReport = this.lightbulbState;
     await this.setDeviceLightbulb({
       isOn: state.on,
       color: `${state.hue};${state.saturation};${state.value}`,
     });
     callback(null);
+  }
+
+  private getSaturation(callback: CharacteristicGetCallback) {
+    const saturation: number = this.lightbulbState.saturation;
+    callback(null, saturation);
   }
 
   private async setBrightness(
@@ -212,6 +224,11 @@ export class MyStromLightbulbAccessory extends DingzDaBaseAccessory {
       color: `${state.hue};${state.saturation};${state.value}`,
     });
     callback(null);
+  }
+
+  private getBrightness(callback: CharacteristicGetCallback) {
+    const brightness = this.lightbulbState.value;
+    callback(null, brightness);
   }
 
   // Set individual dimmer

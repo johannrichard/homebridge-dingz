@@ -41,7 +41,7 @@ export class MyStromButtonAccessory extends DingzDaBaseAccessory {
     // Set Base URL
     this.mystromDeviceInfo = this.device.hwInfo as MyStromDeviceInfo;
 
-    this.platform.log.debug(
+    this.log.debug(
       'Setting informationService Characteristics ->',
       this.device.model,
     );
@@ -71,10 +71,7 @@ export class MyStromButtonAccessory extends DingzDaBaseAccessory {
 
     // get the LightBulb service if it exists, otherwise create a new LightBulb service
     // you can create multiple services for each accessory
-    this.platform.log.info(
-      'Create Stateless Programmable Switch -> ',
-      this.device.name,
-    );
+    this.log.info('Create Stateless Programmable Switch -> ', this.device.name);
     const buttonService: Service =
       this.accessory.getService(
         this.platform.Service.StatelessProgrammableSwitch,
@@ -144,7 +141,7 @@ export class MyStromButtonAccessory extends DingzDaBaseAccessory {
         const ProgrammableSwitchEvent = this.platform.Characteristic
           .ProgrammableSwitchEvent;
         if (buttonService) {
-          this.platform.log.debug(
+          this.log.debug(
             `Button of ${this.device.name} (${this.device.mac}) pressed -> ${action}`,
           );
           switch (action) {
@@ -164,7 +161,7 @@ export class MyStromButtonAccessory extends DingzDaBaseAccessory {
                 .updateValue(ProgrammableSwitchEvent.LONG_PRESS);
               break;
             default:
-              this.platform.log.info(
+              this.log.info(
                 'Heartbeat (Unknown action) ->',
                 this.device.address,
                 '-> Device is alive, though, will try to update info!',
@@ -210,7 +207,7 @@ export class MyStromButtonAccessory extends DingzDaBaseAccessory {
 
   private getSwitchButtonState(callback: CharacteristicGetCallback) {
     const currentState = this.switchButtonState;
-    this.platform.log.info('Get Switch State ->', currentState);
+    this.log.info('Get Switch State ->', currentState);
     callback(null, currentState);
   }
 
@@ -239,9 +236,6 @@ export class MyStromButtonAccessory extends DingzDaBaseAccessory {
    * Typical this only ever happens at the pairing process.
    */
   identify(): void {
-    this.platform.log.debug(
-      'Identify! -> Who am I? I am',
-      this.accessory.displayName,
-    );
+    this.log.debug('Identify! -> Who am I? I am', this.accessory.displayName);
   }
 }

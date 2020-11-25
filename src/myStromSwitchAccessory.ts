@@ -39,7 +39,7 @@ export class MyStromSwitchAccessory extends DingzDaBaseAccessory {
     // Set Base URL
     this.mystromDeviceInfo = this.device.hwInfo as MyStromDeviceInfo;
 
-    this.platform.log.debug(
+    this.log.debug(
       'Setting informationService Characteristics ->',
       this.device.model,
     );
@@ -115,10 +115,7 @@ export class MyStromSwitchAccessory extends DingzDaBaseAccessory {
   }
 
   identify(): void {
-    this.platform.log.debug(
-      'Identify! -> Who am I? I am',
-      this.accessory.displayName,
-    );
+    this.log.debug('Identify! -> Who am I? I am', this.accessory.displayName);
   }
 
   // Get updated device info and update the corresponding values
@@ -142,10 +139,7 @@ export class MyStromSwitchAccessory extends DingzDaBaseAccessory {
         }
       })
       .catch((e) => {
-        this.platform.log.error(
-          'Error while retrieving Device Report ->',
-          e.toString(),
-        );
+        this.log.error('Error while retrieving Device Report ->', e.toString());
       });
   }
 
@@ -153,7 +147,7 @@ export class MyStromSwitchAccessory extends DingzDaBaseAccessory {
     value: CharacteristicValue,
     callback: CharacteristicSetCallback,
   ) {
-    this.platform.log.debug('Set Characteristic On ->', value);
+    this.log.debug('Set Characteristic On ->', value);
     this.outletState.relay = value as boolean;
     this.setDeviceState(this.outletState.relay);
     callback(null);
@@ -161,25 +155,21 @@ export class MyStromSwitchAccessory extends DingzDaBaseAccessory {
 
   private getOn(callback: CharacteristicGetCallback) {
     const isOn = this.outletState?.relay;
-    this.platform.log.debug('Get Characteristic On ->', isOn);
+    this.log.debug('Get Characteristic On ->', isOn);
 
     callback(null, isOn);
   }
 
   private getTemperature(callback: CharacteristicGetCallback) {
     const temperature: number = this.outletState?.temperature;
-    this.platform.log.debug(
-      'Get Characteristic Temperature ->',
-      temperature,
-      '° C',
-    );
+    this.log.debug('Get Characteristic Temperature ->', temperature, '° C');
 
     callback(null, temperature);
   }
 
   private getOutletInUse(callback: CharacteristicGetCallback) {
     const inUse: boolean = this.outletState?.power > 0;
-    this.platform.log.debug('Get Characteristic OutletInUse ->', inUse);
+    this.log.debug('Get Characteristic OutletInUse ->', inUse);
     callback(null, inUse);
   }
 

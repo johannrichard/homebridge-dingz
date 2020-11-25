@@ -115,7 +115,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     }
 
     // Add Dimmers, Blinds etc.
-    this.platform.log.info(
+    this.log.info(
       'Adding output devices for ',
       this.device.address,
       ' -> [...]',
@@ -136,7 +136,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
           this.device.dimmerConfig = dimmerConfig;
 
           if (dingzDevices[this.device.mac]) {
-            this.platform.log.debug(
+            this.log.debug(
               'Updated device info received -> update accessory',
               dingzDevices[this.device.mac],
             );
@@ -166,7 +166,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
             // dingz has a Motion sensor -- let's create it
             this.addMotionService();
           } else {
-            this.platform.log.info(
+            this.log.info(
               'Your dingz',
               this.accessory.displayName,
               'has no Motion sensor.',
@@ -180,7 +180,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
           this.addButtonServices();
 
           this.services.forEach((service) => {
-            this.platform.log.info(
+            this.log.info(
               'Service created ->',
               service.getCharacteristic(this.platform.Characteristic.Name)
                 .value,
@@ -199,7 +199,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
 
   protected setAccessoryInformation() {
     // Sanity check for "empty" SerialNumber
-    this.platform.log.debug(
+    this.log.debug(
       `Attempting to set SerialNumber (which can not be empty) -> front_sn: <${this.dingzDeviceInfo.front_sn}>`,
     );
     const serialNumber: string =
@@ -240,15 +240,13 @@ export class DingzAccessory extends DingzDaBaseAccessory {
   private setButtonCallbacks() {
     // Only necessary for firmware version < 1.2.x
     if (semver.lt(this.dingzDeviceInfo.fw_version, '1.2.0')) {
-      this.platform.log.debug(
-        'Enable PIR callback for older firmware revisions',
-      );
+      this.log.debug('Enable PIR callback for older firmware revisions');
       this.enablePIRCallback();
     }
 
     this.getButtonCallbackUrl().then((callBackUrl) => {
       if (!callBackUrl?.url.includes(this.platform.getCallbackUrl())) {
-        this.platform.log.warn('Update existing callback URL ->', callBackUrl);
+        this.log.warn('Update existing callback URL ->', callBackUrl);
         // Set the callback URL (Override!)
         const endpoints = this.dingzDeviceInfo.has_pir
           ? ['generic', 'pir/single']
@@ -260,10 +258,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
           endpoints: endpoints,
         });
       } else {
-        this.platform.log.debug(
-          'Callback URL already set ->',
-          callBackUrl?.url,
-        );
+        this.log.debug('Callback URL already set ->', callBackUrl?.url);
       }
     });
   }
@@ -285,7 +280,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
         // Push the Update to HomeBridge
         this.platform.eb.emit(DingzEvent.PUSH_STATE_UPDATE);
       } else {
-        this.platform.log.error('Can`t get device state');
+        this.log.error('Can`t get device state');
       }
     });
   }
@@ -334,7 +329,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
    * Typical this only ever happens at the pairing process.
    */
   identify(): void {
-    this.platform.log.info(
+    this.log.info(
       'Identify! -> Who am I? I am',
       this.accessory.displayName,
       '-> MAC:',
@@ -361,6 +356,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
 
   private updateLightSensor(lightService: Service) {
     const intensity: number = this.dingzStates.Brightness;
+    this.log.warn(this.device.name, 'Brightness ->', intensity);
     lightService
       .getCharacteristic(this.platform.Characteristic.CurrentAmbientLightLevel)
       .updateValue(intensity);
@@ -543,16 +539,16 @@ export class DingzAccessory extends DingzDaBaseAccessory {
       DingzEvent.ACTION,
       (mac, action: ButtonAction, button: ButtonId | '5') => {
         if (mac === this.device.mac && button) {
-          this.platform.log.debug(
+          this.log.debug(
             `Button ${button} of ${this.device.name} pressed -> ${action}, MAC: ${mac} (This: ${this.device.mac})`,
           );
           if (button === '5') {
             // PUSH MOTION
             if (!(this.platform.config.motionPoller ?? true)) {
-              this.platform.log.debug(
+              this.log.debug(
                 `Button ${button} of ${this.device.name} Motion -> ${action}`,
               );
-              this.platform.log.debug('Motion Update from CALLBACK');
+              this.log.debug('Motion Update from CALLBACK');
               this.motionService
                 ?.getCharacteristic(this.platform.Characteristic.MotionDetected)
                 .updateValue(
@@ -576,7 +572,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
                 this.platform.Characteristic.ProgrammableSwitchOutputState,
               )
               .updateValue(this.dingzStates.Buttons[button].state);
-            this.platform.log.info(
+            this.log.info(
               `Button ${button} of ${this.device.name} (${service?.displayName}) pressed -> ${action}`,
             );
 
@@ -607,7 +603,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
   }
 
   private addButtonService(name: string, button: ButtonId): Service {
-    this.platform.log.debug('Adding Button Service ->', name, ' -> ', button);
+    this.log.debug('Adding Button Service ->', name, ' -> ', button);
 
     const buttonService =
       this.accessory.getServiceById(
@@ -663,7 +659,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     callback: CharacteristicGetCallback,
   ) {
     const currentState = this.dingzStates.Buttons[button].state;
-    this.platform.log.info(
+    this.log.info(
       'Get Switch State of',
       this.device.name,
       '->',
@@ -680,7 +676,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     callback: CharacteristicSetCallback,
   ) {
     this.dingzStates.Buttons[button].state = value as ButtonState;
-    this.platform.log.info(
+    this.log.info(
       'Set Switch State of',
       this.device.name,
       '->',
@@ -761,7 +757,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
       id,
     );
     if (service) {
-      this.platform.log.debug('Removing Dimmer ->', service.displayName);
+      this.log.debug('Removing Dimmer ->', service.displayName);
       clearTimeout(this.dimmerTimers[id]);
       this.accessory.removeService(service);
     }
@@ -776,7 +772,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
       this.dingzStates.Dimmers[index].on = value as boolean;
       this.setDeviceDimmer(index, value as boolean);
     } catch (e) {
-      this.platform.log.error(
+      this.log.error(
         'Error -> unable to set Dimmer data ',
         index,
         e.name,
@@ -965,13 +961,13 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     id: WindowCoveringId,
     callback: CharacteristicGetCallback,
   ) {
-    this.platform.log.debug(
+    this.log.debug(
       'WindowCoverings: ',
       JSON.stringify(this.dingzStates.WindowCovers),
     );
     const blind: number = this.dingzStates.WindowCovers[id]?.position;
 
-    this.platform.log.debug(
+    this.log.debug(
       'Get Characteristic for WindowCovering',
       id,
       'Current Position ->',
@@ -986,7 +982,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     angle: CharacteristicValue,
     callback: CharacteristicSetCallback,
   ) {
-    this.platform.log.debug(
+    this.log.debug(
       'Set Characteristic TargetHorizontalTiltAngle on ',
       id,
       '->',
@@ -1009,13 +1005,13 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     id: WindowCoveringId,
     callback: CharacteristicGetCallback,
   ) {
-    this.platform.log.debug(
+    this.log.debug(
       'WindowCoverings: ',
       JSON.stringify(this.dingzStates.WindowCovers),
     );
     const tiltAngle: number = this.dingzStates.WindowCovers[id]?.lamella;
 
-    this.platform.log.debug(
+    this.log.debug(
       'Get Characteristic for WindowCovering',
       id,
       'Current TiltAngle ->',
@@ -1029,7 +1025,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     id: WindowCoveringId,
     callback: CharacteristicGetCallback,
   ) {
-    this.platform.log.debug(
+    this.log.debug(
       'WindowCoverings: ',
       JSON.stringify(this.dingzStates.WindowCovers),
     );
@@ -1048,7 +1044,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
           break;
       }
 
-      this.platform.log.debug(
+      this.log.debug(
         'Get Characteristic for WindowCovering',
         id,
         'Current Position State ->',
@@ -1072,7 +1068,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     this.services.push(this.motionService);
     // Only check for motion if we have a PIR and set the Interval
     if (this.platform.config.motionPoller ?? true) {
-      this.platform.log.info('Motion POLLING of', this.device.name, 'enabled');
+      this.log.info('Motion POLLING of', this.device.name, 'enabled');
       const motionInterval: NodeJS.Timer = setInterval(() => {
         this.getDeviceMotion()
           .then((data) => {
@@ -1080,7 +1076,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
               const isMotion: boolean = data.motion;
               // Only update if motionService exists *and* if there's a change in motion'
               if (this.motionService && this.dingzStates.Motion !== isMotion) {
-                this.platform.log.debug('Motion Update from POLLER');
+                this.log.debug('Motion Update from POLLER');
                 this.dingzStates.Motion = isMotion;
                 this.motionService
                   ?.getCharacteristic(
@@ -1096,7 +1092,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
             }
           })
           .catch((e) => {
-            this.platform.log.error(
+            this.log.error(
               'Error -> unable to fetch DeviceMotion data',
               e.name,
               e.toString(),
@@ -1118,7 +1114,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
       this.platform.Service.MotionSensor,
     );
     if (service) {
-      this.platform.log.info('Removing Motion service ->', service.displayName);
+      this.log.info('Removing Motion service ->', service.displayName);
       this.accessory.removeService(service);
     }
   }
@@ -1126,7 +1122,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
   // FIXME: [FIX] refactor dingz.updateAccessory #103
   // Updates the Accessory (e.g. if the config has changed)
   protected async updateAccessory(): Promise<void> {
-    this.platform.log.info(
+    this.log.info(
       'Update accessory',
       this.device.address,
       '-> Check for changed config.',
@@ -1163,7 +1159,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
         currentDingzDeviceInfo.has_pir !== updatedDingzDeviceInfo.has_pir
       ) {
         // Update PIR Service
-        this.platform.log.warn('Update accessory -> PIR config changed.');
+        this.log.warn('Update accessory -> PIR config changed.');
         if (updatedDingzDeviceInfo.has_pir) {
           // Add PIR service
           this.addMotionService();
@@ -1186,7 +1182,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
         if (
           this.accessory.getServiceById(this.platform.Service.Lightbulb, 'D1')
         ) {
-          this.platform.log.warn(
+          this.log.warn(
             'Input active. Dimmer Service 0 can not exist -> remove',
           );
           this.removeDimmerService('D1');
@@ -1201,9 +1197,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
         const dimmerConfig: DingzDeviceDimmerConfig | undefined = this.device
           .dimmerConfig;
 
-        this.platform.log.warn(
-          'No Input defined. Attempting to add Dimmer Service D1.',
-        );
+        this.log.warn('No Input defined. Attempting to add Dimmer Service D1.');
         this.addDimmerService({
           name: dimmerConfig?.dimmers[0].name,
           output: dimmerConfig?.dimmers[0].output,
@@ -1432,7 +1426,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
         return dingzDeviceInfo;
       }
     } catch (e) {
-      this.platform.log.error('Error in getting Device Info ->', e.toString());
+      this.log.error('Error in getting Device Info ->', e.toString());
     }
     throw new Error('dingz Device update failed -> Empty data.');
   }
@@ -1499,10 +1493,10 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     const getMotionUrl = `${this.baseUrl}/api/v1/motion`;
     const release = await this.mutex.acquire();
     try {
-      return await DingzDaHomebridgePlatform.fetch({
-        url: getMotionUrl,
-        returnBody: true,
-        token: this.device.token,
+    return await DingzDaHomebridgePlatform.fetch({
+      url: getMotionUrl,
+      returnBody: true,
+      token: this.device.token,
       }).catch(this.handleFetchError.bind(this));
     } finally {
       release();
@@ -1600,12 +1594,12 @@ export class DingzAccessory extends DingzDaBaseAccessory {
   // information for an update of all sensors and states
   private async getDeviceState(): Promise<DingzState> {
     const getDeviceStateUrl = `${this.baseUrl}/api/v1/state`;
+    this.log.warn('Mutex state ->', this.mutex.isLocked());
     const release = await this.mutex.acquire();
-    try {
-      return await DingzDaHomebridgePlatform.fetch({
-        url: getDeviceStateUrl,
-        returnBody: true,
-        token: this.device.token,
+    return await DingzDaHomebridgePlatform.fetch({
+      url: getDeviceStateUrl,
+      returnBody: true,
+      token: this.device.token,
       }).catch(this.handleFetchError.bind(this));
     } finally {
       release();
@@ -1615,7 +1609,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
   // GEt the callback URL for the device
   public async getButtonCallbackUrl(): Promise<AccessoryActionUrl> {
     const getCallbackUrl = `${this.baseUrl}/api/v1/action/generic/generic`;
-    this.platform.log.debug('Getting the callback URL -> ', getCallbackUrl);
+    this.log.debug('Getting the callback URL -> ', getCallbackUrl);
     return await DingzDaHomebridgePlatform.fetch({
       url: getCallbackUrl,
       method: 'GET',
@@ -1626,7 +1620,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
 
   async enablePIRCallback() {
     const setActionUrl = `${this.baseUrl}/api/v1/action/pir/press_release/enable`;
-    this.platform.log.debug('Enabling the PIR callback -> ');
+    this.log.debug('Enabling the PIR callback -> ');
     await DingzDaHomebridgePlatform.fetch({
       url: setActionUrl,
       method: 'POST',
@@ -1636,14 +1630,14 @@ export class DingzAccessory extends DingzDaBaseAccessory {
 
   private handleFetchError = (error: AxiosError) => {
     if (error.response) {
-      this.platform.log.error('HTTP Response Error ->' + error.config.url);
-      this.platform.log.error(error.message);
-      this.platform.log.error(error.response.data);
-      this.platform.log.error(error.response.status.toString());
-      this.platform.log.error(error.response.headers);
+      this.log.error('HTTP Response Error ->' + error.config.url);
+      this.log.error(error.message);
+      this.log.error(error.response.data);
+      this.log.error(error.response.status.toString());
+      this.log.error(error.response.headers);
     } else {
-      this.platform.log.error('HTTP Response Error ->' + error.config.url);
-      this.platform.log.error(error.message);
+      this.log.error('HTTP Response Error ->' + error.config.url);
+      this.log.error(error.message);
     }
   };
 }

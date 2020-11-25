@@ -1,9 +1,11 @@
-import { PlatformAccessory } from 'homebridge';
+import { Logger, PlatformAccessory } from 'homebridge';
 import { DingzDaHomebridgePlatform } from '../platform';
 import { DeviceInfo } from './commonTypes';
 import { DingzEvent } from './dingzEventBus';
 
 export class DingzDaBaseAccessory {
+  protected readonly log: Logger;
+
   protected device: DeviceInfo;
   protected baseUrl: string;
 
@@ -13,19 +15,20 @@ export class DingzDaBaseAccessory {
   ) {
     this.device = this.accessory.context.device;
     this.baseUrl = `http://${this.device.address}`;
+    this.log = platform.log;
 
     // Register listener for updated device info (e.g. on restore with new IP)
     this.platform.eb.on(
       DingzEvent.UPDATE_DEVICE_INFO,
       (deviceInfo: DeviceInfo) => {
         if (deviceInfo.mac === this.device.mac) {
-          this.platform.log.debug(
+          this.log.debug(
             'Updated device info received -> update accessory address',
           );
 
           // Update core info (mainly address)
           if (this.device.address !== deviceInfo.address) {
-            this.platform.log.info(
+            this.log.info(
               'Accessory IP changed for',
               this.device.name,
               '-> Updating accessory from ->',
@@ -47,14 +50,14 @@ export class DingzDaBaseAccessory {
 
   // Override these if specific actions needed on updates on restore
   protected setAccessoryInformation() {
-    this.platform.log.debug(
+    this.log.debug(
       'setAccessoryInformation() not implemented for',
       this.device.accessoryClass,
     );
   }
 
   protected updateAccessory() {
-    this.platform.log.debug(
+    this.log.debug(
       'setAccessoryInformation() not implemented for',
       this.device.accessoryClass,
     );

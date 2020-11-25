@@ -49,7 +49,7 @@ export class MyStromPIRAccessory extends DingzDaBaseAccessory {
     // Set Base URL
     this.mystromDeviceInfo = this.device.hwInfo as MyStromDeviceInfo;
 
-    this.platform.log.debug(
+    this.log.debug(
       'Setting informationService Characteristics ->',
       this.device.model,
     );
@@ -79,7 +79,7 @@ export class MyStromPIRAccessory extends DingzDaBaseAccessory {
 
     // get the LightBulb service if it exists, otherwise create a new LightBulb service
     // you can create multiple services for each accessory
-    this.platform.log.info('Create Motion Sensor -> ', this.device.name);
+    this.log.info('Create Motion Sensor -> ', this.device.name);
 
     this.temperatureService =
       this.accessory.getService(this.platform.Service.TemperatureSensor) ??
@@ -127,10 +127,10 @@ export class MyStromPIRAccessory extends DingzDaBaseAccessory {
     if (!(this.platform.config.motionPoller ?? true)) {
       // Implement *push* event handling
       this.platform.eb.on(DingzEvent.ACTION, (mac, action) => {
-        this.platform.log.debug(`Processing DingzEvent.ACTION ${action}`);
+        this.log.debug(`Processing DingzEvent.ACTION ${action}`);
 
         if (mac === this.device.mac) {
-          this.platform.log.debug(
+          this.log.debug(
             `Motion detected by ${this.device.name} (${this.device.mac}) pressed -> ${action}`,
           );
           let isMotion: boolean | undefined;
@@ -144,7 +144,7 @@ export class MyStromPIRAccessory extends DingzDaBaseAccessory {
               break;
           }
 
-          this.platform.log.debug('Motion Update from PUSH');
+          this.log.debug('Motion Update from PUSH');
           this.pirState.motion = isMotion;
           this.motionService.setCharacteristic(
             this.platform.Characteristic.MotionDetected,
@@ -172,15 +172,11 @@ export class MyStromPIRAccessory extends DingzDaBaseAccessory {
           // If we are in motion polling mode, update motion from poller
           // TODO: remove this -- doesn't make sense at all
           if (this.platform.config.motionPoller ?? true) {
-            this.platform.log.info(
-              'Motion POLLING of',
-              this.device.name,
-              'enabled',
-            );
+            this.log.info('Motion POLLING of', this.device.name, 'enabled');
             const isMotion: boolean = report.motion;
             // Only update if motionService exists *and* if there's a change in motion'
             if (this.pirState.motion !== isMotion) {
-              this.platform.log.debug('Motion Update from POLLER');
+              this.log.debug('Motion Update from POLLER');
               this.pirState.motion = isMotion;
               this.motionService
                 .getCharacteristic(this.platform.Characteristic.MotionDetected)
@@ -208,7 +204,7 @@ export class MyStromPIRAccessory extends DingzDaBaseAccessory {
         }
       })
       .catch((e: Error) => {
-        this.platform.log.error(
+        this.log.error(
           'Error -> unable to fetch DeviceMotion data',
           e.name,
           e.toString(),
@@ -222,11 +218,7 @@ export class MyStromPIRAccessory extends DingzDaBaseAccessory {
    */
   private getLightLevel(callback: CharacteristicGetCallback) {
     const light: number = this.pirState?.light ?? 42;
-    this.platform.log.debug(
-      'Get Characteristic Ambient Light Level ->',
-      light,
-      ' lux',
-    );
+    this.log.debug('Get Characteristic Ambient Light Level ->', light, ' lux');
 
     callback(null, light);
   }
@@ -237,11 +229,7 @@ export class MyStromPIRAccessory extends DingzDaBaseAccessory {
    */
   private getTemperature(callback: CharacteristicGetCallback) {
     const temperature: number = this.pirState?.temperature;
-    this.platform.log.debug(
-      'Get Characteristic Temperature ->',
-      temperature,
-      '° C',
-    );
+    this.log.debug('Get Characteristic Temperature ->', temperature, '° C');
 
     callback(null, temperature);
   }
@@ -275,9 +263,6 @@ export class MyStromPIRAccessory extends DingzDaBaseAccessory {
    * Typical this only ever happens at the pairing process.
    */
   identify(): void {
-    this.platform.log.debug(
-      'Identify! -> Who am I? I am',
-      this.accessory.displayName,
-    );
+    this.log.debug('Identify! -> Who am I? I am', this.accessory.displayName);
   }
 }
