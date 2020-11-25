@@ -11,9 +11,9 @@ import simpleColorConverter from 'simple-color-converter';
 import qs from 'qs';
 
 import { DingzDaHomebridgePlatform } from './platform';
-import { MyStromDeviceInfo, MyStromLightbulbReport } from './util/myStromTypes';
-import { DingzEvent } from './util/dingzEventBus';
-import { DingzDaBaseAccessory } from './dingzDaBaseAccessory';
+import { MyStromDeviceInfo, MyStromLightbulbReport } from './lib/myStromTypes';
+import { DingzEvent } from './lib/dingzEventBus';
+import { DingzDaBaseAccessory } from './lib/dingzDaBaseAccessory';
 
 /**
  * Platform Accessory

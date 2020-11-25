@@ -15,8 +15,8 @@ import e = require('express');
 import * as os from 'os';
 
 // Internal Types
-import { ButtonId, DingzDeviceInfo } from './util/dingzTypes';
-import { MyStromDeviceInfo, MyStromSwitchTypes } from './util/myStromTypes';
+import { ButtonId, DingzDeviceInfo } from './lib/dingzTypes';
+import { MyStromDeviceInfo, MyStromSwitchTypes } from './lib/myStromTypes';
 
 import {
   DeviceInfo,
@@ -24,13 +24,13 @@ import {
   DeviceTypes,
   AccessoryType,
   ButtonAction,
-} from './util/commonTypes';
+} from './lib/commonTypes';
 
 import {
   InvalidTypeError,
   DeviceNotImplementedError,
   DeviceNotReachableError,
-} from './util/errors';
+} from './lib/errors';
 
 import {
   PLATFORM_NAME,
@@ -40,7 +40,7 @@ import {
 } from './settings';
 
 // TODO: Some refactoring for better event handling, cleanup of the code and separation of concerns
-import { DingzEventBus, DingzEvent } from './util/dingzEventBus';
+import { DingzEventBus, DingzEvent } from './lib/dingzEventBus';
 
 // Accessory classes
 import { DingzAccessory } from './dingzAccessory';

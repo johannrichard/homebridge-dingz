@@ -35,16 +35,16 @@ import {
   WindowCoveringTimer,
   WindowCoveringState,
   WindowCoveringStates,
-} from './util/dingzTypes';
-import { ButtonAction, AccessoryActionUrl } from './util/commonTypes';
+} from './lib/dingzTypes';
+import { ButtonAction, AccessoryActionUrl } from './lib/commonTypes';
 
 import {
   MethodNotImplementedError,
   DeviceNotReachableError,
-} from './util/errors';
+} from './lib/errors';
 import { DingzDaHomebridgePlatform } from './platform';
-import { DingzEvent } from './util/dingzEventBus';
-import { DingzDaBaseAccessory } from './dingzDaBaseAccessory';
+import { DingzEvent } from './lib/dingzEventBus';
+import { DingzDaBaseAccessory } from './lib/dingzDaBaseAccessory';
 
 // Policy for long running tasks, retry every hour
 const retrySlow = Policy.handleAll()

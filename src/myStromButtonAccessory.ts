@@ -7,11 +7,11 @@ import type {
 import { Policy } from 'cockatiel';
 
 import { DingzDaHomebridgePlatform } from './platform';
-import { MyStromDeviceInfo } from './util/myStromTypes';
-import { ButtonAction } from './util/commonTypes';
-import { DingzEvent } from './util/dingzEventBus';
-import { ButtonState } from './util/dingzTypes';
-import { DingzDaBaseAccessory } from './dingzDaBaseAccessory';
+import { MyStromDeviceInfo } from './lib/myStromTypes';
+import { ButtonAction } from './lib/commonTypes';
+import { DingzEvent } from './lib/dingzEventBus';
+import { ButtonState } from './lib/dingzTypes';
+import { DingzDaBaseAccessory } from './lib/dingzDaBaseAccessory';
 
 // Policy for long running tasks, retry every hour
 const retrySlow = Policy.handleAll()

@@ -8,11 +8,11 @@ import { Policy } from 'cockatiel';
 import { Mutex } from 'async-mutex';
 
 import { DingzDaHomebridgePlatform } from './platform';
-import { MyStromDeviceInfo, MyStromPIRReport } from './util/myStromTypes';
-import { ButtonAction } from './util/commonTypes';
-import { DeviceNotReachableError } from './util/errors';
-import { DingzEvent } from './util/dingzEventBus';
-import { DingzDaBaseAccessory } from './dingzDaBaseAccessory';
+import { MyStromDeviceInfo, MyStromPIRReport } from './lib/myStromTypes';
+import { ButtonAction } from './lib/commonTypes';
+import { DeviceNotReachableError } from './lib/errors';
+import { DingzEvent } from './lib/dingzEventBus';
+import { DingzDaBaseAccessory } from './lib/dingzDaBaseAccessory';
 
 // Policy for long running tasks, retry every hour
 const retrySlow = Policy.handleAll()

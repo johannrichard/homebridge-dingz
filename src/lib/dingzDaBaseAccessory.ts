@@ -1,7 +1,7 @@
 import { PlatformAccessory } from 'homebridge';
-import { DingzDaHomebridgePlatform } from './platform';
-import { DeviceInfo } from './util/commonTypes';
-import { DingzEvent } from './util/dingzEventBus';
+import { DingzDaHomebridgePlatform } from '../platform';
+import { DeviceInfo } from './commonTypes';
+import { DingzEvent } from './dingzEventBus';
 
 export class DingzDaBaseAccessory {
   protected device: DeviceInfo;
