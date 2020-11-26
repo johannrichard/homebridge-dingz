@@ -1374,16 +1374,16 @@ export class DingzAccessory extends DingzDaBaseAccessory {
 
     ledService
       .getCharacteristic(this.platform.Characteristic.Hue)
-      .setValue(this.dingzStates.LED.hue);
+      .updateValue(this.dingzStates.LED.hue);
     ledService
       .getCharacteristic(this.platform.Characteristic.Saturation)
-      .setValue(this.dingzStates.LED.saturation);
+      .updateValue(this.dingzStates.LED.saturation);
     ledService
       .getCharacteristic(this.platform.Characteristic.Brightness)
-      .setValue(this.dingzStates.LED.value);
+      .updateValue(this.dingzStates.LED.value);
     ledService
       .getCharacteristic(this.platform.Characteristic.On)
-      .setValue(this.dingzStates.LED.on);
+      .updateValue(this.dingzStates.LED.on);
   }
 
   private setLEDOn(
