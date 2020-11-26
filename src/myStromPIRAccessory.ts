@@ -11,7 +11,7 @@ import { DingzDaHomebridgePlatform } from './platform';
 import { MyStromDeviceInfo, MyStromPIRReport } from './lib/myStromTypes';
 import { ButtonAction } from './lib/commonTypes';
 import { DeviceNotReachableError } from './lib/errors';
-import { DingzEvent } from './lib/dingzEventBus';
+import { PlatformEvent } from './lib/platformEventBus';
 import { DingzDaBaseAccessory } from './lib/dingzDaBaseAccessory';
 
 // Policy for long running tasks, retry every hour
@@ -120,13 +120,13 @@ export class MyStromPIRAccessory extends DingzDaBaseAccessory {
 
     // Subscribe to the REQUEST_STATE_UPDATE event
     this.platform.eb.on(
-      DingzEvent.REQUEST_STATE_UPDATE,
+      PlatformEvent.REQUEST_STATE_UPDATE,
       this.getDeviceStateUpdate.bind(this),
     );
 
     if (!(this.platform.config.motionPoller ?? true)) {
       // Implement *push* event handling
-      this.platform.eb.on(DingzEvent.ACTION, (mac, action) => {
+      this.platform.eb.on(PlatformEvent.ACTION, (mac, action) => {
         this.log.debug(`Processing DingzEvent.ACTION ${action}`);
 
         if (mac === this.device.mac) {

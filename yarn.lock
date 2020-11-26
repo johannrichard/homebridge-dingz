@@ -1746,6 +1746,11 @@ inquirer@^7.0.0:
     strip-ansi "^6.0.0"
     through "^2.3.6"
 
+intervals-for-humans@^1.0.4:
+  version "1.0.4"
+  resolved "https://registry.yarnpkg.com/intervals-for-humans/-/intervals-for-humans-1.0.4.tgz#a39bb74eb4d9019cad402552519e6bcfed491ce8"
+  integrity sha512-j61MrEeyRSCngl10YPhzn0i2fCIohy1dnr3u13TjsQnZQtcRs6CEnUAnsBypxpzjWV0K63+JVRU2TkoQKp2heA==
+
 ip@^1.1.3, ip@^1.1.5:
   version "1.1.5"
   resolved "https://registry.yarnpkg.com/ip/-/ip-1.1.5.tgz#bdded70114290828c0a039e72ef25f5aaec4354a"

@@ -9,7 +9,7 @@ import { Policy } from 'cockatiel';
 import { DingzDaHomebridgePlatform } from './platform';
 import { MyStromDeviceInfo } from './lib/myStromTypes';
 import { ButtonAction } from './lib/commonTypes';
-import { DingzEvent } from './lib/dingzEventBus';
+import { PlatformEvent } from './lib/platformEventBus';
 import { ButtonState } from './lib/dingzTypes';
 import { DingzDaBaseAccessory } from './lib/dingzDaBaseAccessory';
 
@@ -120,7 +120,7 @@ export class MyStromButtonAccessory extends DingzDaBaseAccessory {
       .getCharacteristic(this.platform.Characteristic.ChargingState)
       .on(CharacteristicEventTypes.GET, this.getChargingState.bind(this));
 
-    this.platform.eb.on(DingzEvent.ACTION, (mac, action, battery) => {
+    this.platform.eb.on(PlatformEvent.ACTION, (mac, action, battery) => {
       if (mac === this.device.mac) {
         this.buttonState = action ?? ButtonAction.SINGLE_PRESS;
         this.batteryLevel = battery;

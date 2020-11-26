@@ -4,47 +4,53 @@ import { ButtonId } from './dingzTypes';
 
 // Platform elements
 // EVENT TYPES
-export const enum DingzEvent {
+export const enum PlatformEvent {
   UPDATE_DEVICE_INFO = 'updateDeviceInfo',
   ACTION = 'deviceAction',
   REQUEST_STATE_UPDATE = 'requestStateUpdate',
   PUSH_STATE_UPDATE = 'pushStateUpdate',
 }
 
-export declare interface DingzEventBus {
+export declare interface PlatformEventBus {
   on(
-    event: DingzEvent.ACTION,
+    event: PlatformEvent.ACTION,
     listener: (mac: string, action: ButtonAction, battery: number) => void,
   ): this;
   on(
-    event: DingzEvent.ACTION,
+    event: PlatformEvent.ACTION,
     listener: (mac: string, action: ButtonAction, button: ButtonId) => void,
   ): this;
   on(
-    event: DingzEvent.UPDATE_DEVICE_INFO,
+    event: PlatformEvent.UPDATE_DEVICE_INFO,
     listener: (deviceInfo: DeviceInfo) => void,
   ): this;
-  on(event: DingzEvent.REQUEST_STATE_UPDATE, listener: () => void): this;
-  on(event: DingzEvent.PUSH_STATE_UPDATE, listener: () => void): this;
+  on(event: PlatformEvent.REQUEST_STATE_UPDATE, listener: () => void): this;
+  on(
+    event: PlatformEvent.PUSH_STATE_UPDATE,
+    listener: (mac: string) => void,
+  ): this;
 
   emit(
-    event: DingzEvent.ACTION,
+    event: PlatformEvent.ACTION,
     mac: string,
     action: ButtonAction,
     battery: number,
   ): boolean;
   emit(
-    event: DingzEvent.ACTION,
+    event: PlatformEvent.ACTION,
     mac: string,
     action: ButtonAction,
     button: ButtonId,
   ): boolean;
-  emit(event: DingzEvent.UPDATE_DEVICE_INFO, deviceInfo: DeviceInfo): boolean;
-  emit(event: DingzEvent.REQUEST_STATE_UPDATE): boolean;
-  emit(event: DingzEvent.PUSH_STATE_UPDATE): boolean;
+  emit(
+    event: PlatformEvent.UPDATE_DEVICE_INFO,
+    deviceInfo: DeviceInfo,
+  ): boolean;
+  emit(event: PlatformEvent.REQUEST_STATE_UPDATE): boolean;
+  emit(event: PlatformEvent.PUSH_STATE_UPDATE, mac: string): boolean;
 }
 
-export class DingzEventBus extends EventEmitter {
+export class PlatformEventBus extends EventEmitter {
   constructor() {
     super();
     this.setMaxListeners(20); // Maximum of 20 services

@@ -1,25 +1,57 @@
 import { Logger, PlatformAccessory } from 'homebridge';
 import { DingzDaHomebridgePlatform } from '../platform';
 import { DeviceInfo } from './commonTypes';
-import { DingzEvent } from './dingzEventBus';
+import { PlatformEvent } from './platformEventBus';
 
+import axios, { AxiosRequestConfig, AxiosError, AxiosInstance } from 'axios';
+import axiosRetry from 'axios-retry';
+
+import { REQUEST_RETRIES, RETRY_TIMEOUT } from '../settings';
+import { DeviceNotReachableError } from './errors';
 export class DingzDaBaseAccessory {
+  protected static axiosRetryConfig = {
+    retries: REQUEST_RETRIES,
+    retryDelay: axiosRetry.exponentialDelay,
+    shouldResetTimeout: true,
+  };
+
+  protected static axios = axios;
+
   protected readonly log: Logger;
+  protected readonly request: AxiosInstance;
 
   protected device: DeviceInfo;
   protected baseUrl: string;
+  protected isReachable = true;
 
   constructor(
     protected readonly platform: DingzDaHomebridgePlatform,
     protected readonly accessory: PlatformAccessory,
   ) {
+    // Set-up axios instances
     this.device = this.accessory.context.device;
     this.baseUrl = `http://${this.device.address}`;
+
     this.log = platform.log;
+    this.request = axios.create({
+      baseURL: this.baseUrl,
+      timeout: RETRY_TIMEOUT,
+      headers: { Token: this.device.token ?? '' },
+    });
+
+    /**
+     * Set-up the protected and static axios instance
+     *
+     * This leads to up to 18s delay between retries before failing
+     * Each request will time-out after 3000 ms
+     * maxdelay -> 2^7*100 ms -> 12.8s
+     */
+    axiosRetry(this.request, DingzDaBaseAccessory.axiosRetryConfig);
+    axiosRetry(axios, DingzDaBaseAccessory.axiosRetryConfig);
 
     // Register listener for updated device info (e.g. on restore with new IP)
     this.platform.eb.on(
-      DingzEvent.UPDATE_DEVICE_INFO,
+      PlatformEvent.UPDATE_DEVICE_INFO,
       (deviceInfo: DeviceInfo) => {
         if (deviceInfo.mac === this.device.mac) {
           this.log.debug(
@@ -61,5 +93,68 @@ export class DingzDaBaseAccessory {
       'setAccessoryInformation() not implemented for',
       this.device.accessoryClass,
     );
+  }
+
+  /**
+   * Handler for request errors
+   * @param e AxiosError: the error returned by this.request()
+   */
+  protected handleRequestErrors = (e: AxiosError) => {
+    if (e.isAxiosError) {
+      switch (e.code) {
+        case 'ECONNABORTED':
+          this.log.error('Connection aborted --> ' + e.config.url);
+          this.isReachable = false;
+          break;
+        default:
+          break;
+      }
+      this.log.error('HTTP Response Error in --> ' + e.config.url);
+      this.log.error(e.code ?? 'NOERRCODE');
+      this.log.error(e.message);
+      this.log.error(e.stack ?? '<No stack>');
+      this.log.error(e.response?.data);
+      this.log.error(e.response?.statusText ?? '');
+    } else if (e instanceof DeviceNotReachableError) {
+      this.log.error(
+        `handleRequestErrors() --> ${this.device.name} (${this.device.address})`,
+      );
+      this.isReachable = false;
+    } else {
+      this.log.error(e.message + '\n' + e.stack);
+      throw new Error('Device request failed -> escalating error');
+    }
+  };
+
+  protected static async _fetch({
+    url,
+    method = 'get',
+    returnBody = false,
+    token,
+    body,
+  }: {
+    url: string;
+    method?: string;
+    returnBody?: boolean;
+    token?: string;
+    body?: object | string;
+  }) {
+    // Retry up to 3 times, with exponential Backoff
+    // (https://developers.google.com/analytics/devguides/reporting/core/v3/errors#backoff)
+    const data = await axios({
+      url: url,
+      method: method,
+      headers: {
+        Token: token ?? '',
+      },
+      data: body,
+    } as AxiosRequestConfig).then((response) => {
+      if (returnBody) {
+        return response.data;
+      } else {
+        return response.status;
+      }
+    });
+    return data;
   }
 }

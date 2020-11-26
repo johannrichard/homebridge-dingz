@@ -12,7 +12,7 @@ import qs from 'qs';
 
 import { DingzDaHomebridgePlatform } from './platform';
 import { MyStromDeviceInfo, MyStromLightbulbReport } from './lib/myStromTypes';
-import { DingzEvent } from './lib/dingzEventBus';
+import { PlatformEvent } from './lib/platformEventBus';
 import { DingzDaBaseAccessory } from './lib/dingzDaBaseAccessory';
 
 /**
@@ -106,7 +106,7 @@ export class MyStromLightbulbAccessory extends DingzDaBaseAccessory {
 
     // Subscribe to the REQUEST_STATE_UPDATE event
     this.platform.eb.on(
-      DingzEvent.REQUEST_STATE_UPDATE,
+      PlatformEvent.REQUEST_STATE_UPDATE,
       this.getDeviceStateUpdate.bind(this),
     );
   }
