@@ -1,7 +1,8 @@
-import { Logger, PlatformAccessory } from 'homebridge';
+import { PlatformAccessory } from 'homebridge';
 import { DingzDaHomebridgePlatform } from '../platform';
 import { DeviceInfo } from './commonTypes';
 import { PlatformEvent } from './platformEventBus';
+import { DingzLogger } from './dingzLogHelper';
 
 import axios, { AxiosRequestConfig, AxiosError, AxiosInstance } from 'axios';
 import axiosRetry from 'axios-retry';
@@ -17,7 +18,7 @@ export class DingzDaBaseAccessory {
 
   protected static axios = axios;
 
-  protected readonly log: Logger;
+  protected readonly log: DingzLogger;
   protected readonly request: AxiosInstance;
 
   protected device: DeviceInfo;
@@ -32,7 +33,7 @@ export class DingzDaBaseAccessory {
     this.device = this.accessory.context.device;
     this.baseUrl = `http://${this.device.address}`;
 
-    this.log = platform.log;
+    this.log = new DingzLogger(this.device.name, platform.log);
     this.request = axios.create({
       baseURL: this.baseUrl,
       timeout: RETRY_TIMEOUT,
