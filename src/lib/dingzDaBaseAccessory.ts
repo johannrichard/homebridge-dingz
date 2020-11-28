@@ -4,7 +4,7 @@ import { DeviceInfo } from './commonTypes';
 import { PlatformEvent } from './platformEventBus';
 import { DingzLogger } from './dingzLogHelper';
 
-import axios, { AxiosRequestConfig, AxiosError, AxiosInstance } from 'axios';
+import axios, { AxiosError, AxiosInstance } from 'axios';
 import axiosRetry from 'axios-retry';
 
 import { REQUEST_RETRIES, RETRY_TIMEOUT } from '../settings';
@@ -26,7 +26,6 @@ export class DingzDaBaseAccessory {
   protected readonly request: AxiosInstance;
   protected readonly debugHelper: AxiosDebugHelper;
 
-  protected device: DeviceInfo;
   protected baseUrl: string;
   protected isReachable = true;
 
