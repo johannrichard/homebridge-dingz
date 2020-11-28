@@ -13,7 +13,10 @@ export class DingzLogger {
   constructor(
     private readonly dingzPrefix: string,
     private readonly logger: Logger,
-  ) {}
+  ) {
+    // Force color
+    chalk.level = 1;
+  }
 
   /**
    * Logger.log like method
