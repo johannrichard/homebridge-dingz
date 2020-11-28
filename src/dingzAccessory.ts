@@ -290,10 +290,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
           this.dingzStates.WindowCovers = state.blinds;
 
           // Push the Update to HomeBridge
-          this.platform.eb.emit(
-            PlatformEvent.PUSH_STATE_UPDATE,
-            this.device.mac,
-          );
+          this.eb.emit(AccessoryEvent.PUSH_STATE_UPDATE);
         } else {
           this.log.error('Can`t get device state');
         }
@@ -371,8 +368,8 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     lightService.setCharacteristic(this.platform.Characteristic.Name, 'Light');
     this.services.push(lightService);
 
-    this.platform.eb.on(
-      PlatformEvent.PUSH_STATE_UPDATE,
+    this.eb.on(
+      AccessoryEvent.PUSH_STATE_UPDATE,
       this.updateLightSensor.bind(this, lightService),
     );
   }
