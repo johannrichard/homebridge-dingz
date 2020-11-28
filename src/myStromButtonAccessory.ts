@@ -200,18 +200,18 @@ export class MyStromButtonAccessory extends DingzDaBaseAccessory {
 
   private getButtonState(callback: CharacteristicGetCallback) {
     const currentState = this.buttonState;
-    callback(null, currentState);
+    callback(this.reachabilityState, currentState);
   }
 
   private getSwitchButtonState(callback: CharacteristicGetCallback) {
     const currentState = this.switchButtonState;
     this.log.info('Get Switch State ->', currentState);
-    callback(null, currentState);
+    callback(this.reachabilityState, currentState);
   }
 
   private getBatteryLevel(callback: CharacteristicGetCallback) {
     const currentLevel = this.batteryLevel;
-    callback(null, currentLevel);
+    callback(this.reachabilityState, currentLevel);
   }
 
   private getStatusBatteryLow(callback: CharacteristicGetCallback) {
@@ -226,6 +226,6 @@ export class MyStromButtonAccessory extends DingzDaBaseAccessory {
 
   private getChargingState(callback: CharacteristicGetCallback) {
     const currentState = this.chargingState;
-    callback(null, currentState);
+    callback(this.reachabilityState, currentState);
   }
 }

@@ -27,7 +27,7 @@ export class DingzDaBaseAccessory {
   protected readonly debugHelper: AxiosDebugHelper;
 
   protected baseUrl: string;
-  protected isReachable = true;
+  protected reachabilityState: null | Error = null;
 
   constructor(
     protected readonly platform: DingzDaHomebridgePlatform,
@@ -106,7 +106,7 @@ export class DingzDaBaseAccessory {
 
           // Set accessory to reachable and
           // updateAccessory()
-          this.isReachable = true;
+          this.reachabilityState = null;
           this.updateAccessory();
         }
       },
@@ -146,11 +146,11 @@ export class DingzDaBaseAccessory {
           this.log.error(
             'HTTP ECONNABORTED Connection aborted --> ' + this.device.address,
           );
-          this.isReachable = false;
+          this.reachabilityState = new Error();
           break;
         case 'EHOSTDOWN':
           this.log.error('HTTP EHOSTDOWN Host down --> ' + this.device.address);
-          this.isReachable = false;
+          this.reachabilityState = new Error();
           break;
         default:
           this.log.error(
@@ -163,7 +163,7 @@ export class DingzDaBaseAccessory {
       this.log.error(
         `handleRequestErrors() --> ${this.accessory.displayName} (${this.device.address})`,
       );
-      this.isReachable = false;
+      this.reachabilityState = new Error();
     } else {
       this.log.error(e.message + '\n' + e.stack);
       throw new Error('Device request failed -> escalating error');

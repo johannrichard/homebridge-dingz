@@ -164,7 +164,7 @@ export class MyStromLightbulbAccessory extends DingzDaBaseAccessory {
     const isOn = this.lightbulbState.on;
     this.platform.log.debug('Get Characteristic On ->', isOn);
 
-    callback(this.isReachable ? null : new Error(), isOn);
+    callback(this.reachabilityState, isOn);
   }
 
   private async setHue(
@@ -177,7 +177,7 @@ export class MyStromLightbulbAccessory extends DingzDaBaseAccessory {
 
   private getHue(callback: CharacteristicGetCallback) {
     const hue: number = this.lightbulbState.hue;
-    callback(this.isReachable ? null : new Error(), hue);
+    callback(this.reachabilityState, hue);
   }
 
   private async setSaturation(
@@ -190,7 +190,7 @@ export class MyStromLightbulbAccessory extends DingzDaBaseAccessory {
 
   private getSaturation(callback: CharacteristicGetCallback) {
     const saturation: number = this.lightbulbState.saturation;
-    callback(this.isReachable ? null : new Error(), saturation);
+    callback(this.reachabilityState, saturation);
   }
 
   private async setBrightness(
@@ -203,7 +203,7 @@ export class MyStromLightbulbAccessory extends DingzDaBaseAccessory {
 
   private getBrightness(callback: CharacteristicGetCallback) {
     const brightness = this.lightbulbState.value;
-    callback(this.isReachable ? null : new Error(), brightness);
+    callback(this.reachabilityState, brightness);
   }
 
   // Set individual dimmer
@@ -224,12 +224,7 @@ export class MyStromLightbulbAccessory extends DingzDaBaseAccessory {
       .post(setDimmerUrl, data)
       .catch(this.handleRequestErrors.bind(this))
       .finally(() => {
-        // make sure we callback
-        if (!this.isReachable) {
-          callback(new Error());
-        } else {
-          callback(null);
-        }
+        callback(this.reachabilityState);
       });
   }
 

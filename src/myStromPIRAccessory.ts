@@ -218,7 +218,7 @@ export class MyStromPIRAccessory extends DingzDaBaseAccessory {
     const light: number = this.pirState?.light ?? 42;
     this.log.debug('Get Characteristic Ambient Light Level ->', light, ' lux');
 
-    callback(this.isReachable ? null : new Error(), light);
+    callback(this.reachabilityState, light);
   }
 
   /**
@@ -229,7 +229,7 @@ export class MyStromPIRAccessory extends DingzDaBaseAccessory {
     const temperature: number = this.pirState?.temperature;
     this.log.debug('Get Characteristic Temperature ->', temperature, '° C');
 
-    callback(this.isReachable ? null : new Error(), temperature);
+    callback(this.reachabilityState, temperature);
   }
 
   /**
@@ -239,7 +239,7 @@ export class MyStromPIRAccessory extends DingzDaBaseAccessory {
   private getMotionDetected(callback: CharacteristicGetCallback) {
     // set this to a valid value for MotionDetected
     const isMotion = this.pirState.motion;
-    callback(this.isReachable ? null : new Error(), isMotion);
+    callback(this.reachabilityState, isMotion);
   }
 
   private async getDeviceReport(): Promise<MyStromPIRReport> {

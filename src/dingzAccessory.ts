@@ -269,9 +269,9 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     this.getDeviceState()
       .then((state) => {
         if (typeof state !== 'undefined') {
-          if (!this.isReachable) {
+          if (this.reachabilityState !== null) {
             // Update reachability -- obviously, we're online again
-            this.isReachable = true;
+            this.reachabilityState = null;
             this.log.warn(
               `Device --> ${this.accessory.displayName} (${this.device.address}) --> recovered from unreachable state`,
             );
@@ -293,7 +293,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
       })
       .catch((e) => {
         if (e instanceof DeviceNotReachableError) {
-          this.isReachable = false;
+          this.reachabilityState = new Error();
           this.log.error('ERROR: Failure to retrieve state', e.message);
         } else {
           throw e;
@@ -337,7 +337,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
   private getTemperature(callback: CharacteristicSetCallback) {
     // set this to a valid value for CurrentTemperature
     const currentTemperature: number = this.dingzStates.Temperature;
-    callback(null, currentTemperature);
+    callback(this.reachabilityState, currentTemperature);
   }
 
   private addLightSensorService() {
@@ -651,7 +651,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     callback: CharacteristicGetCallback,
   ) {
     const currentState = this.dingzStates.Buttons[button].event;
-    callback(null, currentState);
+    callback(this.reachabilityState, currentState);
   }
 
   private getSwitchButtonState(
@@ -660,7 +660,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
   ) {
     const currentState = this.dingzStates.Buttons[button].state;
     this.log.info('Get Switch State of ->', button, '-> state:', currentState);
-    callback(null, currentState);
+    callback(this.reachabilityState, currentState);
   }
 
   private setSwitchButtonState(
@@ -670,7 +670,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
   ) {
     this.dingzStates.Buttons[button].state = value as ButtonState;
     this.log.info('Set Switch State of ->', button, '-> state:', value);
-    callback(null);
+    callback(this.reachabilityState);
   }
 
   private addDimmerService({
@@ -765,7 +765,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
         e.toString(),
       );
     }
-    callback(null);
+    callback(this.reachabilityState);
   }
 
   /**
@@ -773,7 +773,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
    */
   private getOn(index: DimmerId, callback: CharacteristicGetCallback) {
     const isOn: boolean = this.dingzStates.Dimmers[index]?.on ?? false;
-    callback(null, isOn);
+    callback(this.reachabilityState, isOn);
   }
 
   private async setBrightness(
@@ -786,7 +786,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     this.dingzStates.Dimmers[index].on = isOn;
 
     await this.setDeviceDimmer(index, isOn, value as number);
-    callback(null);
+    callback(this.reachabilityState);
   }
 
   // Add WindowCovering (Blinds)
@@ -931,9 +931,9 @@ export class DingzAccessory extends DingzDaBaseAccessory {
         id,
         blind: position as number,
         lamella: windowCovering.lamella,
+        callback: callback,
       });
     }
-    callback(null);
   }
 
   private getPosition(
@@ -953,7 +953,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
       blind,
     );
 
-    callback(null, blind);
+    callback(this.reachabilityState, blind);
   }
 
   private async setTiltAngle(
@@ -972,9 +972,9 @@ export class DingzAccessory extends DingzDaBaseAccessory {
         id,
         blind: this.dingzStates.WindowCovers[id].lamella,
         lamella: angle as number,
+        callback: callback,
       });
     }
-    callback(null);
   }
 
   /**
@@ -997,7 +997,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
       tiltAngle,
     );
 
-    callback(null, tiltAngle);
+    callback(this.reachabilityState, tiltAngle);
   }
 
   private getPositionState(
@@ -1030,7 +1030,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
         positionState,
       );
     }
-    callback(null, positionState);
+    callback(this.reachabilityState, positionState);
   }
 
   /**
@@ -1112,9 +1112,9 @@ export class DingzAccessory extends DingzDaBaseAccessory {
       token: this.device.token,
     })
       .then(({ dingzDevices, inputConfig, dimmerConfig }) => {
-        if (!this.isReachable) {
+        if (this.reachabilityState !== null) {
           this.log.warn('Device recovered from unreachable state');
-          this.isReachable = true;
+          this.reachabilityState = null;
         }
 
         if (inputConfig?.inputs[0]) {
@@ -1349,7 +1349,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
 
   private getLEDOn(callback: CharacteristicGetCallback) {
     const isOn = this.dingzStates.LED.on;
-    callback(this.isReachable ? null : new Error(), isOn);
+    callback(this.reachabilityState, isOn);
   }
 
   private setLEDHue(
@@ -1463,10 +1463,12 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     id,
     blind,
     lamella,
+    callback,
   }: {
     id: WindowCoveringId;
     blind: number;
     lamella: number;
+    callback: CharacteristicSetCallback;
   }) {
     // The API says the parameters can be omitted. This is not true
     // {{ip}}/api/v1/shade/0?blind=<value>&lamella=<value>
@@ -1482,7 +1484,10 @@ export class DingzAccessory extends DingzDaBaseAccessory {
           { encode: false },
         ),
       )
-      .catch(this.handleRequestErrors.bind(this));
+      .catch(this.handleRequestErrors.bind(this))
+      .finally(() => {
+        callback(this.reachabilityState);
+      });
   }
 
   // We need Target vs Current to accurately update WindowCoverings
@@ -1522,12 +1527,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
       )
       .catch(this.handleRequestErrors.bind(this))
       .finally(() => {
-        // make sure we callback
-        if (!this.isReachable) {
-          callback(new Error());
-        } else {
-          callback(null);
-        }
+        callback(this.reachabilityState);
       });
   }
 

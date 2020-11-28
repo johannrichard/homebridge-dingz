@@ -149,19 +149,19 @@ export class MyStromSwitchAccessory extends DingzDaBaseAccessory {
     const isOn = this.outletState?.relay;
     this.log.debug('Get Characteristic On ->', isOn);
 
-    callback(this.isReachable ? null : new Error(), isOn);
+    callback(this.reachabilityState, isOn);
   }
 
   private getTemperature(callback: CharacteristicGetCallback) {
     const temperature: number = this.outletState?.temperature;
     this.log.debug('Get Characteristic Temperature ->', temperature, '° C');
-    callback(this.isReachable ? null : new Error(), temperature);
+    callback(this.reachabilityState, temperature);
   }
 
   private getOutletInUse(callback: CharacteristicGetCallback) {
     const inUse: boolean = this.outletState?.power > 0;
     this.log.debug('Get Characteristic OutletInUse ->', inUse);
-    callback(this.isReachable ? null : new Error(), inUse);
+    callback(this.reachabilityState, inUse);
   }
 
   private setDeviceState(callback: CharacteristicSetCallback) {
@@ -172,12 +172,7 @@ export class MyStromSwitchAccessory extends DingzDaBaseAccessory {
       .get(relayUrl)
       .catch(this.handleRequestErrors.bind(this))
       .finally(() => {
-        // make sure we callback
-        if (!this.isReachable) {
-          callback(new Error());
-        } else {
-          callback(null);
-        }
+        callback(this.reachabilityState);
       });
   }
 
