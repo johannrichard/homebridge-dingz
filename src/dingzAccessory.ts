@@ -31,7 +31,7 @@ import {
   DingzLEDState,
   DingzMotionData,
   DingzState,
-  WindowCoveringId,
+  WindowCoveringIndex,
   WindowCoveringTimer,
   WindowCoveringStates,
   DingzDeviceWindowCoveringConfig,
@@ -285,6 +285,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
           this.dingzStates.Temperature = state.sensors.room_temperature;
           this.dingzStates.Brightness = state.sensors.brightness;
           // Lamellas
+          // TODO: assign right values
           this.dingzStates.WindowCovers = state.blinds;
 
           // Push the Update to HomeBridge
@@ -544,7 +545,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
             this.addWindowCoveringService({
               name: windowCoveringConfig[0].name,
               id: 'M1',
-              index: 1,
+              index: 0,
             }),
           );
           windowCoverServices.push(
@@ -840,7 +841,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
   }: {
     name: string;
     id: string;
-    index: WindowCoveringId;
+    index: WindowCoveringIndex;
   }) {
     const service: Service =
       this.accessory.getServiceById(this.platform.Service.WindowCovering, id) ??
@@ -889,7 +890,11 @@ export class DingzAccessory extends DingzDaBaseAccessory {
 
   // Window Covering functions
   // TODO: Use available information to more accurately set WindowCovering State
-  private updateWindowCoveringState(id: WindowCoveringId, service: Service) {
+  private updateWindowCoveringState(
+    index: WindowCoveringIndex,
+    service: Service,
+  ) {
+    const id = this.getWindowCoveringId(index);
     const state: WindowCoveringStates = this.dingzStates.WindowCovers[id];
     if (state) {
       /**
@@ -939,25 +944,26 @@ export class DingzAccessory extends DingzDaBaseAccessory {
   }
 
   private async setPosition(
-    id: WindowCoveringId,
+    index: WindowCoveringIndex,
     position: CharacteristicValue,
     callback: CharacteristicSetCallback,
   ) {
-    if (this.dingzStates.WindowCovers[id]) {
-      const windowCovering: WindowCoveringStates = this.dingzStates
-        .WindowCovers[id];
-
+    const id = this.getWindowCoveringId(index);
+    const windowCovering = this.dingzStates.WindowCovers[id];
+    if (windowCovering) {
       // Make sure we're setting motion when changing the position
       if (position > windowCovering.position) {
-        this.dingzStates.WindowCovers[id].moving = 'down';
+        windowCovering.moving = 'up';
       } else if (position < windowCovering.position) {
-        this.dingzStates.WindowCovers[id].moving = 'up';
+        windowCovering.moving = 'down';
       } else {
-        this.dingzStates.WindowCovers[id].moving = 'stop';
+        windowCovering.moving = 'stop';
       }
 
+      this.log.warn('Blinds moving: ', windowCovering.moving, '-->', position);
+
       await this.setWindowCovering({
-        id,
+        id: id,
         blind: position as number,
         lamella: windowCovering.lamella,
         callback: callback,
@@ -966,18 +972,19 @@ export class DingzAccessory extends DingzDaBaseAccessory {
   }
 
   private getPosition(
-    id: WindowCoveringId,
+    index: WindowCoveringIndex,
     callback: CharacteristicGetCallback,
   ) {
     this.log.debug(
       'WindowCoverings: ',
       JSON.stringify(this.dingzStates.WindowCovers),
     );
+    const id = this.getWindowCoveringId(index);
     const blind: number = this.dingzStates.WindowCovers[id]?.position;
 
     this.log.debug(
       'Get Characteristic for WindowCovering',
-      id,
+      index,
       'Current Position ->',
       blind,
     );
@@ -986,19 +993,20 @@ export class DingzAccessory extends DingzDaBaseAccessory {
   }
 
   private async setTiltAngle(
-    id: WindowCoveringId,
+    index: WindowCoveringIndex,
     angle: CharacteristicValue,
     callback: CharacteristicSetCallback,
   ) {
     this.log.debug(
       'Set Characteristic TargetHorizontalTiltAngle on ',
-      id,
+      index,
       '->',
       angle,
     );
+    const id = this.getWindowCoveringId(index);
     if (this.dingzStates.WindowCovers[id]) {
       await this.setWindowCovering({
-        id,
+        id: id,
         blind: this.dingzStates.WindowCovers[id].lamella,
         lamella: angle as number,
         callback: callback,
@@ -1010,18 +1018,19 @@ export class DingzAccessory extends DingzDaBaseAccessory {
    * Handle the "GET" requests from HomeKit
    */
   private getTiltAngle(
-    id: WindowCoveringId,
+    index: WindowCoveringIndex,
     callback: CharacteristicGetCallback,
   ) {
     this.log.debug(
       'WindowCoverings: ',
       JSON.stringify(this.dingzStates.WindowCovers),
     );
+    const id = this.getWindowCoveringId(index);
     const tiltAngle: number = this.dingzStates.WindowCovers[id]?.lamella;
 
     this.log.debug(
       'Get Characteristic for WindowCovering',
-      id,
+      index,
       'Current TiltAngle ->',
       tiltAngle,
     );
@@ -1030,7 +1039,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
   }
 
   private getPositionState(
-    id: WindowCoveringId,
+    index: WindowCoveringIndex,
     callback: CharacteristicGetCallback,
   ) {
     this.log.debug(
@@ -1038,7 +1047,10 @@ export class DingzAccessory extends DingzDaBaseAccessory {
       JSON.stringify(this.dingzStates.WindowCovers),
     );
     let positionState = this.platform.Characteristic.PositionState.STOPPED;
+
+    const id = this.getWindowCoveringId(index);
     const moving = this.dingzStates.WindowCovers[id]?.moving;
+
     if (moving) {
       switch (moving) {
         case 'down':
@@ -1054,7 +1066,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
 
       this.log.debug(
         'Get Characteristic for WindowCovering',
-        id,
+        index,
         'Current Position State ->',
         positionState,
       );
@@ -1499,7 +1511,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     lamella,
     callback,
   }: {
-    id: WindowCoveringId;
+    id: WindowCoveringIndex;
     blind: number;
     lamella: number;
     callback: CharacteristicSetCallback;
@@ -1578,6 +1590,23 @@ export class DingzAccessory extends DingzDaBaseAccessory {
         return response.data;
       })
       .catch(this.handleRequestErrors.bind(this));
+  }
+
+  /**
+   * Get the right blind state.
+   * It's complicated ...
+   * @param index *aboslute* index value (i.e. 0/1)
+   */
+  private getWindowCoveringId(index: WindowCoveringIndex): 0 | 1 {
+    if (this.dingzStates.WindowCovers.length === 2 || index === 0) {
+      // we have either two blinds *or* only one but index 0
+      return 0;
+    } else if (index === 1 && this.dingzStates.WindowCovers.length === 1) {
+      // we have one blind and it's index 1
+      return 0;
+    } else {
+      return 1;
+    }
   }
 
   /**

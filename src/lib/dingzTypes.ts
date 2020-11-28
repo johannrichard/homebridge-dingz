@@ -143,7 +143,8 @@ export interface DingzDeviceWindowCoveringConfig {
   blinds: DingzWindowCoveringConfigItem[];
 }
 
-export type WindowCoveringId = 0 | 1;
+// The absolute position of the blind
+export type WindowCoveringIndex = 0 | 1;
 export interface WindowCoveringPosition {
   blind: number;
   lamella: number;
@@ -163,7 +164,10 @@ export interface WindowCoveringStates {
     absolute: number;
   };
 }
-export type WindowCoveringProps = Record<WindowCoveringId, WindowCoveringState>;
+export type WindowCoveringProps = Record<
+  WindowCoveringIndex,
+  WindowCoveringState
+>;
 
 // FIXME: #103 Replace dispersed data gathering with `api/v1/state` endpoint
 export interface DingzState {
