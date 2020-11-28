@@ -104,18 +104,22 @@ export class DingzDaBaseAccessory {
     if (e.isAxiosError) {
       switch (e.code) {
         case 'ECONNABORTED':
-          this.log.error('Connection aborted --> ' + e.config.url);
+          this.log.error(
+            'HTTP ECONNABORTED Connection aborted --> ' + this.device.address,
+          );
+          this.isReachable = false;
+          break;
+        case 'EHOSTDOWN':
+          this.log.error('HTTP EHOSTDOWN Host down --> ' + this.device.address);
           this.isReachable = false;
           break;
         default:
+          this.log.error(
+            `HTTP ${e.code} ${e.message} ${e.response?.statusText ?? ' '}--> ` +
+              this.device.address,
+          );
           break;
       }
-      this.log.error('HTTP Response Error in --> ' + e.config.url);
-      this.log.error(e.code ?? 'NOERRCODE');
-      this.log.error(e.message);
-      this.log.error(e.stack ?? '<No stack>');
-      this.log.error(e.response?.data);
-      this.log.error(e.response?.statusText ?? '');
     } else if (e instanceof DeviceNotReachableError) {
       this.log.error(
         `handleRequestErrors() --> ${this.device.name} (${this.device.address})`,
