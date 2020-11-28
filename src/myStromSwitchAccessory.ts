@@ -112,7 +112,7 @@ export class MyStromSwitchAccessory extends DingzDaBaseAccessory {
   }
 
   // Get updated device info and update the corresponding values
-  protected getDeviceStateUpdate() {
+  protected getDeviceStateUpdate(): void {
     this.getDeviceReport()
       .then((report) => {
         // push the new value to HomeKit

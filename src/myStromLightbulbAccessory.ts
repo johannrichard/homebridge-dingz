@@ -105,18 +105,19 @@ export class MyStromLightbulbAccessory extends DingzDaBaseAccessory {
   }
 
   // Get updated device info and update the corresponding values
-  protected getDeviceStateUpdate() {
+  protected getDeviceStateUpdate(): void {
     this.getDeviceReport(this.device.mac)
       .then((report) => {
-        // push the new value to HomeKit
-        this.lightbulbState = report;
         // FIXME: Add 'mono' as well
-        if (report.mode === 'hsv') {
+        if (report && report.mode === 'hsv') {
+          // push the new value to HomeKit
+          this.lightbulbState = report;
+
           const hsv = report.color.split(';');
           this.lightbulbState.hue = parseInt(hsv[0]);
           this.lightbulbState.saturation = parseInt(hsv[1]);
           this.lightbulbState.value = parseInt(hsv[2]);
-        } else {
+        } else if (report && report.mode === 'rgb') {
           // rgbw
           const hsv = new simpleColorConverter({
             color: `hex #${report.color}`,
@@ -230,13 +231,9 @@ export class MyStromLightbulbAccessory extends DingzDaBaseAccessory {
 
   private async getDeviceReport(mac: string): Promise<MyStromLightbulbReport> {
     const reportUrl = `${this.baseUrl}/api/v1/device/`;
-    return await DingzDaHomebridgePlatform.fetch({
-      url: reportUrl,
-      returnBody: true,
-      token: this.device.token,
-    })
+    return await this.request(reportUrl)
       .then((response) => {
-        return response[mac];
+        return response.data[mac];
       })
       .catch(this.handleRequestErrors.bind(this));
   }

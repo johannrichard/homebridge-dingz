@@ -196,7 +196,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
    * - Manufacturer
    * - S/N etc.
    */
-  protected setAccessoryInformation() {
+  protected setAccessoryInformation(): void {
     // Sanity check for "empty" SerialNumber
     this.log.debug(
       `Attempting to set SerialNumber (which can not be empty) -> front_sn: <${this.dingzDeviceInfo.front_sn}>`,
@@ -267,7 +267,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
 
   // Get updated device info and update the corresponding values
   // TODO: #103, #116, #120, #123 -- fetch state for all device elements
-  protected getDeviceStateUpdate() {
+  protected getDeviceStateUpdate(): void {
     this.getDeviceState()
       .then((state) => {
         if (typeof state !== 'undefined') {
@@ -1128,7 +1128,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
 
   // FIXME: [FIX] refactor dingz.updateAccessory #103
   // Updates the Accessory (e.g. if the config has changed)
-  protected updateAccessory() {
+  protected updateAccessory(): void {
     this.log.info(
       'Update accessory',
       this.device.address,

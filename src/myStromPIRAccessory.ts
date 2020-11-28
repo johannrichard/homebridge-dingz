@@ -163,7 +163,7 @@ export class MyStromPIRAccessory extends DingzDaBaseAccessory {
   }
 
   // Get updated device info and update the corresponding values
-  protected getDeviceStateUpdate() {
+  protected getDeviceStateUpdate(): void {
     this.getDeviceReport()
       .then((report) => {
         if (report) {

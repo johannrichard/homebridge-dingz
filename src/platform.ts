@@ -8,7 +8,7 @@ import type {
 } from 'homebridge';
 import { Policy, ConsecutiveBreaker } from 'cockatiel';
 import { createSocket, Socket, RemoteInfo } from 'dgram';
-import axios, { AxiosRequestConfig, AxiosError } from 'axios';
+import axios, { AxiosError } from 'axios';
 import axiosRetry from 'axios-retry';
 import * as bodyParser from 'body-parser';
 import i4h from 'intervals-for-humans';
@@ -126,7 +126,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
    * This function is invoked when homebridge restores cached accessories from disk at startup.
    * It should be used to setup event handlers for characteristics and update respective values.
    */
-  configureAccessory(accessory: PlatformAccessory) {
+  configureAccessory(accessory: PlatformAccessory): void {
     this.log.info(
       'Restoring accessory from cache:',
       accessory.displayName,
@@ -899,7 +899,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
     token?: string;
     oldUrl?: string;
     endpoints: string[];
-  }) {
+  }): Promise<void> {
     const setActionUrl = `${baseUrl}/api/v1/action/`;
     let callbackUrl: string = this.getCallbackUrl();
     if (oldUrl?.endsWith('||')) {
@@ -910,12 +910,12 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
     this.log.debug('Setting the callback URL -> ', callbackUrl);
     endpoints.forEach((endpoint) => {
       this.log.debug(setActionUrl, 'Endpoint -> ', endpoint);
-      DingzDaHomebridgePlatform.fetch({
-        url: `${setActionUrl}${endpoint}`,
-        method: 'POST',
-        token: token,
-        body: callbackUrl,
-      }).catch(this.handleError.bind(this));
+      axios
+        .post(`${setActionUrl}${endpoint}`, {
+          headers: { Token: token ?? '' },
+          data: callbackUrl,
+        })
+        .catch(this.handleError.bind(this));
     });
   }
 
@@ -988,7 +988,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
     }
   }
 
-  public getCallbackUrl() {
+  public getCallbackUrl(): string {
     const hostname: string = this.config.callbackHostname ?? os.hostname();
     const port: number = this.config.callbackPort ?? DINGZ_CALLBACK_PORT;
     return `post://${hostname}:${port}/button`;
@@ -1008,47 +1008,19 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
     address: string;
     token?: string;
     endpoint?: 'api/v1/info' | 'info';
-  }): Promise<MyStromDeviceInfo> {
+  }): Promise<MyStromDeviceInfo | void> {
     this.log.debug('Fetching myStrom Device Info:', address);
 
     const deviceInfoUrl = `http://${address}/${endpoint}`;
-    return await DingzDaHomebridgePlatform.fetch({
-      url: deviceInfoUrl,
-      returnBody: true,
-      token,
-    }).catch(this.handleError.bind(this));
-  }
-
-  static async fetch({
-    url,
-    method = 'get',
-    returnBody = false,
-    token,
-    body,
-  }: {
-    url: string;
-    method?: string;
-    returnBody?: boolean;
-    token?: string;
-    body?: object | string;
-  }) {
-    // Retry up to 3 times, with exponential Backoff
-    // (https://developers.google.com/analytics/devguides/reporting/core/v3/errors#backoff)
-    const data = await axios({
-      url: url,
-      method: method,
+    return await axios(deviceInfoUrl, {
       headers: {
         Token: token ?? '',
       },
-      data: body,
-    } as AxiosRequestConfig).then((response) => {
-      if (returnBody) {
+    })
+      .then((response) => {
         return response.data;
-      } else {
-        return response.status;
-      }
-    });
-    return data;
+      })
+      .catch(this.handleError.bind(this));
   }
 
   private handleError = (e: AxiosError) => {
