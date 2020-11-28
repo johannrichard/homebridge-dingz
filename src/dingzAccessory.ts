@@ -129,7 +129,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
       address: this.device.address,
       token: this.device.token,
     })
-      .then(({ dingzDevices, inputConfig, dimmerConfig }) => {
+      .then(({ dingzDevices, inputConfig, dimmerConfig, blindConfig }) => {
         if (
           inputConfig?.inputs &&
           dimmerConfig?.dimmers &&
@@ -137,6 +137,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
         ) {
           this.device.dingzInputInfo = inputConfig.inputs;
           this.device.dimmerConfig = dimmerConfig;
+          this.device.windowCoveringConfig = blindConfig.blinds;
 
           if (dingzDevices[this.device.mac]) {
             this.log.debug(
