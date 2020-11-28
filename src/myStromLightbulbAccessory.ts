@@ -212,15 +212,16 @@ export class MyStromLightbulbAccessory extends DingzDaBaseAccessory {
     const color = `${state.hue};${state.saturation};${state.value}`;
 
     const setDimmerUrl = `${this.baseUrl}/api/v1/device/${this.device.mac}`;
+    const data = qs.stringify(
+      {
+        action: state.on ? 'on' : 'off',
+        color: color ?? undefined,
+        mode: color ? 'hsv' : undefined,
+      },
+      { encode: false },
+    );
     return this.request
-      .post(
-        setDimmerUrl,
-        qs.stringify({
-          action: state.on ? 'on' : 'off',
-          color: color ?? undefined,
-          mode: color ? 'hsv' : undefined,
-        }),
-      )
+      .post(setDimmerUrl, data)
       .catch(this.handleRequestErrors.bind(this))
       .finally(() => {
         // make sure we callback
