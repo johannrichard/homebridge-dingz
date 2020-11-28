@@ -221,9 +221,12 @@ export class DingzAccessory extends DingzDaBaseAccessory {
       // Update info from deviceInfo
       .setCharacteristic(
         this.platform.Characteristic.ConfiguredName,
-        this.device.name,
+        this.accessory.displayName,
       )
-      .setCharacteristic(this.platform.Characteristic.Name, this.device.name)
+      .setCharacteristic(
+        this.platform.Characteristic.Name,
+        this.accessory.displayName,
+      )
       .setCharacteristic(
         this.platform.Characteristic.Model,
         this.device.model as string,
@@ -1245,8 +1248,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
           ) {
             // Update Dimmer & Blinds Services
             throw new MethodNotImplementedError(
-              'Update Dimmer accessories not yet implemented -> ' +
-                this.accessory.displayName,
+              'Update Dimmer accessories not yet implemented',
             );
           }
 

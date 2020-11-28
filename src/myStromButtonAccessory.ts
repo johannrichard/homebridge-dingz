@@ -71,7 +71,7 @@ export class MyStromButtonAccessory extends DingzDaBaseAccessory {
 
     // get the LightBulb service if it exists, otherwise create a new LightBulb service
     // you can create multiple services for each accessory
-    this.log.info('Create Stateless Programmable Switch -> ', this.device.name);
+    this.log.info('Create Stateless Programmable Switch');
     const buttonService: Service =
       this.accessory.getService(
         this.platform.Service.StatelessProgrammableSwitch,
@@ -229,13 +229,5 @@ export class MyStromButtonAccessory extends DingzDaBaseAccessory {
   private getChargingState(callback: CharacteristicGetCallback) {
     const currentState = this.chargingState;
     callback(null, currentState);
-  }
-
-  /*
-   * This method is optional to implement. It is called when HomeKit ask to identify the accessory.
-   * Typical this only ever happens at the pairing process.
-   */
-  identify(): void {
-    this.log.debug('Identify! -> Who am I? I am', this.accessory.displayName);
   }
 }

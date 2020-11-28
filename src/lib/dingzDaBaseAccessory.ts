@@ -134,35 +134,20 @@ export class DingzDaBaseAccessory {
     }
   };
 
-  protected static async _fetch({
-    url,
-    method = 'get',
-    returnBody = false,
-    token,
-    body,
-  }: {
-    url: string;
-    method?: string;
-    returnBody?: boolean;
-    token?: string;
-    body?: object | string;
-  }) {
-    // Retry up to 3 times, with exponential Backoff
-    // (https://developers.google.com/analytics/devguides/reporting/core/v3/errors#backoff)
-    const data = await axios({
-      url: url,
-      method: method,
-      headers: {
-        Token: token ?? '',
-      },
-      data: body,
-    } as AxiosRequestConfig).then((response) => {
-      if (returnBody) {
-        return response.data;
-      } else {
-        return response.status;
-      }
-    });
-    return data;
+  /*
+   * This method is optional to implement. It is called when HomeKit ask to identify the accessory.
+   * Typical this only ever happens at the pairing process.
+   */
+  identify(): void {
+    this.log.info(
+      'Identify! -> Who am I? I am a',
+      this.device.accessoryClass ?? 'unkown device type',
+      'listeting to the name of',
+      this.device.name,
+      'a.k.a.',
+      this.accessory.displayName,
+      '-> MAC:',
+      this.device.mac,
+    );
   }
 }

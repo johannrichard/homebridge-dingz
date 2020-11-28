@@ -130,9 +130,7 @@ export class MyStromPIRAccessory extends DingzDaBaseAccessory {
         this.log.debug(`Processing DingzEvent.ACTION ${action}`);
 
         if (mac === this.device.mac) {
-          this.log.debug(
-            `Motion detected by ${this.device.name} (${this.device.mac}) pressed -> ${action}`,
-          );
+          this.log.debug(`Motion detected -> ${action}`);
           let isMotion: boolean | undefined;
           switch (action) {
             case ButtonAction.PIR_MOTION_STOP:
