@@ -9,7 +9,6 @@ import type {
 
 import { DingzDaHomebridgePlatform } from './platform';
 import { MyStromDeviceInfo, MyStromSwitchReport } from './lib/myStromTypes';
-import { PlatformEvent } from './lib/platformEventBus';
 import { DingzDaBaseAccessory } from './lib/dingzDaBaseAccessory';
 
 /**
