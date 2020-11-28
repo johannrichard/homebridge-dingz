@@ -790,10 +790,8 @@ export class DingzAccessory extends DingzDaBaseAccessory {
   }
 
   // Add WindowCovering (Blinds)
-  private addWindowCoveringService(name: string, id?: WindowCoveringId) {
-    let service: Service;
-    if (id) {
-      service =
+  private addWindowCoveringService(name: string, id: WindowCoveringId) {
+    const service: Service =
         this.accessory.getServiceById(
           this.platform.Service.WindowCovering,
           id.toString(),
@@ -803,11 +801,6 @@ export class DingzAccessory extends DingzDaBaseAccessory {
           `${name} B${id}`,
           id.toString(),
         );
-    } else {
-      service =
-        this.accessory.getService(this.platform.Service.WindowCovering) ??
-        this.accessory.addService(this.platform.Service.WindowCovering, name);
-    }
     // each service must implement at-minimum the "required characteristics" for the given service type
     // see https://developers.homebridge.io/#/service/Lightbulb
 
