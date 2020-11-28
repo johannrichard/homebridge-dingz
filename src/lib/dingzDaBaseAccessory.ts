@@ -9,6 +9,7 @@ import axiosRetry from 'axios-retry';
 
 import { REQUEST_RETRIES, RETRY_TIMEOUT } from '../settings';
 import { DeviceNotReachableError } from './errors';
+import { AxiosDebugHelper } from './axiosDebugHelper';
 export class DingzDaBaseAccessory {
   protected static axiosRetryConfig = {
     retries: REQUEST_RETRIES,
@@ -20,6 +21,7 @@ export class DingzDaBaseAccessory {
 
   protected readonly log: DingzLogger;
   protected readonly request: AxiosInstance;
+  protected readonly debugHelper: AxiosDebugHelper;
 
   protected device: DeviceInfo;
   protected baseUrl: string;
@@ -49,6 +51,7 @@ export class DingzDaBaseAccessory {
      */
     axiosRetry(this.request, DingzDaBaseAccessory.axiosRetryConfig);
     axiosRetry(axios, DingzDaBaseAccessory.axiosRetryConfig);
+    this.debugHelper = new AxiosDebugHelper(this.request, this.log);
 
     // Register listener for updated device info (e.g. on restore with new IP)
     this.platform.eb.on(
