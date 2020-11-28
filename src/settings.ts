@@ -11,6 +11,7 @@ export const DINGZ_CALLBACK_PORT = 18081;
  */
 export const REQUEST_RETRIES = 7;
 export const RETRY_TIMEOUT = 3000;
+export const STATE_UPDATE_INTERVAL = 5000;
 /**
  * This must match the name of your plugin as defined the package.json
  */

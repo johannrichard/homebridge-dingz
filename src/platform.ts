@@ -39,6 +39,7 @@ import {
   PLUGIN_NAME,
   DINGZ_DISCOVERY_PORT,
   DINGZ_CALLBACK_PORT,
+  STATE_UPDATE_INTERVAL,
 } from './settings';
 
 // TODO: Some refactoring for better event handling, cleanup of the code and separation of concerns
@@ -117,7 +118,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
 
       setInterval(() => {
         this.eb.emit(PlatformEvent.REQUEST_STATE_UPDATE);
-      }, 5000);
+      }, STATE_UPDATE_INTERVAL);
     });
   }
 
