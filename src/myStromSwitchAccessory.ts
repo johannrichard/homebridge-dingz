@@ -106,12 +106,6 @@ export class MyStromSwitchAccessory extends DingzDaBaseAccessory {
         .getCharacteristic(this.platform.Characteristic.CurrentTemperature)
         .on(CharacteristicEventTypes.GET, this.getTemperature.bind(this));
     }
-
-    // Subscribe to the REQUEST_STATE_UPDATE event
-    this.platform.eb.on(
-      PlatformEvent.REQUEST_STATE_UPDATE,
-      this.getDeviceStateUpdate.bind(this),
-    );
   }
 
   identify(): void {

@@ -12,7 +12,6 @@ import qs from 'qs';
 
 import { DingzDaHomebridgePlatform } from './platform';
 import { MyStromDeviceInfo, MyStromLightbulbReport } from './lib/myStromTypes';
-import { PlatformEvent } from './lib/platformEventBus';
 import { DingzDaBaseAccessory } from './lib/dingzDaBaseAccessory';
 
 /**
@@ -103,12 +102,6 @@ export class MyStromLightbulbAccessory extends DingzDaBaseAccessory {
       .getCharacteristic(this.platform.Characteristic.Saturation)
       .on(CharacteristicEventTypes.SET, this.setSaturation.bind(this)) // SET - bind to the 'setBrightness` method below
       .on(CharacteristicEventTypes.GET, this.getSaturation.bind(this)); // SET - bind to the 'setBrightness` method below
-
-    // Subscribe to the REQUEST_STATE_UPDATE event
-    this.platform.eb.on(
-      PlatformEvent.REQUEST_STATE_UPDATE,
-      this.getDeviceStateUpdate.bind(this),
-    );
   }
 
   // Get updated device info and update the corresponding values

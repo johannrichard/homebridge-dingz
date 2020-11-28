@@ -110,12 +110,8 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
       // set-up the callback server ...
       this.callbackServer();
 
-      // .. and finally set-up the interval that triggers updates
       this.eb.on(PlatformEvent.REQUEST_STATE_UPDATE, () => {
-        this.log.debug('Event -> DingzEvent.REQUEST_STATE_UPDATE');
-      });
-      this.eb.on(PlatformEvent.PUSH_STATE_UPDATE, () => {
-        this.log.debug('Event -> DingzEvent.PUSH_STATE_UPDATE');
+        this.log.debug('Event -> PlatformEvent.REQUEST_STATE_UPDATE');
       });
 
       setInterval(() => {

@@ -45,6 +45,7 @@ import {
 import { DingzDaHomebridgePlatform } from './platform';
 import { PlatformEvent } from './lib/platformEventBus';
 import { DingzDaBaseAccessory } from './lib/dingzDaBaseAccessory';
+import { AccessoryEvent } from './lib/accessoryEventBus';
 
 // Policy for long running tasks, retry every hour
 const retrySlow = Policy.handleAll()
@@ -154,11 +155,6 @@ export class DingzAccessory extends DingzDaBaseAccessory {
 
           // Now we have what we need and can create the services …
           this.addOutputServices();
-
-          this.platform.eb.on(
-            PlatformEvent.REQUEST_STATE_UPDATE,
-            this.getDeviceStateUpdate.bind(this),
-          );
 
           // Add auxiliary services (Motion, Temperature)
           if (this.dingzDeviceInfo.has_pir) {
@@ -327,8 +323,8 @@ export class DingzAccessory extends DingzDaBaseAccessory {
       .on(CharacteristicEventTypes.GET, this.getTemperature.bind(this));
     this.services.push(temperatureService);
 
-    this.platform.eb.on(
-      PlatformEvent.PUSH_STATE_UPDATE,
+    this.eb.on(
+      AccessoryEvent.PUSH_STATE_UPDATE,
       this.updateTemperature.bind(this, temperatureService),
     );
   }
@@ -748,8 +744,8 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     }
 
     // Update State
-    this.platform.eb.on(
-      PlatformEvent.PUSH_STATE_UPDATE,
+    this.eb.on(
+      AccessoryEvent.PUSH_STATE_UPDATE,
       this.updateDimmerState.bind(this, index, output, newService),
     );
     return newService;
@@ -895,8 +891,8 @@ export class DingzAccessory extends DingzDaBaseAccessory {
       );
 
     // Subscribe to the update event
-    this.platform.eb.on(
-      PlatformEvent.PUSH_STATE_UPDATE,
+    this.eb.on(
+      AccessoryEvent.PUSH_STATE_UPDATE,
       this.updateWindowCoveringState.bind(
         this,
         id as WindowCoveringId,
@@ -1350,8 +1346,8 @@ export class DingzAccessory extends DingzDaBaseAccessory {
       .on(CharacteristicEventTypes.SET, this.setLEDSaturation.bind(this)); // SET - bind to the 'setBrightness` method below
 
     this.services.push(ledService);
-    this.platform.eb.on(
-      PlatformEvent.PUSH_STATE_UPDATE,
+    this.eb.on(
+      AccessoryEvent.PUSH_STATE_UPDATE,
       this.updateLEDState.bind(this, ledService),
     );
   }

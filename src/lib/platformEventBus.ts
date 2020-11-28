@@ -8,7 +8,6 @@ export const enum PlatformEvent {
   UPDATE_DEVICE_INFO = 'updateDeviceInfo',
   ACTION = 'deviceAction',
   REQUEST_STATE_UPDATE = 'requestStateUpdate',
-  PUSH_STATE_UPDATE = 'pushStateUpdate',
 }
 
 export declare interface PlatformEventBus {
@@ -25,10 +24,6 @@ export declare interface PlatformEventBus {
     listener: (deviceInfo: DeviceInfo) => void,
   ): this;
   on(event: PlatformEvent.REQUEST_STATE_UPDATE, listener: () => void): this;
-  on(
-    event: PlatformEvent.PUSH_STATE_UPDATE,
-    listener: (mac: string) => void,
-  ): this;
 
   emit(
     event: PlatformEvent.ACTION,
@@ -47,7 +42,6 @@ export declare interface PlatformEventBus {
     deviceInfo: DeviceInfo,
   ): boolean;
   emit(event: PlatformEvent.REQUEST_STATE_UPDATE): boolean;
-  emit(event: PlatformEvent.PUSH_STATE_UPDATE, mac: string): boolean;
 }
 
 export class PlatformEventBus extends EventEmitter {
