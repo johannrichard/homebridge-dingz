@@ -12,8 +12,9 @@ import axios, { AxiosRequestConfig, AxiosError } from 'axios';
 import axiosRetry from 'axios-retry';
 import * as bodyParser from 'body-parser';
 import i4h from 'intervals-for-humans';
-import e = require('express');
+import isValidHost from 'is-valid-host';
 import * as os from 'os';
+import e = require('express');
 
 // Internal Types
 import { ButtonId, DingzDeviceInfo } from './lib/dingzTypes';
@@ -188,11 +189,11 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
       switch (device.type) {
         case 'dingz':
           retryWithBreaker.execute(() =>
-            this.addDingzDevice(
-              device.address,
-              device.name,
-              device.token ?? this.config.globalToken,
-            ),
+            this.addDingzDevice({
+              address: device.address,
+              name: device.name,
+              token: device.token ?? this.config.globalToken,
+            }),
           );
           break;
         case 'myStromSwitch':
@@ -235,11 +236,15 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
   }
 
   // Add one device based on address and name
-  private async addDingzDevice(
-    address: string,
+  private async addDingzDevice({
+    address,
     name = 'dingz',
-    token?: string,
-  ): Promise<boolean> {
+    token,
+  }: {
+    address: string;
+    name?: string;
+    token?: string;
+  }): Promise<boolean> {
     // Run a diacovery of changed things every 10 seconds
     this.log.debug(
       `addDingzDevice() --> Add configured device -> ${name} (${address})`,
@@ -830,11 +835,11 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
           case DeviceTypes.DINGZ:
             retryWithBreaker
               .execute(() => {
-                this.addDingzDevice(
-                  remoteInfo.address,
-                  'dingz',
-                  this.config.globalToken,
-                );
+                this.addDingzDevice({
+                  address: remoteInfo.address,
+                  name: 'dingz',
+                  token: this.config.globalToken,
+                });
               })
               .then(() => {
                 this.discovered.set(mac, remoteInfo);
@@ -917,12 +922,15 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
   private callbackServer() {
     this.app.use(bodyParser.urlencoded());
     this.app.post('/button', this.handleRequest.bind(this));
-    this.app.listen(this.config.callbackPort ?? DINGZ_CALLBACK_PORT, () =>
-      this.log.warn(
-        `Callback server listening for POST requests on ${
-          this.config.callbackPort ?? DINGZ_CALLBACK_PORT
-        }... use ${this.getCallbackUrl()} as URL for your dingz or MyStrom callbacks`,
-      ),
+    this.app.listen(
+      this.config.callbackPort ?? DINGZ_CALLBACK_PORT,
+      '0.0.0.0',
+      () =>
+        this.log.warn(
+          `Callback server listening for POST requests on ${
+            this.config.callbackPort ?? DINGZ_CALLBACK_PORT
+          }... use ${this.getCallbackUrl()} as URL for your dingz or MyStrom callbacks`,
+        ),
     );
   }
 
@@ -943,6 +951,13 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
             '-> dingz/Multi-button Action from',
             request.connection.remoteAddress,
           );
+          // attempt-auto add of either a dingz
+          if (
+            request.connection.remoteAddress &&
+            isValidHost(request.connection.remoteAddress)
+          ) {
+            this.addDingzDevice({ address: request.connection.remoteAddress });
+          }
           this.eb.emit(
             PlatformEvent.ACTION,
             mac,

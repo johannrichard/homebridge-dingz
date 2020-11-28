@@ -178,14 +178,6 @@
   dependencies:
     defer-to-connect "^1.0.1"
 
-"@the-/jitter@^15.4.0":
-  version "15.4.0"
-  resolved "https://registry.yarnpkg.com/@the-/jitter/-/jitter-15.4.0.tgz#1c4121d99c25f31ca774c4fa301c25b00b9e8009"
-  integrity sha512-XYeFGJynlXMAz/hi/7rPIbH3j7C6vxykyaqgbrvPqC2Pg2njMZ3Yfu6xi1nhTWgQ18Cyv3VU5BWpFdWZtWyfQA==
-  dependencies:
-    asleep "^1.0.3"
-    debug "^4.1.1"
-
 "@types/body-parser@*", "@types/body-parser@^1.19.0":
   version "1.19.0"
   resolved "https://registry.yarnpkg.com/@types/body-parser/-/body-parser-1.19.0.tgz#0685b3c47eb3006ffed117cdd55164b61f80538f"
@@ -484,11 +476,6 @@ arrify@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/arrify/-/arrify-1.0.1.tgz#898508da2226f380df904728456849c1501a4b0d"
   integrity sha1-iYUI2iIm84DfkEcoRWhJwVAaSw0=
-
-asleep@^1.0.3:
-  version "1.0.3"
-  resolved "https://registry.yarnpkg.com/asleep/-/asleep-1.0.3.tgz#a104e24ac229563c425e4ea7e75b578a19ee218e"
-  integrity sha1-oQTiSsIpVjxCXk6n51tXihnuIY4=
 
 astral-regex@^1.0.0:
   version "1.0.0"

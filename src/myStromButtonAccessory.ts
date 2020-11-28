@@ -141,9 +141,7 @@ export class MyStromButtonAccessory extends DingzDaBaseAccessory {
         const ProgrammableSwitchEvent = this.platform.Characteristic
           .ProgrammableSwitchEvent;
         if (buttonService) {
-          this.log.debug(
-            `Button of ${this.device.name} (${this.device.mac}) pressed -> ${action}`,
-          );
+          this.log.debug(`Button (${this.device.mac}) pressed -> ${action}`);
           switch (action) {
             case ButtonAction.SINGLE_PRESS:
               buttonService

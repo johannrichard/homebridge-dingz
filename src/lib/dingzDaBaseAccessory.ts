@@ -37,7 +37,7 @@ export class DingzDaBaseAccessory {
     this.device = this.accessory.context.device;
     this.baseUrl = `http://${this.device.address}`;
 
-    this.log = new DingzLogger(this.device.name, platform.log);
+    this.log = new DingzLogger(this.accessory.displayName, platform.log);
     this.request = axios.create({
       baseURL: this.baseUrl,
       timeout: RETRY_TIMEOUT,
@@ -62,6 +62,11 @@ export class DingzDaBaseAccessory {
       );
     });
 
+    this.platform.eb.on(
+      PlatformEvent.REQUEST_STATE_UPDATE,
+      this.getDeviceStateUpdate.bind(this),
+    );
+
     // Register listener for updated device info (e.g. on restore with new IP)
     this.platform.eb.on(
       PlatformEvent.UPDATE_DEVICE_INFO,
@@ -71,23 +76,38 @@ export class DingzDaBaseAccessory {
             'Updated device info received -> update accessory address',
           );
 
-          // Update core info (mainly address)
-          if (this.device.address !== deviceInfo.address) {
+          // Update core info (mainly address, maybe token too)
+          if (
+            this.device.address !== deviceInfo.address ||
+            this.device.token !== deviceInfo.token
+          ) {
             this.log.info(
               'Accessory IP changed for',
-              this.device.name,
+              this.accessory.displayName,
               '-> Updating accessory from ->',
               this.device.address,
               'to',
               deviceInfo.address,
             );
+            this.accessory.displayName = this.device.name;
             this.device.address = deviceInfo.address;
+            this.device.token = deviceInfo.token;
             this.baseUrl = `http://${this.device.address}`;
 
-            // Set AccessoryInformation and Update its configuration
+            this.request.defaults = {
+              baseURL: this.baseUrl,
+              timeout: RETRY_TIMEOUT,
+              headers: { Token: this.device.token ?? '' },
+            };
+
+            // update AccessoryInformation
             this.setAccessoryInformation();
-            this.updateAccessory();
           }
+
+          // Set accessory to reachable and
+          // updateAccessory()
+          this.isReachable = true;
+          this.updateAccessory();
         }
       },
     );
@@ -104,6 +124,13 @@ export class DingzDaBaseAccessory {
   protected updateAccessory() {
     this.log.debug(
       'setAccessoryInformation() not implemented for',
+      this.device.accessoryClass,
+    );
+  }
+
+  protected getDeviceStateUpdate() {
+    this.log.debug(
+      'getDeviceStateUpdate() not implemented for',
       this.device.accessoryClass,
     );
   }
@@ -134,7 +161,7 @@ export class DingzDaBaseAccessory {
       }
     } else if (e instanceof DeviceNotReachableError) {
       this.log.error(
-        `handleRequestErrors() --> ${this.device.name} (${this.device.address})`,
+        `handleRequestErrors() --> ${this.accessory.displayName} (${this.device.address})`,
       );
       this.isReachable = false;
     } else {

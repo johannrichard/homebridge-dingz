@@ -105,7 +105,7 @@ export class MyStromLightbulbAccessory extends DingzDaBaseAccessory {
   }
 
   // Get updated device info and update the corresponding values
-  private getDeviceStateUpdate() {
+  protected getDeviceStateUpdate() {
     this.getDeviceReport(this.device.mac)
       .then((report) => {
         // push the new value to HomeKit
@@ -157,15 +157,14 @@ export class MyStromLightbulbAccessory extends DingzDaBaseAccessory {
     callback: CharacteristicSetCallback,
   ) {
     this.lightbulbState.on = value as boolean;
-    this.setDeviceLightbulb({ isOn: this.lightbulbState.on });
-    callback(null);
+    this.setDeviceLightbulb(callback);
   }
 
   private getOn(callback: CharacteristicGetCallback) {
     const isOn = this.lightbulbState.on;
     this.platform.log.debug('Get Characteristic On ->', isOn);
 
-    callback(null, isOn);
+    callback(this.isReachable ? null : new Error(), isOn);
   }
 
   private async setHue(
@@ -173,18 +172,12 @@ export class MyStromLightbulbAccessory extends DingzDaBaseAccessory {
     callback: CharacteristicSetCallback,
   ) {
     this.lightbulbState.hue = value as number;
-
-    const state: MyStromLightbulbReport = this.lightbulbState;
-    await this.setDeviceLightbulb({
-      isOn: state.on,
-      color: `${state.hue};${state.saturation};${state.value}`,
-    });
-    callback(null);
+    this.setDeviceLightbulb(callback);
   }
 
   private getHue(callback: CharacteristicGetCallback) {
     const hue: number = this.lightbulbState.hue;
-    callback(null, hue);
+    callback(this.isReachable ? null : new Error(), hue);
   }
 
   private async setSaturation(
@@ -192,18 +185,12 @@ export class MyStromLightbulbAccessory extends DingzDaBaseAccessory {
     callback: CharacteristicSetCallback,
   ) {
     this.lightbulbState.saturation = value as number;
-
-    const state: MyStromLightbulbReport = this.lightbulbState;
-    await this.setDeviceLightbulb({
-      isOn: state.on,
-      color: `${state.hue};${state.saturation};${state.value}`,
-    });
-    callback(null);
+    this.setDeviceLightbulb(callback);
   }
 
   private getSaturation(callback: CharacteristicGetCallback) {
     const saturation: number = this.lightbulbState.saturation;
-    callback(null, saturation);
+    callback(this.isReachable ? null : new Error(), saturation);
   }
 
   private async setBrightness(
@@ -211,42 +198,38 @@ export class MyStromLightbulbAccessory extends DingzDaBaseAccessory {
     callback: CharacteristicSetCallback,
   ) {
     this.lightbulbState.value = value as number;
-    const state: MyStromLightbulbReport = this.lightbulbState;
-    await this.setDeviceLightbulb({
-      isOn: state.on,
-      color: `${state.hue};${state.saturation};${state.value}`,
-    });
-    callback(null);
+    this.setDeviceLightbulb(callback);
   }
 
   private getBrightness(callback: CharacteristicGetCallback) {
     const brightness = this.lightbulbState.value;
-    callback(null, brightness);
+    callback(this.isReachable ? null : new Error(), brightness);
   }
 
   // Set individual dimmer
-  private async setDeviceLightbulb({
-    isOn,
-    color,
-  }: {
-    isOn: boolean;
-    color?: string;
-  }): Promise<void> {
-    // Weird URL :-)
+  private setDeviceLightbulb(callback: CharacteristicSetCallback) {
+    const state: MyStromLightbulbReport = this.lightbulbState;
+    const color = `${state.hue};${state.saturation};${state.value}`;
+
     const setDimmerUrl = `${this.baseUrl}/api/v1/device/${this.device.mac}`;
-    await DingzDaHomebridgePlatform.fetch({
-      url: setDimmerUrl,
-      method: 'POST',
-      token: this.device.token,
-      body: qs.stringify(
-        {
-          action: isOn ? 'on' : 'off',
+    return this.request
+      .post(
+        setDimmerUrl,
+        qs.stringify({
+          action: state.on ? 'on' : 'off',
           color: color ?? undefined,
           mode: color ? 'hsv' : undefined,
-        },
-        { encode: false },
-      ),
-    });
+        }),
+      )
+      .catch(this.handleRequestErrors.bind(this))
+      .finally(() => {
+        // make sure we callback
+        if (!this.isReachable) {
+          callback(new Error());
+        } else {
+          callback(null);
+        }
+      });
   }
 
   private async getDeviceReport(mac: string): Promise<MyStromLightbulbReport> {
@@ -255,8 +238,10 @@ export class MyStromLightbulbAccessory extends DingzDaBaseAccessory {
       url: reportUrl,
       returnBody: true,
       token: this.device.token,
-    }).then((response) => {
-      return response[mac];
-    });
+    })
+      .then((response) => {
+        return response[mac];
+      })
+      .catch(this.handleRequestErrors.bind(this));
   }
 }

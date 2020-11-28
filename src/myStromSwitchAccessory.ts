@@ -112,7 +112,7 @@ export class MyStromSwitchAccessory extends DingzDaBaseAccessory {
   }
 
   // Get updated device info and update the corresponding values
-  private getDeviceStateUpdate() {
+  protected getDeviceStateUpdate() {
     this.getDeviceReport()
       .then((report) => {
         // push the new value to HomeKit
@@ -142,44 +142,52 @@ export class MyStromSwitchAccessory extends DingzDaBaseAccessory {
   ) {
     this.log.debug('Set Characteristic On ->', value);
     this.outletState.relay = value as boolean;
-    this.setDeviceState(this.outletState.relay);
-    callback(null);
+    this.setDeviceState(callback);
   }
 
   private getOn(callback: CharacteristicGetCallback) {
     const isOn = this.outletState?.relay;
     this.log.debug('Get Characteristic On ->', isOn);
 
-    callback(null, isOn);
+    callback(this.isReachable ? null : new Error(), isOn);
   }
 
   private getTemperature(callback: CharacteristicGetCallback) {
     const temperature: number = this.outletState?.temperature;
     this.log.debug('Get Characteristic Temperature ->', temperature, '° C');
-
-    callback(null, temperature);
+    callback(this.isReachable ? null : new Error(), temperature);
   }
 
   private getOutletInUse(callback: CharacteristicGetCallback) {
     const inUse: boolean = this.outletState?.power > 0;
     this.log.debug('Get Characteristic OutletInUse ->', inUse);
-    callback(null, inUse);
+    callback(this.isReachable ? null : new Error(), inUse);
   }
 
-  private setDeviceState(isOn: boolean) {
-    const relayUrl = `${this.baseUrl}/relay?state=${isOn ? '1' : '0'}`;
-    DingzDaHomebridgePlatform.fetch({
-      url: relayUrl,
-      token: this.device.token,
-    });
+  private setDeviceState(callback: CharacteristicSetCallback) {
+    const relayUrl = `${this.baseUrl}/relay?state=${
+      this.outletState.relay ? '1' : '0'
+    }`;
+    this.request
+      .get(relayUrl)
+      .catch(this.handleRequestErrors.bind(this))
+      .finally(() => {
+        // make sure we callback
+        if (!this.isReachable) {
+          callback(new Error());
+        } else {
+          callback(null);
+        }
+      });
   }
 
   private async getDeviceReport(): Promise<MyStromSwitchReport> {
     const reportUrl = `${this.baseUrl}/report`;
-    return await DingzDaHomebridgePlatform.fetch({
-      url: reportUrl,
-      returnBody: true,
-      token: this.device.token,
-    });
+    return await this.request
+      .get(reportUrl)
+      .then((response) => {
+        return response.data;
+      })
+      .catch(this.handleRequestErrors.bind(this));
   }
 }

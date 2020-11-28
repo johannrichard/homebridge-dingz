@@ -161,11 +161,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
             // dingz has a Motion sensor -- let's create it
             this.addMotionService();
           } else {
-            this.log.info(
-              'Your dingz',
-              this.accessory.displayName,
-              'has no Motion sensor.',
-            );
+            this.log.info('This dingz has no Motion sensor.');
           }
           // dingz has a temperature sensor and an LED,
           // make these available here
@@ -269,7 +265,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
 
   // Get updated device info and update the corresponding values
   // TODO: #103, #116, #120, #123 -- fetch state for all device elements
-  private getDeviceStateUpdate() {
+  protected getDeviceStateUpdate() {
     this.getDeviceState()
       .then((state) => {
         if (typeof state !== 'undefined') {
@@ -277,7 +273,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
             // Update reachability -- obviously, we're online again
             this.isReachable = true;
             this.log.warn(
-              `Device --> ${this.device.name} (${this.device.address}) --> recovered from unreachable state`,
+              `Device --> ${this.accessory.displayName} (${this.device.address}) --> recovered from unreachable state`,
             );
           }
           // Outputs
@@ -344,19 +340,6 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     callback(null, currentTemperature);
   }
 
-  /*
-   * This method is optional to implement. It is called when HomeKit ask to identify the accessory.
-   * Typical this only ever happens at the pairing process.
-   */
-  identify(): void {
-    this.log.info(
-      'Identify! -> Who am I? I am',
-      this.accessory.displayName,
-      '-> MAC:',
-      this.device.mac,
-    );
-  }
-
   private addLightSensorService() {
     // Add the LightSensor that's integrated in the dingz
     // API: /api/v1/light
@@ -376,7 +359,6 @@ export class DingzAccessory extends DingzDaBaseAccessory {
 
   private updateLightSensor(lightService: Service) {
     const intensity: number = this.dingzStates.Brightness;
-    this.log.warn(this.device.name, 'Brightness ->', intensity);
     lightService
       .getCharacteristic(this.platform.Characteristic.CurrentAmbientLightLevel)
       .updateValue(intensity);
@@ -560,14 +542,12 @@ export class DingzAccessory extends DingzDaBaseAccessory {
       (mac, action: ButtonAction, button: ButtonId | '5') => {
         if (mac === this.device.mac && button) {
           this.log.debug(
-            `Button ${button} of ${this.device.name} pressed -> ${action}, MAC: ${mac} (This: ${this.device.mac})`,
+            `Button ${button} pressed -> ${action}, MAC: ${mac} (This: ${this.device.mac})`,
           );
           if (button === '5') {
             // PUSH MOTION
             if (!(this.platform.config.motionPoller ?? true)) {
-              this.log.debug(
-                `Button ${button} of ${this.device.name} Motion -> ${action}`,
-              );
+              this.log.debug(`Button ${button} Motion -> ${action}`);
               this.log.debug('Motion Update from CALLBACK');
               this.motionService
                 ?.getCharacteristic(this.platform.Characteristic.MotionDetected)
@@ -593,7 +573,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
               )
               .updateValue(this.dingzStates.Buttons[button].state);
             this.log.info(
-              `Button ${button} of ${this.device.name} (${service?.displayName}) pressed -> ${action}`,
+              `Button ${button} (${service?.displayName}) pressed -> ${action}`,
             );
 
             // Immediately update states after button pressed
@@ -679,14 +659,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     callback: CharacteristicGetCallback,
   ) {
     const currentState = this.dingzStates.Buttons[button].state;
-    this.log.info(
-      'Get Switch State of',
-      this.device.name,
-      '->',
-      button,
-      '-> state:',
-      currentState,
-    );
+    this.log.info('Get Switch State of ->', button, '-> state:', currentState);
     callback(null, currentState);
   }
 
@@ -696,14 +669,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     callback: CharacteristicSetCallback,
   ) {
     this.dingzStates.Buttons[button].state = value as ButtonState;
-    this.log.info(
-      'Set Switch State of',
-      this.device.name,
-      '->',
-      button,
-      '-> state:',
-      value,
-    );
+    this.log.info('Set Switch State of ->', button, '-> state:', value);
     callback(null);
   }
 
@@ -1088,7 +1054,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     this.services.push(this.motionService);
     // Only check for motion if we have a PIR and set the Interval
     if (this.platform.config.motionPoller ?? true) {
-      this.log.info('Motion POLLING of', this.device.name, 'enabled');
+      this.log.info('Motion POLLING enabled');
       const motionInterval: NodeJS.Timer = setInterval(() => {
         this.getDeviceMotion()
           .then((data) => {
@@ -1106,8 +1072,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
               }
             } else {
               throw new DeviceNotReachableError(
-                `Device can not be reached ->
-              ${this.device.name}-> ${this.device.address}`,
+                `Device can not be reached -> ${this.accessory.displayName}-> ${this.device.address}`,
               );
             }
           })
@@ -1386,15 +1351,12 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     callback: CharacteristicSetCallback,
   ) {
     this.dingzStates.LED.on = value as boolean;
-    const state = this.dingzStates.LED;
-    const color = `${state.hue};${state.saturation};${state.value}`;
-    this.setDeviceLED({ isOn: state.on, color: color });
-    callback(null);
+    this.setDeviceLED(callback);
   }
 
   private getLEDOn(callback: CharacteristicGetCallback) {
     const isOn = this.dingzStates.LED.on;
-    callback(null, isOn);
+    callback(this.isReachable ? null : new Error(), isOn);
   }
 
   private setLEDHue(
@@ -1402,14 +1364,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     callback: CharacteristicSetCallback,
   ) {
     this.dingzStates.LED.hue = value as number;
-
-    const state: DingzLEDState = this.dingzStates.LED;
-    const color = `${state.hue};${state.saturation};${state.value}`;
-    this.setDeviceLED({
-      isOn: state.on,
-      color: color,
-    });
-    callback(null);
+    this.setDeviceLED(callback);
   }
 
   private setLEDSaturation(
@@ -1417,14 +1372,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     callback: CharacteristicSetCallback,
   ) {
     this.dingzStates.LED.saturation = value as number;
-
-    const state: DingzLEDState = this.dingzStates.LED;
-    const color = `${state.hue};${state.saturation};${state.value}`;
-    this.setDeviceLED({
-      isOn: state.on,
-      color: color,
-    });
-    callback(null);
+    this.setDeviceLED(callback);
   }
 
   private setLEDBrightness(
@@ -1432,14 +1380,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     callback: CharacteristicSetCallback,
   ) {
     this.dingzStates.LED.value = value as number;
-
-    const state: DingzLEDState = this.dingzStates.LED;
-    const color = `${state.hue};${state.saturation};${state.value}`;
-    this.setDeviceLED({
-      isOn: state.on,
-      color: color,
-    });
-    callback(null);
+    this.setDeviceLED(callback);
   }
 
   // Get Input & Dimmer Config
@@ -1566,17 +1507,19 @@ export class DingzAccessory extends DingzDaBaseAccessory {
   // TODO: Feedback on API doc
   /**
    * Set the LED on the dingz
-   * @param isOn: on/off state
-   * @param color color to set the LED to
+   * @param callback: Characteristic callback
    */
-  private setDeviceLED({ isOn, color }: { isOn: boolean; color: string }) {
+  private setDeviceLED(callback: CharacteristicSetCallback) {
+    const state: DingzLEDState = this.dingzStates.LED;
+    const color = `${state.hue};${state.saturation};${state.value}`;
+
     const setLEDEndpoint = `${this.baseUrl}/api/v1/led/set`;
     this.request
       .post(
         setLEDEndpoint,
         qs.stringify(
           {
-            action: isOn ? 'on' : 'off',
+            action: state.on ? 'on' : 'off',
             color: color,
             mode: 'hsv', // Fixed for the time being
             ramp: 150,
@@ -1584,7 +1527,15 @@ export class DingzAccessory extends DingzDaBaseAccessory {
           { encode: false },
         ),
       )
-      .catch(this.handleRequestErrors.bind(this));
+      .catch(this.handleRequestErrors.bind(this))
+      .finally(() => {
+        // make sure we callback
+        if (!this.isReachable) {
+          callback(new Error());
+        } else {
+          callback(null);
+        }
+      });
   }
 
   // Get the current state

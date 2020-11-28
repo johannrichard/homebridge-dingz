@@ -79,7 +79,7 @@ export class MyStromPIRAccessory extends DingzDaBaseAccessory {
 
     // get the LightBulb service if it exists, otherwise create a new LightBulb service
     // you can create multiple services for each accessory
-    this.log.info('Create Motion Sensor -> ', this.device.name);
+    this.log.info('Create Motion Sensor');
 
     this.temperatureService =
       this.accessory.getService(this.platform.Service.TemperatureSensor) ??
@@ -163,7 +163,7 @@ export class MyStromPIRAccessory extends DingzDaBaseAccessory {
   }
 
   // Get updated device info and update the corresponding values
-  private getDeviceStateUpdate() {
+  protected getDeviceStateUpdate() {
     this.getDeviceReport()
       .then((report) => {
         if (report) {
@@ -218,7 +218,7 @@ export class MyStromPIRAccessory extends DingzDaBaseAccessory {
     const light: number = this.pirState?.light ?? 42;
     this.log.debug('Get Characteristic Ambient Light Level ->', light, ' lux');
 
-    callback(null, light);
+    callback(this.isReachable ? null : new Error(), light);
   }
 
   /**
@@ -229,7 +229,7 @@ export class MyStromPIRAccessory extends DingzDaBaseAccessory {
     const temperature: number = this.pirState?.temperature;
     this.log.debug('Get Characteristic Temperature ->', temperature, '° C');
 
-    callback(null, temperature);
+    callback(this.isReachable ? null : new Error(), temperature);
   }
 
   /**
@@ -239,21 +239,17 @@ export class MyStromPIRAccessory extends DingzDaBaseAccessory {
   private getMotionDetected(callback: CharacteristicGetCallback) {
     // set this to a valid value for MotionDetected
     const isMotion = this.pirState.motion;
-    callback(null, isMotion);
+    callback(this.isReachable ? null : new Error(), isMotion);
   }
 
   private async getDeviceReport(): Promise<MyStromPIRReport> {
     const getSensorsUrl = `${this.baseUrl}/api/v1/sensors`;
-    const release = await this.mutex.acquire();
-    try {
-      return await DingzDaHomebridgePlatform.fetch({
-        url: getSensorsUrl,
-        returnBody: true,
-        token: this.device.token,
-      });
-    } finally {
-      release();
-    }
+    return await this.request
+      .get(getSensorsUrl)
+      .then((response) => {
+        return response.data;
+      })
+      .catch(this.handleRequestErrors.bind(this));
   }
 
   /*
