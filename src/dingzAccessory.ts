@@ -33,8 +33,9 @@ import {
   DingzState,
   WindowCoveringId,
   WindowCoveringTimer,
-  WindowCoveringState,
   WindowCoveringStates,
+  DingzDeviceWindowCoveringConfig,
+  DingzWindowCoveringConfigItem,
 } from './lib/dingzTypes';
 import { ButtonAction, AccessoryActionUrl } from './lib/commonTypes';
 
@@ -377,6 +378,9 @@ export class DingzAccessory extends DingzDaBaseAccessory {
       .dingzInputInfo;
     const dimmerConfig: DingzDeviceDimmerConfig | undefined = this.device
       .dimmerConfig;
+    const windowCoveringConfig:
+      | DingzWindowCoveringConfigItem[]
+      | undefined = this.device.windowCoveringConfig;
 
     /** DIP Switch
      * 0			M1& M2		(2 blinds)
@@ -446,8 +450,16 @@ export class DingzAccessory extends DingzDaBaseAccessory {
         }
         break;
       case 2:
-        // DIP = 1: M0, D2, D3;
-        windowCoverServices.push(this.addWindowCoveringService('Blind', 0));
+        // DIP = 1: M1, D2, D3;
+        if (windowCoveringConfig && windowCoveringConfig[0]) {
+          windowCoverServices.push(
+            this.addWindowCoveringService({
+              name: windowCoveringConfig[0].name,
+              id: 'M1',
+              index: 0,
+            }),
+          );
+        }
         // Dimmers are always 0 based
         // i.e. if outputs 1 / 2 are for blinds, outputs 3/4 will be dimmer 0/1
         // We use the "index" value of the dingz to determine what to use
@@ -479,7 +491,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
         }
         break;
       case 1:
-        // DIP = 2: D0, D1, M1; (Unless Input, then D1, M1);
+        // DIP = 2: D0, D1, M2; (Unless Input, then D1, M2);
         if (
           inputConfig &&
           !inputConfig[0].active &&
@@ -509,12 +521,39 @@ export class DingzAccessory extends DingzDaBaseAccessory {
             }),
           );
         }
-        windowCoverServices.push(this.addWindowCoveringService('Blind', 0));
+        if (windowCoveringConfig && windowCoveringConfig[1]) {
+          // in this configuration, the second motor has the name we need
+          windowCoverServices.push(
+            this.addWindowCoveringService({
+              name: windowCoveringConfig[1].name,
+              id: 'M2',
+              index: 1,
+            }),
+          );
+        }
         break;
       case 0:
-        // DIP = 3: M0, M1;
-        windowCoverServices.push(this.addWindowCoveringService('Blind', 0));
-        windowCoverServices.push(this.addWindowCoveringService('Blind', 1));
+        // DIP = 3: M1, M2;
+        if (
+          windowCoveringConfig &&
+          windowCoveringConfig[0] &&
+          windowCoveringConfig[1]
+        ) {
+          windowCoverServices.push(
+            this.addWindowCoveringService({
+              name: windowCoveringConfig[0].name,
+              id: 'M1',
+              index: 1,
+            }),
+          );
+          windowCoverServices.push(
+            this.addWindowCoveringService({
+              name: windowCoveringConfig[1].name,
+              id: 'M2',
+              index: 1,
+            }),
+          );
+        }
         break;
       default:
         break;
@@ -790,27 +829,26 @@ export class DingzAccessory extends DingzDaBaseAccessory {
   }
 
   // Add WindowCovering (Blinds)
-  private addWindowCoveringService(name: string, id: WindowCoveringId) {
+  private addWindowCoveringService({
+    name,
+    id,
+    index,
+  }: {
+    name: string;
+    id: string;
+    index: WindowCoveringId;
+  }) {
     const service: Service =
-        this.accessory.getServiceById(
-          this.platform.Service.WindowCovering,
-          id.toString(),
-        ) ??
-        this.accessory.addService(
-          this.platform.Service.WindowCovering,
-          `${name} B${id}`,
-          id.toString(),
-        );
+      this.accessory.getServiceById(this.platform.Service.WindowCovering, id) ??
+      this.accessory.addService(this.platform.Service.WindowCovering, name, id);
     // each service must implement at-minimum the "required characteristics" for the given service type
     // see https://developers.homebridge.io/#/service/Lightbulb
 
-    // register handlers for the On/Off Characteristic
+    service.getCharacteristic(this.platform.Characteristic.Name).setValue(name);
+    // register handlers for the WindoCovering TargetPosition
     service
       .getCharacteristic(this.platform.Characteristic.TargetPosition)
-      .on(
-        CharacteristicEventTypes.SET,
-        this.setPosition.bind(this, id as WindowCoveringId),
-      );
+      .on(CharacteristicEventTypes.SET, this.setPosition.bind(this, index));
 
     // Set min/max Values
     // FIXME: Implement different lamella/blind modes #24
@@ -820,40 +858,27 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     service
       .getCharacteristic(this.platform.Characteristic.TargetHorizontalTiltAngle)
       .setProps({ minValue: 0, maxValue: maxTiltValue }) // dingz Maximum values
-      .on(
-        CharacteristicEventTypes.SET,
-        this.setTiltAngle.bind(this, id as WindowCoveringId),
-      );
+      .on(CharacteristicEventTypes.SET, this.setTiltAngle.bind(this, index));
 
     service
       .getCharacteristic(this.platform.Characteristic.CurrentPosition)
-      .on(
-        CharacteristicEventTypes.GET,
-        this.getPosition.bind(this, id as WindowCoveringId),
-      );
+      .on(CharacteristicEventTypes.GET, this.getPosition.bind(this, index));
     service
       .getCharacteristic(
         this.platform.Characteristic.CurrentHorizontalTiltAngle,
       )
-      .on(
-        CharacteristicEventTypes.GET,
-        this.getTiltAngle.bind(this, id as WindowCoveringId),
-      );
+      .on(CharacteristicEventTypes.GET, this.getTiltAngle.bind(this, index));
     service
       .getCharacteristic(this.platform.Characteristic.PositionState)
       .on(
         CharacteristicEventTypes.GET,
-        this.getPositionState.bind(this, id as WindowCoveringId),
+        this.getPositionState.bind(this, index),
       );
 
     // Subscribe to the update event
     this.eb.on(
       AccessoryEvent.PUSH_STATE_UPDATE,
-      this.updateWindowCoveringState.bind(
-        this,
-        id as WindowCoveringId,
-        service,
-      ),
+      this.updateWindowCoveringState.bind(this, index, service),
     );
     return service;
   }
@@ -1008,7 +1033,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
       'WindowCoverings: ',
       JSON.stringify(this.dingzStates.WindowCovers),
     );
-    let positionState = 0;
+    let positionState = this.platform.Characteristic.PositionState.STOPPED;
     const moving = this.dingzStates.WindowCovers[id]?.moving;
     if (moving) {
       switch (moving) {
@@ -1389,11 +1414,13 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     systemConfig: DingzDeviceSystemConfig;
     inputConfig: DingzDeviceInputConfig;
     dimmerConfig: DingzDeviceDimmerConfig;
+    blindConfig: DingzDeviceWindowCoveringConfig;
   }> {
     const deviceInfoEndpoint = '/api/v1/device';
     const deviceConfigEndpoint = '/api/v1/system_config';
     const inputConfigEndpoint = '/api/v1/input_config';
     const dimmerConfigEndpoint = '/api/v1/dimmer_config';
+    const blindConfigEndpoint = '/api/v1/blind_config';
 
     const config: AxiosRequestConfig = {
       baseURL: `http://${address}`,
@@ -1405,11 +1432,13 @@ export class DingzAccessory extends DingzDaBaseAccessory {
       systemConfigResponse,
       inputConfigResponse,
       dimmerConfigResponse,
+      blindConfigResponse,
     ] = await Promise.all<AxiosResponse>([
       DingzAccessory.axios.get(deviceInfoEndpoint, config),
       DingzAccessory.axios.get(deviceConfigEndpoint, config),
       DingzAccessory.axios.get(inputConfigEndpoint, config),
       DingzAccessory.axios.get(dimmerConfigEndpoint, config),
+      DingzAccessory.axios.get(blindConfigEndpoint, config),
     ]).catch((e: AxiosError) => {
       if (e.code === 'ECONNABORTED') {
         throw new DeviceNotReachableError(
@@ -1428,6 +1457,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
       systemConfig: systemConfigResponse.data,
       inputConfig: inputConfigResponse.data,
       dimmerConfig: dimmerConfigResponse.data,
+      blindConfig: blindConfigResponse.data,
     };
   }
 
@@ -1488,18 +1518,6 @@ export class DingzAccessory extends DingzDaBaseAccessory {
       .finally(() => {
         callback(this.reachabilityState);
       });
-  }
-
-  // We need Target vs Current to accurately update WindowCoverings
-  private async getWindowCovering(
-    id: WindowCoveringId,
-  ): Promise<WindowCoveringState> {
-    const getWindowCoveringUrl = `${this.baseUrl}/api/v1/shade/${id}`;
-    return await DingzDaHomebridgePlatform.fetch({
-      url: getWindowCoveringUrl,
-      returnBody: true,
-      token: this.device.token,
-    }).catch(this.handleRequestErrors.bind(this));
   }
 
   // TODO: Feedback on API doc
