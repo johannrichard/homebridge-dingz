@@ -719,29 +719,32 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     id,
     index,
   }: {
-    name?: string;
+    name: string;
     output?: DingzDimmerConfigValue;
     id: 'D1' | 'D2' | 'D3' | 'D4';
     index: DimmerId;
   }) {
     // Service doesn't yet exist, create new one
-    const newService =
+    const service =
       this.accessory.getServiceById(this.platform.Service.Lightbulb, id) ??
       this.accessory.addService(
         this.platform.Service.Lightbulb,
-        name ?? `Dimmer ${id}`, // Name Dimmers according to WebUI, not API info
+        name, // Name Dimmers according to WebUI, not API info
         id,
       );
 
+    // Update name
+    service.getCharacteristic(this.platform.Characteristic.Name).setValue(name);
+
     // register handlers for the On/Off Characteristic
-    newService
+    service
       .getCharacteristic(this.platform.Characteristic.On)
       .on(CharacteristicEventTypes.SET, this.setOn.bind(this, index)) // SET - bind to the `setOn` method below
       .on(CharacteristicEventTypes.GET, this.getOn.bind(this, index)); // GET - bind to the `getOn` method below
 
     // register handlers for the Brightness Characteristic but only if not dimmable
     if (output && output !== 'non_dimmable') {
-      newService
+      service
         .getCharacteristic(this.platform.Characteristic.Brightness)
         .on(CharacteristicEventTypes.SET, this.setBrightness.bind(this, index)); // SET - bind to the 'setBrightness` method below
     }
@@ -749,9 +752,9 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     // Update State
     this.eb.on(
       AccessoryEvent.PUSH_STATE_UPDATE,
-      this.updateDimmerState.bind(this, index, output, newService),
+      this.updateDimmerState.bind(this, index, output, service),
     );
-    return newService;
+    return service;
   }
 
   private updateDimmerState(
