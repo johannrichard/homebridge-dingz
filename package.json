@@ -1,7 +1,7 @@
 {
   "displayName": "Homebridge dingz Plugin",
   "name": "homebridge-dingz",
-  "version": "2.0.0-nightly.0",
+  "version": "2.0.0-nightly.16",
   "author": "johannrichard",
   "description": "Homebridge Plugin for dingz & myStrom Devices. Implements some (but not all, due to API limitations) functions of a [dingz](https://dingz.ch) Smart Home Device.",
   "license": "Apache-2.0",
@@ -36,16 +36,20 @@
     "iot"
   ],
   "dependencies": {
+    "@the-/jitter": "^15.4.0",
     "@types/node": "^14.0.13",
     "@types/node-fetch": "^2.5.7",
     "abort-controller": "^3.0.0",
     "async-mutex": "^0.2.2",
     "axios": "^0.21.0",
+    "axios-debug-log": "^0.8.2",
     "axios-retry": "^3.1.8",
     "body-parser": "^1.19.0",
     "chalk": "^4.1.0",
     "cockatiel": "^1.1.1",
     "express": "^4.17.1",
+    "intervals-for-humans": "^1.0.4",
+    "is-valid-host": "^0.0.1",
     "qs": "^6.9.4",
     "semver": "^7.3.2",
     "simple-color-converter": "^2.1.5"
