@@ -1576,10 +1576,10 @@ export class DingzAccessory extends DingzDaBaseAccessory {
    * @param index *aboslute* index value (i.e. 0/1)
    */
   private getWindowCoveringId(index: WindowCoveringIndex): 0 | 1 {
-    if (this.dingzStates.WindowCovers.length === 2 || index === 0) {
-      // we have either two blinds *or* only one but index 0
+    if (index === 0) {
+      // we have either two blinds *but* index 0
       return 0;
-    } else if (index === 1 && this.dingzStates.WindowCovers.length === 1) {
+    } else if (this.dingzStates.WindowCovers.length === 1 && index === 1) {
       // we have one blind and it's index 1
       return 0;
     } else {
