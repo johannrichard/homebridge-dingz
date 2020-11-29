@@ -68,10 +68,7 @@ export class DingzDaBaseAccessory {
         this.reachabilityState === null
           ? chalk.green('ALIVE')
           : chalk.yellow('DEAD');
-      this.log.info(
-        `-> REQUEST_STATE_UPDATE (${this.device.address})`,
-        heartbeat,
-      );
+      this.log.info(heartbeat, `(${this.device.address})`);
       this.getDeviceStateUpdate()
         .then(() => {
           // The device update was successful
