@@ -8,7 +8,7 @@ import axios, { AxiosError, AxiosInstance } from 'axios';
 import axiosRetry from 'axios-retry';
 
 import { REQUEST_RETRIES, RETRY_TIMEOUT } from '../settings';
-import { DeviceNotReachableError } from './errors';
+import { DeviceNotReachableError, MethodNotImplementedError } from './errors';
 import { AccessoryEventBus } from './accessoryEventBus';
 import { AxiosDebugHelper } from './axiosDebugHelper';
 import chalk from 'chalk';
@@ -157,7 +157,9 @@ export class DingzDaBaseAccessory {
       'getDeviceStateUpdate() not implemented for',
       this.device.accessoryClass,
     );
-    return Promise.reject();
+    return Promise.reject(
+      new MethodNotImplementedError(this.device.accessoryClass),
+    );
   }
 
   /**
@@ -165,7 +167,7 @@ export class DingzDaBaseAccessory {
    * @param e AxiosError: the error returned by this.request()
    */
   protected handleRequestErrors = (e: AxiosError): void => {
-    if (e.isAxiosError) {
+    if (e && e.isAxiosError) {
       this.reachabilityState = new Error();
       switch (e.code) {
         case 'ECONNABORTED':

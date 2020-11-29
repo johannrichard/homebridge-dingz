@@ -228,4 +228,13 @@ export class MyStromButtonAccessory extends DingzDaBaseAccessory {
     const currentState = this.chargingState;
     callback(this.reachabilityState, currentState);
   }
+
+  // Buttons can not be queried -- always resolve Promise
+  protected getDeviceStateUpdate(): Promise<void> {
+    this.log.debug(
+      'getDeviceStateUpdate() not implemented for',
+      this.device.accessoryClass,
+    );
+    return Promise.resolve();
+  }
 }
