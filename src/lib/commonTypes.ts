@@ -1,7 +1,7 @@
 // Various Type Definitions for the dingz Accessory
 // Based on the API definition
 
-import { DingzDaAccessory } from '../dingzAccessory';
+import { DingzAccessory } from '../dingzAccessory';
 import { MyStromSwitchAccessory } from '../myStromSwitchAccessory';
 import { MyStromLightbulbAccessory } from '../myStromLightbulbAccessory';
 import { MyStromButtonAccessory } from '../myStromButtonAccessory';
@@ -11,7 +11,8 @@ import { MyStromPIRAccessory } from '../myStromPIRAccessory';
 import {
   DingzDeviceInfo,
   DingzInputInfoItem,
-  DingzDimmerConfig,
+  DingzDeviceDimmerConfig,
+  DingzWindowCoveringConfigItem,
 } from './dingzTypes';
 import { MyStromDeviceInfo } from './myStromTypes';
 
@@ -42,7 +43,8 @@ export interface DeviceInfo {
   model?: string;
   token?: string;
   hwInfo?: DingzDeviceInfo | MyStromDeviceInfo;
-  dimmerConfig?: DingzDimmerConfig;
+  dimmerConfig?: DingzDeviceDimmerConfig;
+  windowCoveringConfig?: DingzWindowCoveringConfigItem[];
   dingzInputInfo?: DingzInputInfoItem[];
   lastUpdate?: Date;
   accessoryClass?:
@@ -54,7 +56,7 @@ export interface DeviceInfo {
 }
 
 export type AccessoryType =
-  | DingzDaAccessory
+  | DingzAccessory
   | MyStromSwitchAccessory
   | MyStromLightbulbAccessory
   | MyStromButtonAccessory

@@ -11,21 +11,19 @@ import simpleColorConverter from 'simple-color-converter';
 import qs from 'qs';
 
 import { DingzDaHomebridgePlatform } from './platform';
-import { MyStromDeviceInfo, MyStromLightbulbReport } from './util/myStromTypes';
-import { DeviceInfo } from './util/commonTypes';
+import { MyStromDeviceInfo, MyStromLightbulbReport } from './lib/myStromTypes';
+import { DingzDaBaseAccessory } from './lib/dingzDaBaseAccessory';
 
 /**
  * Platform Accessory
  * An instance of this class is created for each accessory your platform registers
  * Each accessory may expose multiple services of different service types.
  */
-export class MyStromLightbulbAccessory {
+export class MyStromLightbulbAccessory extends DingzDaBaseAccessory {
   private lightbulbService: Service;
 
   // Eventually replaced by:
-  private device: DeviceInfo;
   private mystromDeviceInfo: MyStromDeviceInfo;
-  private baseUrl: string;
 
   private lightbulbState = {
     on: false,
@@ -38,13 +36,12 @@ export class MyStromLightbulbAccessory {
   } as MyStromLightbulbReport;
 
   constructor(
-    private readonly platform: DingzDaHomebridgePlatform,
-    private readonly accessory: PlatformAccessory,
+    private readonly _platform: DingzDaHomebridgePlatform,
+    private readonly _accessory: PlatformAccessory,
   ) {
+    super(_platform, _accessory);
     // Set Base URL
-    this.device = this.accessory.context.device;
     this.mystromDeviceInfo = this.device.hwInfo as MyStromDeviceInfo;
-    this.baseUrl = `http://${this.device.address}`;
 
     this.platform.log.debug(
       'Setting informationService Characteristics ->',
@@ -56,7 +53,7 @@ export class MyStromLightbulbAccessory {
         this.platform.Characteristic.Manufacturer,
         'MyStrom AG',
       )
-      .updateCharacteristic(
+      .setCharacteristic(
         this.platform.Characteristic.AppMatchingIdentifier,
         'ch.mystrom.iOSApp',
       )
@@ -79,7 +76,7 @@ export class MyStromLightbulbAccessory {
 
     this.lightbulbService.setCharacteristic(
       this.platform.Characteristic.Name,
-      this.device.name ?? `${accessory.context.device.model} Bulb`,
+      this.device.name ?? `${this.accessory.context.device.model} Bulb`,
     );
 
     // register handlers for the On/Off Characteristic
@@ -91,56 +88,65 @@ export class MyStromLightbulbAccessory {
     // register handlers for the Brightness Characteristic
     this.lightbulbService
       .getCharacteristic(this.platform.Characteristic.Brightness)
-      .on(CharacteristicEventTypes.SET, this.setBrightness.bind(this)); // SET - bind to the 'setBrightness` method below
+      .on(CharacteristicEventTypes.SET, this.setBrightness.bind(this)) // SET - bind to the 'setBrightness` method below
+      .on(CharacteristicEventTypes.GET, this.getBrightness.bind(this)); // SET - bind to the 'setBrightness` method below
 
     // register handlers for the Brightness Characteristic
     this.lightbulbService
       .getCharacteristic(this.platform.Characteristic.Hue)
-      .on(CharacteristicEventTypes.SET, this.setHue.bind(this)); // SET - bind to the 'setBrightness` method below
+      .on(CharacteristicEventTypes.SET, this.setHue.bind(this)) // SET - bind to the 'setBrightness` method below
+      .on(CharacteristicEventTypes.GET, this.getHue.bind(this)); // SET - bind to the 'setBrightness` method below
 
     // register handlers for the Brightness Characteristic
     this.lightbulbService
       .getCharacteristic(this.platform.Characteristic.Saturation)
-      .on(CharacteristicEventTypes.SET, this.setSaturation.bind(this)); // SET - bind to the 'setBrightness` method below
+      .on(CharacteristicEventTypes.SET, this.setSaturation.bind(this)) // SET - bind to the 'setBrightness` method below
+      .on(CharacteristicEventTypes.GET, this.getSaturation.bind(this)); // SET - bind to the 'setBrightness` method below
+  }
 
-    // Here we change update the brightness to a random value every 5 seconds using
-    // the `updateCharacteristic` method.
-    setInterval(() => {
-      this.getDeviceReport(this.device.mac)
-        .then((report) => {
+  // Get updated device info and update the corresponding values
+  protected getDeviceStateUpdate(): Promise<void> {
+    return this.getDeviceReport(this.device.mac)
+      .then((report) => {
+        // FIXME: Add 'mono' as well
+        if (report && report.mode === 'hsv') {
           // push the new value to HomeKit
           this.lightbulbState = report;
-          // FIXME: Add 'mono' as well
-          if (report.mode === 'hsv') {
-            const hsv = report.color.split(';');
-            this.lightbulbState.hue = parseInt(hsv[0]);
-            this.lightbulbState.saturation = parseInt(hsv[1]);
-            this.lightbulbState.value = parseInt(hsv[2]);
-          } else {
-            // rgbw
-            const hsv = new simpleColorConverter({
-              color: `hex #${report.color}`, // Should be the most compatible form
-              to: 'hsv',
-            });
-            this.lightbulbState.hue = hsv.c;
-            this.lightbulbState.saturation = hsv.s;
-            this.lightbulbState.value = hsv.i;
-          }
 
-          this.lightbulbService
-            .getCharacteristic(this.platform.Characteristic.Hue)
-            .setValue(this.lightbulbState.hue);
-          this.lightbulbService
-            .getCharacteristic(this.platform.Characteristic.Saturation)
-            .setValue(this.lightbulbState.saturation);
-          this.lightbulbService
-            .getCharacteristic(this.platform.Characteristic.Brightness)
-            .setValue(this.lightbulbState.value);
-        })
-        .catch((e) => {
-          this.platform.log.debug('Error while retrieving Device Report ->', e);
-        });
-    }, 2000);
+          const hsv = report.color.split(';');
+          this.lightbulbState.hue = parseInt(hsv[0]);
+          this.lightbulbState.saturation = parseInt(hsv[1]);
+          this.lightbulbState.value = parseInt(hsv[2]);
+        } else if (report && report.mode === 'rgb') {
+          // rgbw
+          const hsv = new simpleColorConverter({
+            color: `hex #${report.color}`,
+            to: 'hsv',
+          });
+          this.lightbulbState.hue = hsv.c;
+          this.lightbulbState.saturation = hsv.s;
+          this.lightbulbState.value = hsv.i;
+        }
+
+        this.lightbulbService
+          .getCharacteristic(this.platform.Characteristic.Hue)
+          .updateValue(this.lightbulbState.hue);
+        this.lightbulbService
+          .getCharacteristic(this.platform.Characteristic.Saturation)
+          .updateValue(this.lightbulbState.saturation);
+        this.lightbulbService
+          .getCharacteristic(this.platform.Characteristic.Brightness)
+          .updateValue(this.lightbulbState.value);
+        this.lightbulbService
+          .getCharacteristic(this.platform.Characteristic.On)
+          .updateValue(this.lightbulbState.on);
+
+        // Return promise
+        return Promise.resolve();
+      })
+      .catch((e) => {
+        return Promise.reject(e);
+      });
   }
 
   identify(): void {
@@ -155,15 +161,14 @@ export class MyStromLightbulbAccessory {
     callback: CharacteristicSetCallback,
   ) {
     this.lightbulbState.on = value as boolean;
-    this.setDeviceLightbulb({ isOn: this.lightbulbState.on });
-    callback(null);
+    this.setDeviceLightbulb(callback);
   }
 
   private getOn(callback: CharacteristicGetCallback) {
     const isOn = this.lightbulbState.on;
     this.platform.log.debug('Get Characteristic On ->', isOn);
 
-    callback(null, isOn);
+    callback(this.reachabilityState, isOn);
   }
 
   private async setHue(
@@ -171,13 +176,12 @@ export class MyStromLightbulbAccessory {
     callback: CharacteristicSetCallback,
   ) {
     this.lightbulbState.hue = value as number;
+    this.setDeviceLightbulb(callback);
+  }
 
-    const state: MyStromLightbulbReport = this.lightbulbState;
-    await this.setDeviceLightbulb({
-      isOn: state.on,
-      color: `${state.hue};${state.saturation};${state.value}`,
-    });
-    callback(null);
+  private getHue(callback: CharacteristicGetCallback) {
+    const hue: number = this.lightbulbState.hue;
+    callback(this.reachabilityState, hue);
   }
 
   private async setSaturation(
@@ -185,14 +189,12 @@ export class MyStromLightbulbAccessory {
     callback: CharacteristicSetCallback,
   ) {
     this.lightbulbState.saturation = value as number;
+    this.setDeviceLightbulb(callback);
+  }
 
-    // Call setDimmerValue()
-    const state: MyStromLightbulbReport = this.lightbulbState;
-    await this.setDeviceLightbulb({
-      isOn: state.on,
-      color: `${state.hue};${state.saturation};${state.value}`,
-    });
-    callback(null);
+  private getSaturation(callback: CharacteristicGetCallback) {
+    const saturation: number = this.lightbulbState.saturation;
+    callback(this.reachabilityState, saturation);
   }
 
   private async setBrightness(
@@ -200,49 +202,40 @@ export class MyStromLightbulbAccessory {
     callback: CharacteristicSetCallback,
   ) {
     this.lightbulbState.value = value as number;
-    const state: MyStromLightbulbReport = this.lightbulbState;
-    await this.setDeviceLightbulb({
-      isOn: state.on,
-      color: `${state.hue};${state.saturation};${state.value}`,
-    });
-    callback(null);
+    this.setDeviceLightbulb(callback);
+  }
+
+  private getBrightness(callback: CharacteristicGetCallback) {
+    const brightness = this.lightbulbState.value;
+    callback(this.reachabilityState, brightness);
   }
 
   // Set individual dimmer
-  private async setDeviceLightbulb({
-    isOn,
-    color,
-  }: {
-    isOn: boolean;
-    color?: string;
-  }): Promise<void> {
-    // Weird URL :-)
+  private setDeviceLightbulb(callback: CharacteristicSetCallback) {
+    const state: MyStromLightbulbReport = this.lightbulbState;
+    const color = `${state.hue};${state.saturation};${state.value}`;
+
     const setDimmerUrl = `${this.baseUrl}/api/v1/device/${this.device.mac}`;
-    await this.platform.fetch({
-      url: setDimmerUrl,
-      method: 'POST',
-      token: this.device.token,
-      body: qs.stringify(
-        {
-          action: isOn ? 'on' : 'off',
-          color: color ?? undefined,
-          mode: color ? 'hsv' : undefined,
-        },
-        { encode: false },
-      ),
-    });
+    const data = qs.stringify(
+      {
+        action: state.on ? 'on' : 'off',
+        color: color ?? undefined,
+        mode: color ? 'hsv' : undefined,
+      },
+      { encode: false },
+    );
+    return this.request
+      .post(setDimmerUrl, data)
+      .catch(this.handleRequestErrors.bind(this))
+      .finally(() => {
+        callback(this.reachabilityState);
+      });
   }
 
   private async getDeviceReport(mac: string): Promise<MyStromLightbulbReport> {
     const reportUrl = `${this.baseUrl}/api/v1/device/`;
-    return await this.platform
-      .fetch({
-        url: reportUrl,
-        returnBody: true,
-        token: this.device.token,
-      })
-      .then((response) => {
-        return response[mac];
-      });
+    return await this.request(reportUrl).then((response) => {
+      return response.data[mac];
+    });
   }
 }

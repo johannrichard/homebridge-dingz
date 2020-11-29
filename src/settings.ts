@@ -5,6 +5,13 @@ export const PLATFORM_NAME = 'Dingz';
 export const ACCESSORY_NAME = 'Da';
 export const DINGZ_DISCOVERY_PORT = 7979;
 export const DINGZ_CALLBACK_PORT = 18081;
+
+/**
+ * Settings for Axios
+ */
+export const REQUEST_RETRIES = 7;
+export const RETRY_TIMEOUT = 3000;
+export const STATE_UPDATE_INTERVAL = 5000;
 /**
  * This must match the name of your plugin as defined the package.json
  */

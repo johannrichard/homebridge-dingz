@@ -8,23 +8,21 @@ import type {
 } from 'homebridge';
 
 import { DingzDaHomebridgePlatform } from './platform';
-import { MyStromDeviceInfo, MyStromSwitchReport } from './util/myStromTypes';
-import { DeviceInfo } from './util/commonTypes';
+import { MyStromDeviceInfo, MyStromSwitchReport } from './lib/myStromTypes';
+import { DingzDaBaseAccessory } from './lib/dingzDaBaseAccessory';
 
 /**
  * Platform Accessory
  * An instance of this class is created for each accessory your platform registers
  * Each accessory may expose multiple services of different service types.
  */
-export class MyStromSwitchAccessory {
+export class MyStromSwitchAccessory extends DingzDaBaseAccessory {
   private outletService: Service;
   private temperatureService: Service | undefined = undefined;
 
   // Eventually replaced by:
   private switchOn = false;
-  private device: DeviceInfo;
   private mystromDeviceInfo: MyStromDeviceInfo;
-  private baseUrl: string;
 
   private outletState = {
     relay: false,
@@ -33,15 +31,14 @@ export class MyStromSwitchAccessory {
   } as MyStromSwitchReport;
 
   constructor(
-    private readonly platform: DingzDaHomebridgePlatform,
-    private readonly accessory: PlatformAccessory,
+    private readonly _platform: DingzDaHomebridgePlatform,
+    private readonly _accessory: PlatformAccessory,
   ) {
+    super(_platform, _accessory);
     // Set Base URL
-    this.device = this.accessory.context.device;
     this.mystromDeviceInfo = this.device.hwInfo as MyStromDeviceInfo;
-    this.baseUrl = `http://${this.device.address}`;
 
-    this.platform.log.debug(
+    this.log.debug(
       'Setting informationService Characteristics ->',
       this.device.model,
     );
@@ -51,7 +48,7 @@ export class MyStromSwitchAccessory {
         this.platform.Characteristic.Manufacturer,
         'MyStrom AG',
       )
-      .updateCharacteristic(
+      .setCharacteristic(
         this.platform.Characteristic.AppMatchingIdentifier,
         'ch.mystrom.iOSApp',
       )
@@ -78,7 +75,7 @@ export class MyStromSwitchAccessory {
 
     this.outletService.setCharacteristic(
       this.platform.Characteristic.Name,
-      this.device.name ?? `${accessory.context.device.model} Outlet`,
+      this.device.name ?? `${this.accessory.context.device.model} Outlet`,
     );
 
     // register handlers for the On/Off Characteristic
@@ -108,93 +105,82 @@ export class MyStromSwitchAccessory {
         .getCharacteristic(this.platform.Characteristic.CurrentTemperature)
         .on(CharacteristicEventTypes.GET, this.getTemperature.bind(this));
     }
-
-    setInterval(() => {
-      this.getDeviceReport()
-        .then((report) => {
-          // push the new value to HomeKit
-          this.outletState = report;
-          this.outletService
-            .updateCharacteristic(
-              this.platform.Characteristic.On,
-              this.outletState.relay,
-            )
-            .updateCharacteristic(
-              this.platform.Characteristic.OutletInUse,
-              this.outletState.power > 0,
-            );
-
-          if (this.temperatureService) {
-            this.temperatureService.updateCharacteristic(
-              this.platform.Characteristic.CurrentTemperature,
-              this.outletState.temperature,
-            );
-          }
-        })
-        .catch((e) => {
-          this.platform.log.error(
-            'Error while retrieving Device Report ->',
-            e.toString(),
-          );
-        });
-    }, 2000);
   }
 
   identify(): void {
-    this.platform.log.debug(
-      'Identify! -> Who am I? I am',
-      this.accessory.displayName,
-    );
+    this.log.debug('Identify! -> Who am I? I am', this.accessory.displayName);
+  }
+
+  // Get updated device info and update the corresponding values
+  protected getDeviceStateUpdate(): Promise<void> {
+    return this.getDeviceReport()
+      .then((report) => {
+        // push the new value to HomeKit
+        this.outletState = report;
+        this.outletService
+          .getCharacteristic(this.platform.Characteristic.On)
+          .updateValue(this.outletState.relay);
+
+        this.outletService
+          .getCharacteristic(this.platform.Characteristic.OutletInUse)
+          .updateValue(this.outletState.power > 0);
+
+        if (this.temperatureService) {
+          this.temperatureService
+            .getCharacteristic(this.platform.Characteristic.CurrentTemperature)
+            .updateValue(this.outletState.temperature);
+        }
+        return Promise.resolve();
+      })
+      .catch((e) => {
+        return Promise.reject(e);
+      });
   }
 
   private setOn(
     value: CharacteristicValue,
     callback: CharacteristicSetCallback,
   ) {
-    this.platform.log.debug('Set Characteristic On ->', value);
+    this.log.debug('Set Characteristic On ->', value);
     this.outletState.relay = value as boolean;
-    this.setDeviceState(this.outletState.relay);
-    callback(null);
+    this.setDeviceState(callback);
   }
 
   private getOn(callback: CharacteristicGetCallback) {
     const isOn = this.outletState?.relay;
-    this.platform.log.debug('Get Characteristic On ->', isOn);
+    this.log.debug('Get Characteristic On ->', isOn);
 
-    callback(null, isOn);
+    callback(this.reachabilityState, isOn);
   }
 
   private getTemperature(callback: CharacteristicGetCallback) {
     const temperature: number = this.outletState?.temperature;
-    this.platform.log.debug(
-      'Get Characteristic Temperature ->',
-      temperature,
-      '° C',
-    );
-
-    callback(null, temperature);
+    this.log.debug('Get Characteristic Temperature ->', temperature, '° C');
+    callback(this.reachabilityState, temperature);
   }
 
   private getOutletInUse(callback: CharacteristicGetCallback) {
     const inUse: boolean = this.outletState?.power > 0;
-    this.platform.log.debug('Get Characteristic OutletInUse ->', inUse);
-    callback(null, inUse);
+    this.log.debug('Get Characteristic OutletInUse ->', inUse);
+    callback(this.reachabilityState, inUse);
   }
 
-  private setDeviceState(isOn: boolean) {
-    const relayUrl = `${this.baseUrl}/relay?state=${isOn ? '1' : '0'}`;
-    this.platform.fetch({
-      url: relayUrl,
-      token: this.device.token,
-    });
+  private setDeviceState(callback: CharacteristicSetCallback) {
+    const relayUrl = `${this.baseUrl}/relay?state=${
+      this.outletState.relay ? '1' : '0'
+    }`;
+    this.request
+      .get(relayUrl)
+      .catch(this.handleRequestErrors.bind(this))
+      .finally(() => {
+        callback(this.reachabilityState);
+      });
   }
 
   private async getDeviceReport(): Promise<MyStromSwitchReport> {
     const reportUrl = `${this.baseUrl}/report`;
-    return await this.platform.fetch({
-      url: reportUrl,
-      returnBody: true,
-      token: this.device.token,
+    return await this.request.get(reportUrl).then((response) => {
+      return response.data;
     });
   }
 }

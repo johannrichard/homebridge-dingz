@@ -14,7 +14,7 @@ export interface DingzLightData {
   state: 'night' | 'day';
 }
 
-export interface DingzInputConfig {
+export interface DingzDeviceInputConfig {
   inputs: DingzInputInfoItem[];
 }
 export interface DingzInputInfoItem {
@@ -69,7 +69,7 @@ export enum ButtonState {
 // Representation of dimmer in Dingz
 export interface DimmerState {
   on: boolean;
-  value: number;
+  output: number;
   ramp: number;
   disabled: boolean;
   index?: {
@@ -99,7 +99,7 @@ export type DingzDimmerConfigValue =
   | 'ohmic'
   | 'not_connected';
 
-export interface DingzDimmerConfig {
+export interface DingzDeviceDimmerConfig {
   dimmers: [
     {
       output: DingzDimmerConfigValue;
@@ -119,8 +119,32 @@ export interface DingzDimmerConfig {
     },
   ];
 }
+export type DingzWindowCoveringCalibrationState =
+  | 'Initialised'
+  | 'Not initialised'
+  | 'Initialising'
+  | 'Unknown';
 
-export type WindowCoveringId = 0 | 1;
+export type DingzWindowCoveringType = 'lamella_90' | 'canvas';
+export type WindowCoveringConfigIndex = 0 | 1;
+export type DingzWindowCoveringConfigItem = {
+  auto_calibration: boolean;
+  state: DingzWindowCoveringCalibrationState;
+  invert_direction: boolean;
+  lamella_time: number;
+  shade_up_time: number;
+  shade_down_time: number;
+  type: DingzWindowCoveringType;
+  min_value: number;
+  max_value: number;
+  name: string;
+};
+export interface DingzDeviceWindowCoveringConfig {
+  blinds: DingzWindowCoveringConfigItem[];
+}
+
+// The absolute position of the blind
+export type WindowCoveringIndex = 0 | 1;
 export interface WindowCoveringPosition {
   blind: number;
   lamella: number;
@@ -131,7 +155,7 @@ export interface WindowCoveringState {
 }
 
 export interface WindowCoveringStates {
-  moving: string;
+  moving: 'up' | 'down' | 'stop';
   position: number;
   lamella: number;
   readonly: boolean;
@@ -140,10 +164,12 @@ export interface WindowCoveringStates {
     absolute: number;
   };
 }
-export type WindowCoveringProps = Record<WindowCoveringId, WindowCoveringState>;
+export type WindowCoveringProps = Record<
+  WindowCoveringIndex,
+  WindowCoveringState
+>;
 
-// FIXME: Replace dispersed data gathering with `api/v1/state` endpoint
-
+// FIXME: #103 Replace dispersed data gathering with `api/v1/state` endpoint
 export interface DingzState {
   dimmers: DimmerState[];
   blinds: WindowCoveringStates[];

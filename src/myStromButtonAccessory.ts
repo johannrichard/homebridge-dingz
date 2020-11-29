@@ -7,10 +7,11 @@ import type {
 import { Policy } from 'cockatiel';
 
 import { DingzDaHomebridgePlatform } from './platform';
-import { MyStromDeviceInfo } from './util/myStromTypes';
-import { DeviceInfo, ButtonAction } from './util/commonTypes';
-import { DingzEvent } from './util/dingzEventBus';
-import { ButtonState } from './util/dingzTypes';
+import { MyStromDeviceInfo } from './lib/myStromTypes';
+import { ButtonAction } from './lib/commonTypes';
+import { PlatformEvent } from './lib/platformEventBus';
+import { ButtonState } from './lib/dingzTypes';
+import { DingzDaBaseAccessory } from './lib/dingzDaBaseAccessory';
 
 // Policy for long running tasks, retry every hour
 const retrySlow = Policy.handleAll()
@@ -23,26 +24,24 @@ const retrySlow = Policy.handleAll()
  * An instance of this class is created for each accessory your platform registers
  * Each accessory may expose multiple services of different service types.
  */
-export class MyStromButtonAccessory {
+export class MyStromButtonAccessory extends DingzDaBaseAccessory {
   // Eventually replaced by:
-  private device: DeviceInfo;
   private mystromDeviceInfo: MyStromDeviceInfo;
-  private baseUrl: string;
   private buttonState?: ButtonAction;
   private switchButtonState?: ButtonState;
   private batteryLevel: Nullable<number> = 0;
   private chargingState = false;
 
   constructor(
-    private readonly platform: DingzDaHomebridgePlatform,
-    private readonly accessory: PlatformAccessory,
+    private readonly _platform: DingzDaHomebridgePlatform,
+    private readonly _accessory: PlatformAccessory,
   ) {
-    // Set Base URL
-    this.device = this.accessory.context.device;
-    this.mystromDeviceInfo = this.device.hwInfo as MyStromDeviceInfo;
-    this.baseUrl = `http://${this.device.address}`;
+    super(_platform, _accessory);
 
-    this.platform.log.debug(
+    // Set Base URL
+    this.mystromDeviceInfo = this.device.hwInfo as MyStromDeviceInfo;
+
+    this.log.debug(
       'Setting informationService Characteristics ->',
       this.device.model,
     );
@@ -72,10 +71,7 @@ export class MyStromButtonAccessory {
 
     // get the LightBulb service if it exists, otherwise create a new LightBulb service
     // you can create multiple services for each accessory
-    this.platform.log.info(
-      'Create Stateless Programmable Switch -> ',
-      this.device.name,
-    );
+    this.log.info('Create Stateless Programmable Switch');
     const buttonService: Service =
       this.accessory.getService(
         this.platform.Service.StatelessProgrammableSwitch,
@@ -86,7 +82,7 @@ export class MyStromButtonAccessory {
 
     buttonService.setCharacteristic(
       this.platform.Characteristic.Name,
-      this.device.name ?? `${accessory.context.device.model}`,
+      this.device.name ?? `${this.accessory.context.device.model}`,
     );
 
     buttonService
@@ -124,7 +120,7 @@ export class MyStromButtonAccessory {
       .getCharacteristic(this.platform.Characteristic.ChargingState)
       .on(CharacteristicEventTypes.GET, this.getChargingState.bind(this));
 
-    this.platform.eb.on(DingzEvent.ACTION, (mac, action, battery) => {
+    this.platform.eb.on(PlatformEvent.ACTION, (mac, action, battery) => {
       if (mac === this.device.mac) {
         this.buttonState = action ?? ButtonAction.SINGLE_PRESS;
         this.batteryLevel = battery;
@@ -145,9 +141,7 @@ export class MyStromButtonAccessory {
         const ProgrammableSwitchEvent = this.platform.Characteristic
           .ProgrammableSwitchEvent;
         if (buttonService) {
-          this.platform.log.debug(
-            `Button of ${this.device.name} (${this.device.mac}) pressed -> ${action}`,
-          );
+          this.log.debug(`Button (${this.device.mac}) pressed -> ${action}`);
           switch (action) {
             case ButtonAction.SINGLE_PRESS:
               buttonService
@@ -165,7 +159,7 @@ export class MyStromButtonAccessory {
                 .updateValue(ProgrammableSwitchEvent.LONG_PRESS);
               break;
             default:
-              this.platform.log.info(
+              this.log.info(
                 'Heartbeat (Unknown action) ->',
                 this.device.address,
                 '-> Device is alive, though, will try to update info!',
@@ -178,7 +172,7 @@ export class MyStromButtonAccessory {
                 .then((data) => {
                   if (typeof data !== 'undefined') {
                     const info = data as MyStromDeviceInfo;
-                    accessory.context.device.hwInfo = info;
+                    this.accessory.context.device.hwInfo = info;
                     if (batteryService) {
                       batteryService
                         .getCharacteristic(
@@ -206,18 +200,18 @@ export class MyStromButtonAccessory {
 
   private getButtonState(callback: CharacteristicGetCallback) {
     const currentState = this.buttonState;
-    callback(null, currentState);
+    callback(this.reachabilityState, currentState);
   }
 
   private getSwitchButtonState(callback: CharacteristicGetCallback) {
     const currentState = this.switchButtonState;
-    this.platform.log.info('Get Switch State ->', currentState);
-    callback(null, currentState);
+    this.log.info('Get Switch State ->', currentState);
+    callback(this.reachabilityState, currentState);
   }
 
   private getBatteryLevel(callback: CharacteristicGetCallback) {
     const currentLevel = this.batteryLevel;
-    callback(null, currentLevel);
+    callback(this.reachabilityState, currentLevel);
   }
 
   private getStatusBatteryLow(callback: CharacteristicGetCallback) {
@@ -232,17 +226,15 @@ export class MyStromButtonAccessory {
 
   private getChargingState(callback: CharacteristicGetCallback) {
     const currentState = this.chargingState;
-    callback(null, currentState);
+    callback(this.reachabilityState, currentState);
   }
 
-  /*
-   * This method is optional to implement. It is called when HomeKit ask to identify the accessory.
-   * Typical this only ever happens at the pairing process.
-   */
-  identify(): void {
-    this.platform.log.debug(
-      'Identify! -> Who am I? I am',
-      this.accessory.displayName,
+  // Buttons can not be queried -- always resolve Promise
+  protected getDeviceStateUpdate(): Promise<void> {
+    this.log.debug(
+      'getDeviceStateUpdate() not implemented for',
+      this.device.accessoryClass,
     );
+    return Promise.resolve();
   }
 }

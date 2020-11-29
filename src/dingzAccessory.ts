@@ -7,13 +7,14 @@ import {
   Service,
 } from 'homebridge';
 
-import { EventEmitter } from 'events';
+import { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { Policy } from 'cockatiel';
-import { Mutex } from 'async-mutex';
 import simpleColorConverter from 'simple-color-converter';
 import qs from 'qs';
+import semver from 'semver';
 
 // Internal types
+import { RETRY_TIMEOUT } from './settings';
 import {
   ButtonId,
   ButtonState,
@@ -21,30 +22,31 @@ import {
   DimmerState,
   DimmerTimer,
   DingzDeviceInfo,
-  DingzDimmerConfig,
+  DingzDevices,
+  DingzDeviceSystemConfig,
+  DingzDeviceDimmerConfig,
+  DingzDeviceInputConfig,
   DingzDimmerConfigValue,
-  DingzInputConfig,
   DingzInputInfoItem,
   DingzLEDState,
   DingzMotionData,
   DingzState,
-  WindowCoveringId,
+  WindowCoveringIndex,
   WindowCoveringTimer,
-  WindowCoveringState,
-  WindowCoveringPosition,
-} from './util/dingzTypes';
-import {
-  ButtonAction,
-  DeviceInfo,
-  AccessoryActionUrl,
-} from './util/commonTypes';
+  WindowCoveringStates,
+  DingzDeviceWindowCoveringConfig,
+  DingzWindowCoveringConfigItem,
+} from './lib/dingzTypes';
+import { ButtonAction, AccessoryActionUrl } from './lib/commonTypes';
 
 import {
   MethodNotImplementedError,
   DeviceNotReachableError,
-} from './util/errors';
+} from './lib/errors';
 import { DingzDaHomebridgePlatform } from './platform';
-import { DingzEvent } from './util/dingzEventBus';
+import { PlatformEvent } from './lib/platformEventBus';
+import { DingzDaBaseAccessory } from './lib/dingzDaBaseAccessory';
+import { AccessoryEvent } from './lib/accessoryEventBus';
 
 // Policy for long running tasks, retry every hour
 const retrySlow = Policy.handleAll()
@@ -57,25 +59,20 @@ const retrySlow = Policy.handleAll()
  * An instance of this class is created for each accessory your platform registers
  * Each accessory may expose multiple services of different service types.
  */
-
-export class DingzDaAccessory extends EventEmitter {
-  private readonly mutex = new Mutex();
-
+export class DingzAccessory extends DingzDaBaseAccessory {
   private services: Service[] = [];
   private motionService?: Service;
 
   private _updatedDeviceInfo?: DingzDeviceInfo;
   private _updatedDeviceInputConfig?: DingzInputInfoItem;
 
-  private device: DeviceInfo;
   private dingzDeviceInfo: DingzDeviceInfo;
-  private baseUrl: string;
 
   // Todo: Make proper internal representation
   private dingzStates = {
     // Outputs
     Dimmers: [] as DimmerState[],
-    WindowCovers: [] as WindowCoveringState[],
+    WindowCovers: [] as WindowCoveringStates[],
     LED: {
       on: false,
       hsv: '0;0;100',
@@ -99,34 +96,19 @@ export class DingzDaAccessory extends EventEmitter {
   private dimmerTimers = {} as DimmerTimer;
   private windowCoveringTimers = {} as WindowCoveringTimer;
 
+  /**
+   * DingzAccessory constructor
+   * @param _platform platform pointer
+   * @param _accessory accessory pointer
+   */
   constructor(
-    private readonly platform: DingzDaHomebridgePlatform,
-    private readonly accessory: PlatformAccessory,
+    private readonly _platform: DingzDaHomebridgePlatform,
+    private readonly _accessory: PlatformAccessory,
   ) {
-    super();
+    super(_platform, _accessory);
 
     // Set base info
-    this.device = this.accessory.context.device;
     this.dingzDeviceInfo = this.device.hwInfo as DingzDeviceInfo;
-    this.baseUrl = `http://${this.device.address}`;
-
-    this.setAccessoryInformation();
-
-    // Register listener for updated device info (e.g. on restore)
-    this.platform.eb.on(DingzEvent.UPDATE_INFO, (deviceInfo: DeviceInfo) => {
-      if (deviceInfo.mac === this.device.mac) {
-        this.platform.log.debug(
-          'Updated device info received -> update accessory',
-        );
-
-        // Persist updated info
-        this.device = deviceInfo;
-        this.accessory.context.device = deviceInfo;
-        this.dingzDeviceInfo = this.device.hwInfo as DingzDeviceInfo;
-        this.baseUrl = `http://${this.device.address}`;
-        this.setAccessoryInformation();
-      }
-    });
 
     // Remove Reachability service if still present
     const bridgingService: Service | undefined = this.accessory.getService(
@@ -136,21 +118,18 @@ export class DingzDaAccessory extends EventEmitter {
       this.accessory.removeService(bridgingService);
     }
 
-    /****
-     * How to discover Accessories:
-     * - Check for UDP Packets and/or use manually configured accessories
-     */
-
     // Add Dimmers, Blinds etc.
-    this.platform.log.info(
+    this.log.info(
       'Adding output devices for ',
       this.device.address,
       ' -> [...]',
     );
 
-    // FIXME: Is there a better way to handle errors?
-    this.getConfigs()
-      .then(([inputConfig, dimmerConfig]) => {
+    DingzAccessory.getConfigs({
+      address: this.device.address,
+      token: this.device.token,
+    })
+      .then(({ dingzDevices, inputConfig, dimmerConfig, blindConfig }) => {
         if (
           inputConfig?.inputs &&
           dimmerConfig?.dimmers &&
@@ -158,89 +137,68 @@ export class DingzDaAccessory extends EventEmitter {
         ) {
           this.device.dingzInputInfo = inputConfig.inputs;
           this.device.dimmerConfig = dimmerConfig;
+          this.device.windowCoveringConfig = blindConfig.blinds;
+
+          if (dingzDevices[this.device.mac]) {
+            this.log.debug(
+              'Updated device info received -> update accessory',
+              dingzDevices[this.device.mac],
+            );
+
+            // Persist updated info
+            this.device.hwInfo = dingzDevices[this.device.mac];
+            this.accessory.context.device = this.device;
+            this.dingzDeviceInfo = this.device.hwInfo as DingzDeviceInfo;
+            this.baseUrl = `http://${this.device.address}`;
+            this.setAccessoryInformation();
+          }
+          this.setAccessoryInformation();
+          this.setButtonCallbacks();
 
           // Now we have what we need and can create the services …
           this.addOutputServices();
-          setInterval(() => {
-            // TODO: Set rechability if call times out too many times
-            // Set up an interval to fetch Dimmer states
-            this.updateDeviceState();
-          }, 10000);
-        }
-      }) // FIXME: Don't chain this way, improve error handling
-      .then(() => {
-        /**
-         * Add auxiliary services (Motion, Temperature)
-         */
-        if (this.dingzDeviceInfo.has_pir) {
-          // dingz has a Motion sensor -- let's create it
-          this.addMotionService();
-        } else {
-          this.platform.log.info(
-            'Your dingz',
-            this.accessory.displayName,
-            'has no Motion sensor.',
-          );
-        }
-        // dingz has a temperature sensor and an LED,
-        // make these available here
-        this.addTemperatureService();
-        this.addLEDService();
-        this.addLightSensorService();
-        this.addButtonServices();
 
-        this.services.forEach((service) => {
-          this.platform.log.info(
-            'Service created ->',
-            service.getCharacteristic(this.platform.Characteristic.Name).value,
-          );
-        });
-
-        // Only necessary for firmware version < 1.2.x
-        if (
-          this.dingzDeviceInfo.fw_version.indexOf('1.1.') === 0 ||
-          this.dingzDeviceInfo.fw_version.indexOf('1.0.') === 0
-        ) {
-          this.platform.log.debug(
-            'Enable PIR callback for older firmware revisions',
-          );
-          this.enablePIRCallback();
-        }
-        this.getButtonCallbackUrl().then((callBackUrl) => {
-          if (!callBackUrl?.url.includes(this.platform.getCallbackUrl())) {
-            this.platform.log.warn(
-              'Update existing callback URL ->',
-              callBackUrl,
-            );
-            // Set the callback URL (Override!)
-            const endpoints = this.dingzDeviceInfo.has_pir
-              ? ['generic', 'pir/single']
-              : ['generic'];
-            this.platform.setButtonCallbackUrl({
-              baseUrl: this.baseUrl,
-              token: this.device.token,
-              oldUrl: callBackUrl.url,
-              endpoints: endpoints,
-            });
+          // Add auxiliary services (Motion, Temperature)
+          if (this.dingzDeviceInfo.has_pir) {
+            // dingz has a Motion sensor -- let's create it
+            this.addMotionService();
           } else {
-            this.platform.log.debug(
-              'Callback URL already set ->',
-              callBackUrl?.url,
-            );
+            this.log.info('This dingz has no Motion sensor.');
           }
-        });
+          // dingz has a temperature sensor and an LED,
+          // make these available here
+          this.addTemperatureService();
+          this.addLEDService();
+          this.addLightSensorService();
+          this.addButtonServices();
 
-        // Retry at least once every day
-        retrySlow.execute(() => {
-          this.updateAccessory();
-          return true;
-        });
-      });
+          this.services.forEach((service) => {
+            this.log.info(
+              'Service created ->',
+              service.getCharacteristic(this.platform.Characteristic.Name)
+                .value,
+            );
+          });
+
+          // Retry at least once every day
+          retrySlow.execute(() => {
+            this.updateAccessory();
+            return true;
+          });
+        }
+      })
+      .catch(this.handleRequestErrors.bind(this));
   }
 
-  private setAccessoryInformation() {
+  /**
+   * Set the accessory information
+   * - Firmware
+   * - Manufacturer
+   * - S/N etc.
+   */
+  protected setAccessoryInformation(): void {
     // Sanity check for "empty" SerialNumber
-    this.platform.log.debug(
+    this.log.debug(
       `Attempting to set SerialNumber (which can not be empty) -> front_sn: <${this.dingzDeviceInfo.front_sn}>`,
     );
     const serialNumber: string =
@@ -249,36 +207,92 @@ export class DingzDaAccessory extends EventEmitter {
         : this.dingzDeviceInfo.front_sn;
     this.accessory
       .getService(this.platform.Service.AccessoryInformation)!
-      .updateCharacteristic(
-        this.platform.Characteristic.Manufacturer,
-        'iolo AG',
-      )
-      .updateCharacteristic(
+      .setCharacteristic(this.platform.Characteristic.Manufacturer, 'iolo AG')
+      .setCharacteristic(
         this.platform.Characteristic.AppMatchingIdentifier,
         'ch.iolo.dingz.consumer',
       )
       // Update info from deviceInfo
-      .updateCharacteristic(
+      .setCharacteristic(
         this.platform.Characteristic.ConfiguredName,
-        this.device.name,
+        this.accessory.displayName,
       )
-      .updateCharacteristic(this.platform.Characteristic.Name, this.device.name)
-      .updateCharacteristic(
+      .setCharacteristic(
+        this.platform.Characteristic.Name,
+        this.accessory.displayName,
+      )
+      .setCharacteristic(
         this.platform.Characteristic.Model,
         this.device.model as string,
       )
-      .updateCharacteristic(
+      .setCharacteristic(
         this.platform.Characteristic.FirmwareRevision,
         this.dingzDeviceInfo.fw_version ?? 'Unknown',
       )
-      .updateCharacteristic(
+      .setCharacteristic(
         this.platform.Characteristic.HardwareRevision,
         this.dingzDeviceInfo.hw_version_puck ?? 'Unknown',
       )
-      .updateCharacteristic(
+      .setCharacteristic(
         this.platform.Characteristic.SerialNumber,
         serialNumber,
       );
+  }
+
+  private setButtonCallbacks() {
+    // Only necessary for firmware version < 1.2.x
+    if (semver.lt(this.dingzDeviceInfo.fw_version, '1.2.0')) {
+      this.log.debug('Enable PIR callback for older firmware revisions');
+      this.enablePIRCallback();
+    }
+
+    this.getButtonCallbackUrl()
+      .then((callBackUrl) => {
+        if (!callBackUrl?.url.includes(this.platform.getCallbackUrl())) {
+          this.log.warn('Update existing callback URL ->', callBackUrl);
+          // Set the callback URL (Override!)
+          const endpoints = this.dingzDeviceInfo.has_pir
+            ? ['generic', 'pir/single']
+            : ['generic'];
+          this.platform.setButtonCallbackUrl({
+            baseUrl: this.baseUrl,
+            token: this.device.token,
+            oldUrl: callBackUrl.url,
+            endpoints: endpoints,
+          });
+        } else {
+          this.log.debug('Callback URL already set ->', callBackUrl?.url);
+        }
+      })
+      .catch(this.handleRequestErrors.bind(this));
+  }
+
+  // Get updated device info and update the corresponding values
+  // TODO: #103, #116, #120, #123 -- fetch state for all device elements
+  protected getDeviceStateUpdate(): Promise<void> {
+    return this.getDeviceState()
+      .then((state) => {
+        if (typeof state !== 'undefined') {
+          // Outputs
+          this.dingzStates.Dimmers = state.dimmers;
+          this.dingzStates.LED = state.led;
+          // Sensors
+          this.dingzStates.Temperature = state.sensors.room_temperature;
+          this.dingzStates.Brightness = state.sensors.brightness;
+          // Lamellas
+          // TODO: assign right values
+          this.dingzStates.WindowCovers = state.blinds;
+
+          // Push the Update to HomeBridge
+          this.eb.emit(AccessoryEvent.PUSH_STATE_UPDATE);
+          return Promise.resolve();
+        } else {
+          return Promise.reject(new DeviceNotReachableError());
+        }
+      })
+      .catch((e: Error) => {
+        return Promise.reject(e);
+      });
   }
 
   private addTemperatureService() {
@@ -296,8 +310,8 @@ export class DingzDaAccessory extends EventEmitter {
       .on(CharacteristicEventTypes.GET, this.getTemperature.bind(this));
     this.services.push(temperatureService);
 
-    this.platform.eb.on(
-      DingzEvent.STATE_UPDATE,
+    this.eb.on(
+      AccessoryEvent.PUSH_STATE_UPDATE,
       this.updateTemperature.bind(this, temperatureService),
     );
   }
@@ -317,30 +331,7 @@ export class DingzDaAccessory extends EventEmitter {
   private getTemperature(callback: CharacteristicSetCallback) {
     // set this to a valid value for CurrentTemperature
     const currentTemperature: number = this.dingzStates.Temperature;
-    callback(null, currentTemperature);
-  }
-
-  /**
-   * Handle Handle the "GET" requests from HomeKit
-   * to get the current value of the "Motion Detected" characteristic
-   */
-  private getMotionDetected(callback: CharacteristicSetCallback) {
-    // set this to a valid value for MotionDetected
-    const isMotion = this.dingzStates.Motion;
-    callback(null, isMotion);
-  }
-
-  /*
-   * This method is optional to implement. It is called when HomeKit ask to identify the accessory.
-   * Typical this only ever happens at the pairing process.
-   */
-  identify(): void {
-    this.platform.log.info(
-      'Identify! -> Who am I? I am',
-      this.accessory.displayName,
-      '-> MAC:',
-      this.device.mac,
-    );
+    callback(this.reachabilityState, currentTemperature);
   }
 
   private addLightSensorService() {
@@ -354,8 +345,8 @@ export class DingzDaAccessory extends EventEmitter {
     lightService.setCharacteristic(this.platform.Characteristic.Name, 'Light');
     this.services.push(lightService);
 
-    this.platform.eb.on(
-      DingzEvent.STATE_UPDATE,
+    this.eb.on(
+      AccessoryEvent.PUSH_STATE_UPDATE,
       this.updateLightSensor.bind(this, lightService),
     );
   }
@@ -378,8 +369,11 @@ export class DingzDaAccessory extends EventEmitter {
 
     const inputConfig: DingzInputInfoItem[] | undefined = this.device
       .dingzInputInfo;
-    const dimmerConfig: DingzDimmerConfig | undefined = this.device
+    const dimmerConfig: DingzDeviceDimmerConfig | undefined = this.device
       .dimmerConfig;
+    const windowCoveringConfig:
+      | DingzWindowCoveringConfigItem[]
+      | undefined = this.device.windowCoveringConfig;
 
     /** DIP Switch
      * 0			M1& M2		(2 blinds)
@@ -449,8 +443,16 @@ export class DingzDaAccessory extends EventEmitter {
         }
         break;
       case 2:
-        // DIP = 1: M0, D2, D3;
-        windowCoverServices.push(this.addWindowCoveringService('Blind', 0));
+        // DIP = 1: M1, D2, D3;
+        if (windowCoveringConfig && windowCoveringConfig[0]) {
+          windowCoverServices.push(
+            this.addWindowCoveringService({
+              name: windowCoveringConfig[0].name,
+              id: 'M1',
+              index: 0,
+            }),
+          );
+        }
         // Dimmers are always 0 based
         // i.e. if outputs 1 / 2 are for blinds, outputs 3/4 will be dimmer 0/1
         // We use the "index" value of the dingz to determine what to use
@@ -482,7 +484,7 @@ export class DingzDaAccessory extends EventEmitter {
         }
         break;
       case 1:
-        // DIP = 2: D0, D1, M1; (Unless Input, then D1, M1);
+        // DIP = 2: D0, D1, M2; (Unless Input, then D1, M2);
         if (
           inputConfig &&
           !inputConfig[0].active &&
@@ -512,12 +514,39 @@ export class DingzDaAccessory extends EventEmitter {
             }),
           );
         }
-        windowCoverServices.push(this.addWindowCoveringService('Blind', 0));
+        if (windowCoveringConfig && windowCoveringConfig[1]) {
+          // in this configuration, the second motor has the name we need
+          windowCoverServices.push(
+            this.addWindowCoveringService({
+              name: windowCoveringConfig[1].name,
+              id: 'M2',
+              index: 1,
+            }),
+          );
+        }
         break;
       case 0:
-        // DIP = 3: M0, M1;
-        windowCoverServices.push(this.addWindowCoveringService('Blind', 0));
-        windowCoverServices.push(this.addWindowCoveringService('Blind', 1));
+        // DIP = 3: M1, M2;
+        if (
+          windowCoveringConfig &&
+          windowCoveringConfig[0] &&
+          windowCoveringConfig[1]
+        ) {
+          windowCoverServices.push(
+            this.addWindowCoveringService({
+              name: windowCoveringConfig[0].name,
+              id: 'M1',
+              index: 0,
+            }),
+          );
+          windowCoverServices.push(
+            this.addWindowCoveringService({
+              name: windowCoveringConfig[1].name,
+              id: 'M2',
+              index: 1,
+            }),
+          );
+        }
         break;
       default:
         break;
@@ -541,19 +570,17 @@ export class DingzDaAccessory extends EventEmitter {
     this.services.push(this.addButtonService('dingz Button 4', '4'));
 
     this.platform.eb.on(
-      DingzEvent.ACTION,
+      PlatformEvent.ACTION,
       (mac, action: ButtonAction, button: ButtonId | '5') => {
         if (mac === this.device.mac && button) {
-          this.platform.log.debug(
-            `Button ${button} of ${this.device.name} pressed -> ${action}, MAC: ${mac} (This: ${this.device.mac})`,
+          this.log.debug(
+            `Button ${button} pressed -> ${action}, MAC: ${mac} (This: ${this.device.mac})`,
           );
           if (button === '5') {
             // PUSH MOTION
             if (!(this.platform.config.motionPoller ?? true)) {
-              this.platform.log.debug(
-                `Button ${button} of ${this.device.name} Motion -> ${action}`,
-              );
-              this.platform.log.debug('Motion Update from CALLBACK');
+              this.log.debug(`Button ${button} Motion -> ${action}`);
+              this.log.debug('Motion Update from CALLBACK');
               this.motionService
                 ?.getCharacteristic(this.platform.Characteristic.MotionDetected)
                 .updateValue(
@@ -577,12 +604,12 @@ export class DingzDaAccessory extends EventEmitter {
                 this.platform.Characteristic.ProgrammableSwitchOutputState,
               )
               .updateValue(this.dingzStates.Buttons[button].state);
-            this.platform.log.info(
-              `Button ${button} of ${this.device.name} (${service?.displayName}) pressed -> ${action}`,
+            this.log.info(
+              `Button ${button} (${service?.displayName}) pressed -> ${action}`,
             );
 
-            // immediately update states after button pressed
-            this.updateDeviceState();
+            // Immediately update states after button pressed
+            this.getDeviceStateUpdate();
 
             switch (action) {
               case ButtonAction.SINGLE_PRESS:
@@ -608,7 +635,7 @@ export class DingzDaAccessory extends EventEmitter {
   }
 
   private addButtonService(name: string, button: ButtonId): Service {
-    this.platform.log.debug('Adding Button Service ->', name, ' -> ', button);
+    this.log.debug('Adding Button Service ->', name, ' -> ', button);
 
     const buttonService =
       this.accessory.getServiceById(
@@ -656,7 +683,7 @@ export class DingzDaAccessory extends EventEmitter {
     callback: CharacteristicGetCallback,
   ) {
     const currentState = this.dingzStates.Buttons[button].event;
-    callback(null, currentState);
+    callback(this.reachabilityState, currentState);
   }
 
   private getSwitchButtonState(
@@ -664,15 +691,8 @@ export class DingzDaAccessory extends EventEmitter {
     callback: CharacteristicGetCallback,
   ) {
     const currentState = this.dingzStates.Buttons[button].state;
-    this.platform.log.info(
-      'Get Switch State of',
-      this.device.name,
-      '->',
-      button,
-      '-> state:',
-      currentState,
-    );
-    callback(null, currentState);
+    this.log.info('Get Switch State of ->', button, '-> state:', currentState);
+    callback(this.reachabilityState, currentState);
   }
 
   private setSwitchButtonState(
@@ -681,31 +701,8 @@ export class DingzDaAccessory extends EventEmitter {
     callback: CharacteristicSetCallback,
   ) {
     this.dingzStates.Buttons[button].state = value as ButtonState;
-    this.platform.log.info(
-      'Set Switch State of',
-      this.device.name,
-      '->',
-      button,
-      '-> state:',
-      value,
-    );
-    callback(null);
-  }
-
-  private updateDeviceState() {
-    this.getDeviceState().then((state) => {
-      if (typeof state !== 'undefined' && state?.config) {
-        // Outputs
-        this.dingzStates.Dimmers = state.dimmers;
-        this.dingzStates.LED = state.led;
-        // Sensors
-        this.dingzStates.Temperature = state.sensors.room_temperature;
-        this.dingzStates.Brightness = state.sensors.brightness;
-      } else {
-        this.platform.log.error('Can`t get device state');
-      }
-      this.platform.eb.emit(DingzEvent.STATE_UPDATE);
-    });
+    this.log.info('Set Switch State of ->', button, '-> state:', value);
+    callback(this.reachabilityState);
   }
 
   private addDimmerService({
@@ -714,39 +711,42 @@ export class DingzDaAccessory extends EventEmitter {
     id,
     index,
   }: {
-    name?: string;
+    name: string;
     output?: DingzDimmerConfigValue;
     id: 'D1' | 'D2' | 'D3' | 'D4';
     index: DimmerId;
   }) {
     // Service doesn't yet exist, create new one
-    const newService =
+    const service =
       this.accessory.getServiceById(this.platform.Service.Lightbulb, id) ??
       this.accessory.addService(
         this.platform.Service.Lightbulb,
-        name ?? `Dimmer ${id}`, // Name Dimmers according to WebUI, not API info
+        name, // Name Dimmers according to WebUI, not API info
         id,
       );
 
+    // Update name
+    service.getCharacteristic(this.platform.Characteristic.Name).setValue(name);
+
     // register handlers for the On/Off Characteristic
-    newService
+    service
       .getCharacteristic(this.platform.Characteristic.On)
       .on(CharacteristicEventTypes.SET, this.setOn.bind(this, index)) // SET - bind to the `setOn` method below
       .on(CharacteristicEventTypes.GET, this.getOn.bind(this, index)); // GET - bind to the `getOn` method below
 
     // register handlers for the Brightness Characteristic but only if not dimmable
     if (output && output !== 'non_dimmable') {
-      newService
+      service
         .getCharacteristic(this.platform.Characteristic.Brightness)
         .on(CharacteristicEventTypes.SET, this.setBrightness.bind(this, index)); // SET - bind to the 'setBrightness` method below
     }
 
     // Update State
-    this.platform.eb.on(
-      DingzEvent.STATE_UPDATE,
-      this.updateDimmerState.bind(this, index, output, newService),
+    this.eb.on(
+      AccessoryEvent.PUSH_STATE_UPDATE,
+      this.updateDimmerState.bind(this, index, output, service),
     );
-    return newService;
+    return service;
   }
 
   private updateDimmerState(
@@ -762,7 +762,7 @@ export class DingzDaAccessory extends EventEmitter {
         if (output && output !== 'non_dimmable') {
           service
             .getCharacteristic(this.platform.Characteristic.Brightness)
-            .updateValue(state.value);
+            .updateValue(state.output);
         }
         service
           .getCharacteristic(this.platform.Characteristic.On)
@@ -778,7 +778,7 @@ export class DingzDaAccessory extends EventEmitter {
       id,
     );
     if (service) {
-      this.platform.log.debug('Removing Dimmer ->', service.displayName);
+      this.log.debug('Removing Dimmer ->', service.displayName);
       clearTimeout(this.dimmerTimers[id]);
       this.accessory.removeService(service);
     }
@@ -789,18 +789,8 @@ export class DingzDaAccessory extends EventEmitter {
     value: CharacteristicValue,
     callback: CharacteristicSetCallback,
   ) {
-    try {
-      this.dingzStates.Dimmers[index].on = value as boolean;
-      this.setDeviceDimmer(index, value as boolean);
-    } catch (e) {
-      this.platform.log.error(
-        'Error -> unable to set Dimmer data ',
-        index,
-        e.name,
-        e.toString(),
-      );
-    }
-    callback(null);
+    this.dingzStates.Dimmers[index].on = value as boolean;
+    this.setDeviceDimmer(index, callback, value as boolean);
   }
 
   /**
@@ -808,7 +798,7 @@ export class DingzDaAccessory extends EventEmitter {
    */
   private getOn(index: DimmerId, callback: CharacteristicGetCallback) {
     const isOn: boolean = this.dingzStates.Dimmers[index]?.on ?? false;
-    callback(null, isOn);
+    callback(this.reachabilityState, isOn);
   }
 
   private async setBrightness(
@@ -817,281 +807,251 @@ export class DingzDaAccessory extends EventEmitter {
     callback: CharacteristicSetCallback,
   ) {
     const isOn: boolean = value > 0 ? true : false;
-    this.dingzStates.Dimmers[index].value = value as number;
+    this.dingzStates.Dimmers[index].output = value as number;
     this.dingzStates.Dimmers[index].on = isOn;
 
-    await this.setDeviceDimmer(index, isOn, value as number);
-    callback(null);
+    this.setDeviceDimmer(index, callback, isOn, value as number);
   }
 
   // Add WindowCovering (Blinds)
-  private addWindowCoveringService(name: string, id?: WindowCoveringId) {
-    let service: Service;
-    if (id) {
-      service =
-        this.accessory.getServiceById(
-          this.platform.Service.WindowCovering,
-          id.toString(),
-        ) ??
-        this.accessory.addService(
-          this.platform.Service.WindowCovering,
-          `${name} B${id}`,
-          id.toString(),
-        );
-    } else {
-      service =
-        this.accessory.getService(this.platform.Service.WindowCovering) ??
-        this.accessory.addService(this.platform.Service.WindowCovering, name);
-    }
+  private addWindowCoveringService({
+    name,
+    id,
+    index,
+  }: {
+    name: string;
+    id: string;
+    index: WindowCoveringIndex;
+  }) {
+    const service: Service =
+      this.accessory.getServiceById(this.platform.Service.WindowCovering, id) ??
+      this.accessory.addService(this.platform.Service.WindowCovering, name, id);
     // each service must implement at-minimum the "required characteristics" for the given service type
     // see https://developers.homebridge.io/#/service/Lightbulb
 
-    // register handlers for the On/Off Characteristic
+    service.getCharacteristic(this.platform.Characteristic.Name).setValue(name);
+    // register handlers for the WindoCovering TargetPosition
     service
       .getCharacteristic(this.platform.Characteristic.TargetPosition)
-      .on(
-        CharacteristicEventTypes.SET,
-        this.setPosition.bind(this, id as WindowCoveringId),
-      );
+      .on(CharacteristicEventTypes.SET, this.setPosition.bind(this, index));
 
     // Set min/max Values
     // FIXME: Implement different lamella/blind modes #24
+    const maxTiltValue = semver.lt(this.dingzDeviceInfo.fw_version, '1.2.0')
+      ? 90
+      : 100;
     service
       .getCharacteristic(this.platform.Characteristic.TargetHorizontalTiltAngle)
-      .setProps({ minValue: 0, maxValue: 90 }) // dingz Maximum values
-      .on(
-        CharacteristicEventTypes.SET,
-        this.setTiltAngle.bind(this, id as WindowCoveringId),
-      );
+      .setProps({ minValue: 0, maxValue: maxTiltValue }) // dingz Maximum values
+      .on(CharacteristicEventTypes.SET, this.setTiltAngle.bind(this, index));
 
     service
       .getCharacteristic(this.platform.Characteristic.CurrentPosition)
-      .on(
-        CharacteristicEventTypes.GET,
-        this.getPosition.bind(this, id as WindowCoveringId),
-      );
+      .on(CharacteristicEventTypes.GET, this.getPosition.bind(this, index));
     service
       .getCharacteristic(
         this.platform.Characteristic.CurrentHorizontalTiltAngle,
       )
-      .on(
-        CharacteristicEventTypes.GET,
-        this.getTiltAngle.bind(this, id as WindowCoveringId),
-      );
+      .on(CharacteristicEventTypes.GET, this.getTiltAngle.bind(this, index));
     service
       .getCharacteristic(this.platform.Characteristic.PositionState)
       .on(
         CharacteristicEventTypes.GET,
-        this.getPositionState.bind(this, id as WindowCoveringId),
+        this.getPositionState.bind(this, index),
       );
 
-    const updateInterval: NodeJS.Timer = setInterval(() => {
-      try {
-        this.getWindowCovering(id as WindowCoveringId).then((state) => {
-          if (typeof state !== 'undefined' && typeof id === 'number') {
-            // push the new value to HomeKit
-            this.dingzStates.WindowCovers[id] = state;
-            service
-              .getCharacteristic(this.platform.Characteristic.TargetPosition)
-              .updateValue(state.target.blind);
-            service
-              .getCharacteristic(
-                this.platform.Characteristic.TargetHorizontalTiltAngle,
-              )
-              .updateValue(state.target.lamella);
-            service
-              .getCharacteristic(this.platform.Characteristic.CurrentPosition)
-              .updateValue(state.current.blind);
-            service
-              .getCharacteristic(
-                this.platform.Characteristic.CurrentHorizontalTiltAngle,
-              )
-              .updateValue(state.current.lamella);
-
-            this.platform.log.debug(
-              'Pushed updated current WindowCovering state of',
-              service.getCharacteristic(this.platform.Characteristic.Name)
-                .value,
-              'to HomeKit:',
-              state,
-            );
-          } else {
-            this.platform.log.warn(
-              'Failed to push updated Window Covering',
-              state,
-            );
-          }
-        });
-      } catch (e) {
-        this.platform.log.error(
-          'Error -> unable to fetch WindowCovering data',
-          e.name,
-          e.toString(),
-        );
-      }
-    }, 5000);
-
-    if (id && updateInterval) {
-      this.windowCoveringTimers[id as number] = updateInterval;
-    }
-
-    // this.platform.eb.on(
-    //   DingzEvent.STATE_UPDATE,
-    //   this.updateWindowCoveringState.bind(
-    //     this,
-    //     id as WindowCoveringId,
-    //     service,
-    //   ),
-    // );
+    // Subscribe to the update event
+    this.eb.on(
+      AccessoryEvent.PUSH_STATE_UPDATE,
+      this.updateWindowCoveringState.bind(this, index, service),
+    );
     return service;
   }
 
   // Window Covering functions
   // TODO: Use available information to more accurately set WindowCovering State
-  private updateWindowCoveringState(id: WindowCoveringId, service: Service) {
-    const state: WindowCoveringState = this.dingzStates.WindowCovers[id];
-
+  private updateWindowCoveringState(
+    index: WindowCoveringIndex,
+    service: Service,
+  ) {
+    const id = this.getWindowCoveringId(index);
+    const state: WindowCoveringStates = this.dingzStates.WindowCovers[id];
     if (state) {
+      /**
+       * TODO: Fix Hardware Buttons and UI buttons
+       * It can be complicated:
+       * - We're moving by setting new positions in the UI [x]
+       * - We're moving by pressing the "up/down" buttons in the UI or Hardware [x]
+       */
+
+      const maxTiltValue = semver.lt(this.dingzDeviceInfo.fw_version, '1.2.0')
+        ? 90
+        : 100;
+
       service
         .getCharacteristic(this.platform.Characteristic.TargetPosition)
-        .updateValue(state.target.blind);
+        .updateValue(state.position);
       service
         .getCharacteristic(
           this.platform.Characteristic.TargetHorizontalTiltAngle,
         )
-        .updateValue(state.target.lamella);
-      service
-        .getCharacteristic(this.platform.Characteristic.CurrentPosition)
-        .updateValue(state.current.blind);
-      service
-        .getCharacteristic(
-          this.platform.Characteristic.CurrentHorizontalTiltAngle,
-        )
-        .updateValue((state.current.lamella / 100) * 90); // Set in °, Get in % (...)
+        .updateValue((state.lamella / 100) * maxTiltValue); // Old FW: Set in °, Get in % (...)
 
       let positionState: number;
-      if (state.target.blind > state.current.blind) {
-        positionState = this.platform.Characteristic.PositionState.DECREASING;
-      } else if (state.target.blind < state.current.blind) {
-        positionState = this.platform.Characteristic.PositionState.INCREASING;
-      } else {
-        positionState = this.platform.Characteristic.PositionState.STOPPED;
+      switch (state.moving) {
+        case 'up':
+          positionState = this.platform.Characteristic.PositionState.INCREASING;
+          break;
+        case 'down':
+          positionState = this.platform.Characteristic.PositionState.DECREASING;
+          break;
+        case 'stop':
+          positionState = this.platform.Characteristic.PositionState.STOPPED;
+          service
+            .getCharacteristic(this.platform.Characteristic.CurrentPosition)
+            .updateValue(state.position);
+          service
+            .getCharacteristic(
+              this.platform.Characteristic.CurrentHorizontalTiltAngle,
+            )
+            .updateValue((state.lamella / 100) * maxTiltValue); // Set in °, Get in % (...)
+          break;
       }
-      this.platform.log.debug('WindowCovering Position State:', positionState);
       service
         .getCharacteristic(this.platform.Characteristic.PositionState)
-        .setValue(positionState);
-      // .updateValue(positionState);
+        .updateValue(positionState);
     }
   }
 
   private async setPosition(
-    id: WindowCoveringId,
-    value: CharacteristicValue,
+    index: WindowCoveringIndex,
+    position: CharacteristicValue,
     callback: CharacteristicSetCallback,
   ) {
-    const blind: number = value as number;
+    const id = this.getWindowCoveringId(index);
+    const windowCovering = this.dingzStates.WindowCovers[id];
+    if (windowCovering) {
+      // Make sure we're setting motion when changing the position
+      if (position > windowCovering.position) {
+        windowCovering.moving = 'up';
+      } else if (position < windowCovering.position) {
+        windowCovering.moving = 'down';
+      } else {
+        windowCovering.moving = 'stop';
+      }
 
-    if (this.dingzStates.WindowCovers[id]) {
-      const lamella: number = this.dingzStates.WindowCovers[id].target.lamella;
-      this.dingzStates.WindowCovers[id].target.blind = blind;
+      this.log.warn('Blinds moving: ', windowCovering.moving, '-->', position);
 
-      await this.setWindowCovering(id, blind, lamella);
+      await this.setWindowCovering({
+        id: id,
+        blind: position as number,
+        lamella: windowCovering.lamella,
+        callback: callback,
+      });
     }
-    callback(null);
   }
 
   private getPosition(
-    id: WindowCoveringId,
+    index: WindowCoveringIndex,
     callback: CharacteristicGetCallback,
   ) {
-    this.platform.log.debug(
+    this.log.debug(
       'WindowCoverings: ',
       JSON.stringify(this.dingzStates.WindowCovers),
     );
-    const blind: number = this.dingzStates.WindowCovers[id]?.current.blind;
+    const id = this.getWindowCoveringId(index);
+    const blind: number = this.dingzStates.WindowCovers[id]?.position;
 
-    this.platform.log.debug(
+    this.log.debug(
       'Get Characteristic for WindowCovering',
-      id,
+      index,
       'Current Position ->',
       blind,
     );
 
-    callback(null, blind);
+    callback(this.reachabilityState, blind);
   }
 
   private async setTiltAngle(
-    id: WindowCoveringId,
-    value: CharacteristicValue,
+    index: WindowCoveringIndex,
+    angle: CharacteristicValue,
     callback: CharacteristicSetCallback,
   ) {
-    const blind: number = this.dingzStates.WindowCovers[id].target.blind;
-    const lamella: number = value as number;
-    this.dingzStates.WindowCovers[id].target.lamella = lamella;
-
-    this.platform.log.debug(
+    this.log.debug(
       'Set Characteristic TargetHorizontalTiltAngle on ',
-      id,
+      index,
       '->',
-      value,
+      angle,
     );
-    await this.setWindowCovering(id, blind, lamella);
-    callback(null);
+    const id = this.getWindowCoveringId(index);
+    if (this.dingzStates.WindowCovers[id]) {
+      await this.setWindowCovering({
+        id: id,
+        blind: this.dingzStates.WindowCovers[id].lamella,
+        lamella: angle as number,
+        callback: callback,
+      });
+    }
   }
 
   /**
    * Handle the "GET" requests from HomeKit
    */
   private getTiltAngle(
-    id: WindowCoveringId,
+    index: WindowCoveringIndex,
     callback: CharacteristicGetCallback,
   ) {
-    this.platform.log.debug(
+    this.log.debug(
       'WindowCoverings: ',
       JSON.stringify(this.dingzStates.WindowCovers),
     );
-    const currentWindowCover: WindowCoveringPosition = this.dingzStates
-      .WindowCovers[id]?.current;
-    const tiltAngle: number = currentWindowCover?.lamella;
+    const id = this.getWindowCoveringId(index);
+    const tiltAngle: number = this.dingzStates.WindowCovers[id]?.lamella;
 
-    this.platform.log.debug(
+    this.log.debug(
       'Get Characteristic for WindowCovering',
-      id,
+      index,
       'Current TiltAngle ->',
       tiltAngle,
     );
 
-    callback(null, tiltAngle);
+    callback(this.reachabilityState, tiltAngle);
   }
 
   private getPositionState(
-    id: WindowCoveringId,
+    index: WindowCoveringIndex,
     callback: CharacteristicGetCallback,
   ) {
-    this.platform.log.debug(
+    this.log.debug(
       'WindowCoverings: ',
       JSON.stringify(this.dingzStates.WindowCovers),
     );
-    let positionState = 0;
-    const state = this.dingzStates.WindowCovers[id];
-    if (state) {
-      if (state.target.blind > state.current.blind) {
-        positionState = this.platform.Characteristic.PositionState.DECREASING;
-      } else if (state.target.blind < state.current.blind) {
-        positionState = this.platform.Characteristic.PositionState.INCREASING;
-      } else {
-        positionState = this.platform.Characteristic.PositionState.STOPPED;
+    let positionState = this.platform.Characteristic.PositionState.STOPPED;
+
+    const id = this.getWindowCoveringId(index);
+    const moving = this.dingzStates.WindowCovers[id]?.moving;
+
+    if (moving) {
+      switch (moving) {
+        case 'down':
+          positionState = this.platform.Characteristic.PositionState.DECREASING;
+          break;
+        case 'up':
+          positionState = this.platform.Characteristic.PositionState.INCREASING;
+          break;
+        case 'stop':
+          positionState = this.platform.Characteristic.PositionState.STOPPED;
+          break;
       }
-      this.platform.log.debug(
+
+      this.log.debug(
         'Get Characteristic for WindowCovering',
-        id,
+        index,
         'Current Position State ->',
         positionState,
       );
     }
-
-    callback(null, positionState);
+    callback(this.reachabilityState, positionState);
   }
 
   /**
@@ -1108,7 +1068,7 @@ export class DingzDaAccessory extends EventEmitter {
     this.services.push(this.motionService);
     // Only check for motion if we have a PIR and set the Interval
     if (this.platform.config.motionPoller ?? true) {
-      this.platform.log.info('Motion POLLING of', this.device.name, 'enabled');
+      this.log.info('Motion POLLING enabled');
       const motionInterval: NodeJS.Timer = setInterval(() => {
         this.getDeviceMotion()
           .then((data) => {
@@ -1116,7 +1076,7 @@ export class DingzDaAccessory extends EventEmitter {
               const isMotion: boolean = data.motion;
               // Only update if motionService exists *and* if there's a change in motion'
               if (this.motionService && this.dingzStates.Motion !== isMotion) {
-                this.platform.log.debug('Motion Update from POLLER');
+                this.log.debug('Motion Update from POLLER');
                 this.dingzStates.Motion = isMotion;
                 this.motionService
                   ?.getCharacteristic(
@@ -1126,13 +1086,12 @@ export class DingzDaAccessory extends EventEmitter {
               }
             } else {
               throw new DeviceNotReachableError(
-                `Device can not be reached ->
-              ${this.device.name}-> ${this.device.address}`,
+                `Device can not be reached -> ${this.accessory.displayName}-> ${this.device.address}`,
               );
             }
           })
           .catch((e) => {
-            this.platform.log.error(
+            this.log.error(
               'Error -> unable to fetch DeviceMotion data',
               e.name,
               e.toString(),
@@ -1154,114 +1113,130 @@ export class DingzDaAccessory extends EventEmitter {
       this.platform.Service.MotionSensor,
     );
     if (service) {
-      this.platform.log.info('Removing Motion service ->', service.displayName);
+      this.log.info('Removing Motion service ->', service.displayName);
       this.accessory.removeService(service);
     }
   }
 
-  // FIXME: refactor dingz.updateAccessory #103
+  // FIXME: [FIX] refactor dingz.updateAccessory #103
   // Updates the Accessory (e.g. if the config has changed)
-  private async updateAccessory(): Promise<void> {
-    this.platform.log.info(
-      'Update accessory ',
+  protected updateAccessory(): void {
+    this.log.info(
+      'Update accessory',
       this.device.address,
       '-> Check for changed config.',
     );
 
-    this.getConfigs().then(([inputConfig, dimmerConfig]) => {
-      if (inputConfig?.inputs[0]) {
-        this._updatedDeviceInputConfig = inputConfig.inputs[0];
-      }
-      this.device.dimmerConfig = dimmerConfig;
-    });
-
-    this.getDingzDeviceInfo().then((deviceInfo) => {
-      this._updatedDeviceInfo = deviceInfo;
-    });
-
-    let updatedDingzDeviceInfo: DingzDeviceInfo | undefined;
-    let updatedDingzInputInfo: DingzInputInfoItem | undefined;
-
-    try {
-      const currentDingzDeviceInfo: DingzDeviceInfo = this.accessory.context
-        .device.dingzDeviceInfo;
-      updatedDingzDeviceInfo =
-        this._updatedDeviceInfo ?? currentDingzDeviceInfo;
-
-      if (
-        currentDingzDeviceInfo &&
-        currentDingzDeviceInfo.has_pir !== updatedDingzDeviceInfo.has_pir
-      ) {
-        // Update PIR Service
-        this.platform.log.warn('Update accessory -> PIR config changed.');
-        if (updatedDingzDeviceInfo.has_pir) {
-          // Add PIR service
-          this.addMotionService();
-        } else {
-          // Remove PIR service
-          this.removeMotionService();
+    // FIXME: [FIX] refactor dingz.updateAccessory #103
+    DingzAccessory.getConfigs({
+      address: this.device.address,
+      token: this.device.token,
+    })
+      .then(({ dingzDevices, inputConfig, dimmerConfig }) => {
+        if (this.reachabilityState !== null) {
+          this.log.warn('Device recovered from unreachable state');
+          this.reachabilityState = null;
         }
-      }
 
-      // Something about the Input config changed -- either remove or add the Dimmer,
-      // but only if DIP is not set to WindowCovers
-      // Update PIR Service
-      const currentDingzInputInfo: DingzInputInfoItem | undefined = this
-        .accessory.context.device.dingzInputInfo
-        ? this.accessory.context.device.dingzInputInfo[0]
-        : undefined;
-      updatedDingzInputInfo =
-        this._updatedDeviceInputConfig ?? currentDingzInputInfo;
-      if (updatedDingzInputInfo?.active || currentDingzInputInfo?.active) {
-        if (
-          this.accessory.getServiceById(this.platform.Service.Lightbulb, 'D1')
-        ) {
-          this.platform.log.warn(
-            'Input active. Dimmer Service 0 can not exist -> remove',
-          );
-          this.removeDimmerService('D1');
+        if (inputConfig?.inputs[0]) {
+          this._updatedDeviceInputConfig = inputConfig.inputs[0];
         }
-      } else if (
-        !updatedDingzInputInfo?.active &&
-        !this.accessory.getServiceById(this.platform.Service.Lightbulb, 'D1') &&
-        (updatedDingzDeviceInfo.dip_config === 1 ||
-          updatedDingzDeviceInfo.dip_config === 3)
-      ) {
-        // Only add Dimmer 0 if we're not in "WindowCover" mode
-        const dimmerConfig: DingzDimmerConfig | undefined = this.device
-          .dimmerConfig;
+        this.device.dimmerConfig = dimmerConfig;
+        this._updatedDeviceInfo = dingzDevices[this.device.mac];
 
-        this.platform.log.warn(
-          'No Input defined. Attempting to add Dimmer Service D1.',
-        );
-        this.addDimmerService({
-          name: dimmerConfig?.dimmers[0].name,
-          output: dimmerConfig?.dimmers[0].output,
-          id: 'D1',
-          index: 0,
-        });
-      }
-      // DIP overrides Input
-      if (
-        currentDingzDeviceInfo &&
-        currentDingzDeviceInfo.dip_config !== updatedDingzDeviceInfo.dip_config
-      ) {
-        // Update Dimmer & Blinds Services
-        throw new MethodNotImplementedError(
-          'Update Dimmer accessories not yet implemented -> ' +
-            this.accessory.displayName,
-        );
-      }
+        let updatedDingzDeviceInfo: DingzDeviceInfo | undefined;
+        let updatedDingzInputInfo: DingzInputInfoItem | undefined;
 
-      this.updateDimmerServices();
-    } finally {
-      if (updatedDingzDeviceInfo) {
-        this.accessory.context.device.dingzDeviceInfo = updatedDingzDeviceInfo;
-      }
-      if (updatedDingzInputInfo) {
-        this.accessory.context.device.dingzInputInfo = [updatedDingzInputInfo];
-      }
-    }
+        try {
+          const currentDingzDeviceInfo: DingzDeviceInfo = this.accessory.context
+            .device.dingzDeviceInfo;
+          updatedDingzDeviceInfo =
+            this._updatedDeviceInfo ?? currentDingzDeviceInfo;
+
+          if (
+            currentDingzDeviceInfo &&
+            currentDingzDeviceInfo.has_pir !== updatedDingzDeviceInfo.has_pir
+          ) {
+            // Update PIR Service
+            this.log.warn('Update accessory -> PIR config changed.');
+            if (updatedDingzDeviceInfo.has_pir) {
+              // Add PIR service
+              this.addMotionService();
+            } else {
+              // Remove PIR service
+              this.removeMotionService();
+            }
+          }
+
+          // Something about the Input config changed -- either remove or add the Dimmer,
+          // but only if DIP is not set to WindowCovers
+          // Update PIR Service
+          const currentDingzInputInfo: DingzInputInfoItem | undefined = this
+            .accessory.context.device.dingzInputInfo
+            ? this.accessory.context.device.dingzInputInfo[0]
+            : undefined;
+          updatedDingzInputInfo =
+            this._updatedDeviceInputConfig ?? currentDingzInputInfo;
+          if (updatedDingzInputInfo?.active || currentDingzInputInfo?.active) {
+            if (
+              this.accessory.getServiceById(
+                this.platform.Service.Lightbulb,
+                'D1',
+              )
+            ) {
+              this.log.warn(
+                'Input active. Dimmer Service 0 can not exist -> remove',
+              );
+              this.removeDimmerService('D1');
+            }
+          } else if (
+            !updatedDingzInputInfo?.active &&
+            !this.accessory.getServiceById(
+              this.platform.Service.Lightbulb,
+              'D1',
+            ) &&
+            (updatedDingzDeviceInfo.dip_config === 1 ||
+              updatedDingzDeviceInfo.dip_config === 3)
+          ) {
+            // Only add Dimmer 0 if we're not in "WindowCover" mode
+            const dimmerConfig: DingzDeviceDimmerConfig | undefined = this
+              .device.dimmerConfig;
+
+            this.log.warn(
+              'No Input defined. Attempting to add Dimmer Service D1.',
+            );
+            this.addDimmerService({
+              name: dimmerConfig?.dimmers[0].name,
+              output: dimmerConfig?.dimmers[0].output,
+              id: 'D1',
+              index: 0,
+            });
+          }
+          // DIP overrides Input
+          if (
+            currentDingzDeviceInfo &&
+            currentDingzDeviceInfo.dip_config !==
+              updatedDingzDeviceInfo.dip_config
+          ) {
+            // Update Dimmer & Blinds Services
+            throw new MethodNotImplementedError(
+              'Update Dimmer accessories not yet implemented',
+            );
+          }
+
+          this.updateDimmerServices();
+        } finally {
+          if (updatedDingzDeviceInfo) {
+            this.accessory.context.device.dingzDeviceInfo = updatedDingzDeviceInfo;
+          }
+          if (updatedDingzInputInfo) {
+            this.accessory.context.device.dingzInputInfo = [
+              updatedDingzInputInfo,
+            ];
+          }
+        }
+      })
+      .catch(this.handleRequestErrors.bind(this));
   }
 
   // Updates the Dimemr Services with their correct name
@@ -1347,10 +1322,8 @@ export class DingzDaAccessory extends EventEmitter {
       .on(CharacteristicEventTypes.SET, this.setLEDSaturation.bind(this)); // SET - bind to the 'setBrightness` method below
 
     this.services.push(ledService);
-    // Here we change update the brightness to a random value every 5 seconds using
-    // the `updateCharacteristic` method.
-    this.platform.eb.on(
-      DingzEvent.STATE_UPDATE,
+    this.eb.on(
+      AccessoryEvent.PUSH_STATE_UPDATE,
       this.updateLEDState.bind(this, ledService),
     );
   }
@@ -1375,16 +1348,16 @@ export class DingzDaAccessory extends EventEmitter {
 
     ledService
       .getCharacteristic(this.platform.Characteristic.Hue)
-      .setValue(this.dingzStates.LED.hue);
+      .updateValue(this.dingzStates.LED.hue);
     ledService
       .getCharacteristic(this.platform.Characteristic.Saturation)
-      .setValue(this.dingzStates.LED.saturation);
+      .updateValue(this.dingzStates.LED.saturation);
     ledService
       .getCharacteristic(this.platform.Characteristic.Brightness)
-      .setValue(this.dingzStates.LED.value);
+      .updateValue(this.dingzStates.LED.value);
     ledService
       .getCharacteristic(this.platform.Characteristic.On)
-      .setValue(this.dingzStates.LED.on);
+      .updateValue(this.dingzStates.LED.on);
   }
 
   private setLEDOn(
@@ -1392,15 +1365,12 @@ export class DingzDaAccessory extends EventEmitter {
     callback: CharacteristicSetCallback,
   ) {
     this.dingzStates.LED.on = value as boolean;
-    const state = this.dingzStates.LED;
-    const color = `${state.hue};${state.saturation};${state.value}`;
-    this.setDeviceLED({ isOn: state.on, color: color });
-    callback(null);
+    this.setDeviceLED(callback);
   }
 
   private getLEDOn(callback: CharacteristicGetCallback) {
     const isOn = this.dingzStates.LED.on;
-    callback(null, isOn);
+    callback(this.reachabilityState, isOn);
   }
 
   private setLEDHue(
@@ -1408,14 +1378,7 @@ export class DingzDaAccessory extends EventEmitter {
     callback: CharacteristicSetCallback,
   ) {
     this.dingzStates.LED.hue = value as number;
-
-    const state: DingzLEDState = this.dingzStates.LED;
-    const color = `${state.hue};${state.saturation};${state.value}`;
-    this.setDeviceLED({
-      isOn: state.on,
-      color: color,
-    });
-    callback(null);
+    this.setDeviceLED(callback);
   }
 
   private setLEDSaturation(
@@ -1423,14 +1386,7 @@ export class DingzDaAccessory extends EventEmitter {
     callback: CharacteristicSetCallback,
   ) {
     this.dingzStates.LED.saturation = value as number;
-
-    const state: DingzLEDState = this.dingzStates.LED;
-    const color = `${state.hue};${state.saturation};${state.value}`;
-    this.setDeviceLED({
-      isOn: state.on,
-      color: color,
-    });
-    callback(null);
+    this.setDeviceLED(callback);
   }
 
   private setLEDBrightness(
@@ -1438,183 +1394,207 @@ export class DingzDaAccessory extends EventEmitter {
     callback: CharacteristicSetCallback,
   ) {
     this.dingzStates.LED.value = value as number;
-
-    const state: DingzLEDState = this.dingzStates.LED;
-    const color = `${state.hue};${state.saturation};${state.value}`;
-    this.setDeviceLED({
-      isOn: state.on,
-      color: color,
-    });
-    callback(null);
+    this.setDeviceLED(callback);
   }
 
-  /**
-   * Device Methods -- these are used to retrieve the data from the Dingz
-   * TODO: Refactor duplicate code into proper API caller
-   */
-  private async getDingzDeviceInfo(): Promise<DingzDeviceInfo> {
-    const [dingzDevices] = await this.platform.getDingzDeviceInfo({
-      address: this.device.address,
-      token: this.device.token,
-    });
-    try {
-      const dingzDeviceInfo: DingzDeviceInfo = dingzDevices[this.device.mac];
-      if (dingzDeviceInfo) {
-        return dingzDeviceInfo;
+  // Get Input & Dimmer Config
+  public static async getConfigs({
+    address,
+    token,
+  }: {
+    address: string;
+    token?: string;
+    caller?: string;
+  }): Promise<{
+    dingzDevices: DingzDevices;
+    systemConfig: DingzDeviceSystemConfig;
+    inputConfig: DingzDeviceInputConfig;
+    dimmerConfig: DingzDeviceDimmerConfig;
+    blindConfig: DingzDeviceWindowCoveringConfig;
+  }> {
+    const deviceInfoEndpoint = '/api/v1/device';
+    const deviceConfigEndpoint = '/api/v1/system_config';
+    const inputConfigEndpoint = '/api/v1/input_config';
+    const dimmerConfigEndpoint = '/api/v1/dimmer_config';
+    const blindConfigEndpoint = '/api/v1/blind_config';
+
+    const config: AxiosRequestConfig = {
+      baseURL: `http://${address}`,
+      timeout: RETRY_TIMEOUT, // devices can be a bit slow
+      headers: { Token: token ?? '' },
+    };
+    const [
+      dingzDevicesResponse,
+      systemConfigResponse,
+      inputConfigResponse,
+      dimmerConfigResponse,
+      blindConfigResponse,
+    ] = await Promise.all<AxiosResponse>([
+      DingzAccessory.axios.get(deviceInfoEndpoint, config),
+      DingzAccessory.axios.get(deviceConfigEndpoint, config),
+      DingzAccessory.axios.get(inputConfigEndpoint, config),
+      DingzAccessory.axios.get(dimmerConfigEndpoint, config),
+      DingzAccessory.axios.get(blindConfigEndpoint, config),
+    ]).catch((e: AxiosError) => {
+      if (e.code === 'ECONNABORTED') {
+        throw new DeviceNotReachableError(
+          `${
+            e.code ?? ''
+          }: Device ${address} not reachable after ${RETRY_TIMEOUT} ms\n\n${
+            e.stack
+          }`,
+        );
+      } else {
+        throw e;
       }
-    } catch (e) {
-      this.platform.log.error('Error in getting Device Info ->', e.toString());
-    }
-    throw new Error('dingz Device update failed -> Empty data.');
+    });
+    return {
+      dingzDevices: dingzDevicesResponse.data,
+      systemConfig: systemConfigResponse.data,
+      inputConfig: inputConfigResponse.data,
+      dimmerConfig: dimmerConfigResponse.data,
+      blindConfig: blindConfigResponse.data,
+    };
   }
 
   private async getDeviceMotion(): Promise<DingzMotionData> {
-    const getMotionUrl = `${this.baseUrl}/api/v1/motion`;
-    const release = await this.mutex.acquire();
-    try {
-      return await this.platform.fetch({
-        url: getMotionUrl,
+    const getMotionEndpoint = '/api/v1/motion';
+    return await this.request
+      .get(getMotionEndpoint, {
         returnBody: true,
-        token: this.device.token,
-      });
-    } finally {
-      release();
-    }
+      } as AxiosRequestConfig)
+      .then((response) => {
+        return response.data;
+      })
+      .catch(this.handleRequestErrors.bind(this));
   }
 
   // Set individual dimmer
   private async setDeviceDimmer(
     index: DimmerId,
+    callback: CharacteristicSetCallback,
     isOn?: boolean,
     level?: number,
-  ): Promise<void> {
+  ) {
     // /api/v1/dimmer/<DIMMER>/on/?value=<value>
-    const setDimmerUrl = `${this.baseUrl}/api/v1/dimmer/${index}/${
-      isOn ? 'on' : 'off'
-    }/${level ? '?value=' + level : ''}`;
-    await this.platform.fetch({
-      url: setDimmerUrl,
-      method: 'POST',
-      token: this.device.token,
-    });
+    const setDimmerEndpoint = `/api/v1/dimmer/${index}/${isOn ? 'on' : 'off'}/${
+      level ? '?value=' + level : ''
+    }`;
+    await this.request
+      .post(setDimmerEndpoint)
+      .catch(this.handleRequestErrors.bind(this))
+      .finally(() => {
+        callback(this.reachabilityState);
+      });
   }
 
   // Set individual dimmer
-  private async setWindowCovering(
-    id: WindowCoveringId,
-    blind: number,
-    lamella: number,
-  ): Promise<void> {
+  private setWindowCovering({
+    id,
+    blind,
+    lamella,
+    callback,
+  }: {
+    id: WindowCoveringIndex;
+    blind: number;
+    lamella: number;
+    callback: CharacteristicSetCallback;
+  }) {
+    // The API says the parameters can be omitted. This is not true
     // {{ip}}/api/v1/shade/0?blind=<value>&lamella=<value>
-    const setWindowCoveringUrl = `${this.baseUrl}/api/v1/shade/${id}/`;
-    await this.platform.fetch({
-      url: setWindowCoveringUrl,
-      method: 'POST',
-      token: this.device.token,
-      body: qs.stringify(
-        {
-          blind: blind,
-          lamella: lamella,
-        },
-        { encode: false },
-      ),
-    });
-  }
-
-  // We need Target vs Current to accurately update WindowCoverings
-  private async getWindowCovering(
-    id: WindowCoveringId,
-  ): Promise<WindowCoveringState> {
-    const getWindowCoveringUrl = `${this.baseUrl}/api/v1/shade/${id}`;
-    const release = await this.mutex.acquire();
-    try {
-      return await this.platform.fetch({
-        url: getWindowCoveringUrl,
-        returnBody: true,
-        token: this.device.token,
+    const setWindowCoveringEndpoint = `${this.baseUrl}/api/v1/shade/${id}`;
+    this.request
+      .post(
+        setWindowCoveringEndpoint,
+        qs.stringify(
+          {
+            blind: blind,
+            lamella: lamella,
+          },
+          { encode: false },
+        ),
+      )
+      .catch(this.handleRequestErrors.bind(this))
+      .finally(() => {
+        callback(this.reachabilityState);
       });
-    } finally {
-      release();
-    }
   }
 
   // TODO: Feedback on API doc
-  private async setDeviceLED({
-    isOn,
-    color,
-  }: {
-    isOn: boolean;
-    color: string;
-  }): Promise<void> {
-    const setLEDUrl = `${this.baseUrl}/api/v1/led/set`;
-    await this.platform.fetch({
-      url: setLEDUrl,
-      method: 'POST',
-      token: this.device.token,
-      body: qs.stringify(
-        {
-          action: isOn ? 'on' : 'off',
-          color: color,
-          mode: 'hsv', // Fixed for the time being
-          ramp: 150,
-        },
-        { encode: false },
-      ),
+  /**
+   * Set the LED on the dingz
+   * @param callback: Characteristic callback
+   */
+  private setDeviceLED(callback: CharacteristicSetCallback) {
+    const state: DingzLEDState = this.dingzStates.LED;
+    const color = `${state.hue};${state.saturation};${state.value}`;
+
+    const setLEDEndpoint = `${this.baseUrl}/api/v1/led/set`;
+    this.request
+      .post(
+        setLEDEndpoint,
+        qs.stringify(
+          {
+            action: state.on ? 'on' : 'off',
+            color: color,
+            mode: 'hsv', // Fixed for the time being
+            ramp: 150,
+          },
+          { encode: false },
+        ),
+      )
+      .catch(this.handleRequestErrors.bind(this))
+      .finally(() => {
+        callback(this.reachabilityState);
+      });
+  }
+
+  // Get the current state
+  // This function is called regularly and contains all necessary
+  // information for an update of all sensors and states
+  private async getDeviceState(): Promise<DingzState> {
+    const getDeviceStateEndpoint = `${this.baseUrl}/api/v1/state`;
+    return await this.request.get(getDeviceStateEndpoint).then((response) => {
+      return response.data;
     });
   }
 
-  // Get Input & Dimmer Config
-  private async getConfigs(): Promise<[DingzInputConfig, DingzDimmerConfig]> {
-    const getInputConfigUrl = `${this.baseUrl}/api/v1/input_config`;
-    const getDimmerConfigUrl = `${this.baseUrl}/api/v1/dimmer_config`;
-
-    return Promise.all<DingzInputConfig, DingzDimmerConfig>([
-      this.platform.fetch({
-        url: getInputConfigUrl,
-        returnBody: true,
-        token: this.device.token,
-      }),
-      this.platform.fetch({
-        url: getDimmerConfigUrl,
-        returnBody: true,
-        token: this.device.token,
-      }),
-    ]);
+  /**
+   * Returns the callback URL for the device
+   */
+  public async getButtonCallbackUrl(): Promise<AccessoryActionUrl> {
+    const getCallbackEndpoint = '/api/v1/action/generic/generic';
+    this.log.debug('Getting the callback URL -> ', getCallbackEndpoint);
+    return await this.request.get(getCallbackEndpoint).then((response) => {
+      return response.data;
+    });
   }
 
-  private async getDeviceState(): Promise<DingzState> {
-    const getDeviceStateUrl = `${this.baseUrl}/api/v1/state`;
-    const release = await this.mutex.acquire();
-    try {
-      return await this.platform.fetch({
-        url: getDeviceStateUrl,
-        returnBody: true,
-        token: this.device.token,
-      });
-    } finally {
-      release();
+  /**
+   * Get the right blind state.
+   * It's complicated ...
+   * @param index *aboslute* index value (i.e. 0/1)
+   */
+  private getWindowCoveringId(index: WindowCoveringIndex): 0 | 1 {
+    if (this.dingzStates.WindowCovers.length === 2 || index === 0) {
+      // we have either two blinds *or* only one but index 0
+      return 0;
+    } else if (index === 1 && this.dingzStates.WindowCovers.length === 1) {
+      // we have one blind and it's index 1
+      return 0;
+    } else {
+      return 1;
     }
   }
 
-  // GEt the callback URL for the device
-  public async getButtonCallbackUrl(): Promise<AccessoryActionUrl> {
-    const getCallbackUrl = `${this.baseUrl}/api/v1/action/generic/generic`;
-    this.platform.log.debug('Getting the callback URL -> ', getCallbackUrl);
-    return await this.platform.fetch({
-      url: getCallbackUrl,
-      method: 'GET',
-      token: this.device.token,
-      returnBody: true,
-    });
-  }
-
-  async enablePIRCallback() {
-    const setActionUrl = `${this.baseUrl}/api/v1/action/pir/press_release/enable`;
-    this.platform.log.debug('Enabling the PIR callback -> ');
-    await this.platform.fetch({
-      url: setActionUrl,
-      method: 'POST',
-      token: this.device.token,
-    });
+  /**
+   * Enable the PIR callback
+   */
+  private enablePIRCallback() {
+    const setActionEndpoint = '/api/v1/action/pir/press_release/enable';
+    this.log.debug('Enabling the PIR callback -> ');
+    this.request
+      .post(setActionEndpoint)
+      .catch(this.handleRequestErrors.bind(this));
   }
 }
