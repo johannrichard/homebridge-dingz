@@ -803,10 +803,10 @@ clone-response@^1.0.2:
   dependencies:
     mimic-response "^1.0.0"
 
-cockatiel@^1.1.1:
-  version "1.1.1"
-  resolved "https://registry.yarnpkg.com/cockatiel/-/cockatiel-1.1.1.tgz#851fcee67df9a824c7946cb0927c9351b552d26b"
-  integrity sha512-YO02ZhTcK2HOZodksWfg4tS1GYYt1j7R6U1unAkwcQf1uoIYKSBqPrfqXlLNbsyMvkDXMwa2nuwZDHbUkB1VbQ==
+cockatiel@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/cockatiel/-/cockatiel-2.0.0.tgz#8eb1479ad0c76e6f15ff0e12d6f60192a1c8aa7a"
+  integrity sha512-zEobgx9f8RGBpPAuR8/z0nXJCuz7lrk3KcbUNEo0QxE/5/EM3fvk9LoL+Egm2CmMwFONlQyOKYbXMDwY+sXKXw==
 
 color-convert@^1.9.0:
   version "1.9.3"
@@ -2830,10 +2830,10 @@ prettier-linter-helpers@^1.0.0:
   dependencies:
     fast-diff "^1.1.2"
 
-prettier@2.1.2:
-  version "2.1.2"
-  resolved "https://registry.yarnpkg.com/prettier/-/prettier-2.1.2.tgz#3050700dae2e4c8b67c4c3f666cdb8af405e1ce5"
-  integrity sha512-16c7K+x4qVlJg9rEbXl7HEGmQyZlG4R9AgP+oHKRMsMsuk8s+ATStlf1NpDqyBI1HpVyfjLOeMhH2LvuNvV5Vg==
+prettier@2.2.1:
+  version "2.2.1"
+  resolved "https://registry.yarnpkg.com/prettier/-/prettier-2.2.1.tgz#795a1a78dd52f073da0cd42b21f9c91381923ff5"
+  integrity sha512-PqyhM2yCjg/oKkFPtTGUojv7gnZAoG80ttl45O6x2Ug/rMJw4wcc9k6aaf2hibP7BGVCCM33gZoGjyvt9mm16Q==
 
 process-nextick-args@~2.0.0:
   version "2.0.1"
@@ -3243,9 +3243,9 @@ signal-exit@^3.0.2:
   integrity sha512-VUJ49FC8U1OxwZLxIbTTrDvLnf/6TDgxZcK8wxR8zs13xpx7xbG60ndBlhNrFi2EMuFRoeDoJO7wthSLq42EjA==
 
 simple-color-converter@^2.1.5:
-  version "2.1.9"
-  resolved "https://registry.yarnpkg.com/simple-color-converter/-/simple-color-converter-2.1.9.tgz#c922b06eea462494be633e27245283f38e2c26ee"
-  integrity sha512-Xm5TUJzqLDHN+Agi1ueFZugCCUXPGMu/cVJLvjAnlWJeyIjApvc8LhN4VcQkboQrPOk113gw9baG8gpQ7D+YUw==
+  version "2.1.11"
+  resolved "https://registry.yarnpkg.com/simple-color-converter/-/simple-color-converter-2.1.11.tgz#80778bfb6575fad508ecd11f092c90aa415e2fd3"
+  integrity sha512-C+JoFb8jrQHhDAHLSMRiFX7moaNurvsh8B9TyJdx3OgOXY+vyR/+FI9ADJt04PkaH9igSNasnaHo/WpoH0xO3Q==
   dependencies:
     color_library "0.0.2"
 
