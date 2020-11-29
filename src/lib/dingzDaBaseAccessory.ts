@@ -9,8 +9,14 @@ import axiosRetry from 'axios-retry';
 
 import { REQUEST_RETRIES, RETRY_TIMEOUT } from '../settings';
 import { DeviceNotReachableError } from './errors';
-import { AccessoryEvent, AccessoryEventBus } from './accessoryEventBus';
+import { AccessoryEventBus } from './accessoryEventBus';
 import { AxiosDebugHelper } from './axiosDebugHelper';
+import chalk from 'chalk';
+/**
+ * DingzDaBase Accessory is our base class
+ * - getDeviceStateUpdate() is the one method every child class should override
+ * TODO: #140 [FIX] use interface & class inheritance to make this clearer
+ */
 export class DingzDaBaseAccessory {
   protected static axiosRetryConfig = {
     retries: REQUEST_RETRIES,
@@ -55,17 +61,35 @@ export class DingzDaBaseAccessory {
     axiosRetry(axios, DingzDaBaseAccessory.axiosRetryConfig);
     this.debugHelper = new AxiosDebugHelper(this.request, this.log);
 
-    // .. and finally set-up the interval that triggers updates
-    this.eb.on(AccessoryEvent.PUSH_STATE_UPDATE, () => {
-      this.log.debug(
-        `Event -> AccessoryEvent.PUSH_STATE_UPDATE on ${this.accessory.displayName} (${this.device.address})`,
+    // .. and finally set-up the interval that triggers updates or
+    // changes the reachability state of the device
+    this.platform.eb.on(PlatformEvent.REQUEST_STATE_UPDATE, () => {
+      const heartbeat: string =
+        this.reachabilityState === null
+          ? chalk.green('ALIVE')
+          : chalk.yellow('DEAD');
+      this.log.info(
+        `-> REQUEST_STATE_UPDATE (${this.device.address})`,
+        heartbeat,
       );
+      this.getDeviceStateUpdate()
+        .then(() => {
+          // The device update was successful
+          if (this.reachabilityState !== null) {
+            // Update reachability -- obviously, we're online again
+            this.reachabilityState = null;
+            this.log.warn(
+              `Device --> recovered from unreachable state (${this.device.address})`,
+            );
+          }
+        })
+        .catch((e) => {
+          this.log.warn(
+            `Device --> entered unreachable state (${this.device.address})`,
+          );
+          this.handleRequestErrors(e);
+        });
     });
-
-    this.platform.eb.on(
-      PlatformEvent.REQUEST_STATE_UPDATE,
-      this.getDeviceStateUpdate.bind(this),
-    );
 
     // Register listener for updated device info (e.g. on restore with new IP)
     this.platform.eb.on(
@@ -114,43 +138,43 @@ export class DingzDaBaseAccessory {
   }
 
   // Override these if specific actions needed on updates on restore
-  protected setAccessoryInformation() {
+  protected setAccessoryInformation(): void {
     this.log.debug(
       'setAccessoryInformation() not implemented for',
       this.device.accessoryClass,
     );
   }
 
-  protected updateAccessory() {
+  protected updateAccessory(): void {
     this.log.debug(
       'setAccessoryInformation() not implemented for',
       this.device.accessoryClass,
     );
   }
 
-  protected getDeviceStateUpdate() {
-    this.log.debug(
+  protected getDeviceStateUpdate(): Promise<void> {
+    this.log.warn(
       'getDeviceStateUpdate() not implemented for',
       this.device.accessoryClass,
     );
+    return Promise.reject();
   }
 
   /**
    * Handler for request errors
    * @param e AxiosError: the error returned by this.request()
    */
-  protected handleRequestErrors = (e: AxiosError) => {
+  protected handleRequestErrors = (e: AxiosError): void => {
     if (e.isAxiosError) {
+      this.reachabilityState = new Error();
       switch (e.code) {
         case 'ECONNABORTED':
           this.log.error(
             'HTTP ECONNABORTED Connection aborted --> ' + this.device.address,
           );
-          this.reachabilityState = new Error();
           break;
         case 'EHOSTDOWN':
           this.log.error('HTTP EHOSTDOWN Host down --> ' + this.device.address);
-          this.reachabilityState = new Error();
           break;
         default:
           this.log.error(
@@ -161,12 +185,14 @@ export class DingzDaBaseAccessory {
       }
     } else if (e instanceof DeviceNotReachableError) {
       this.log.error(
-        `handleRequestErrors() --> ${this.accessory.displayName} (${this.device.address})`,
+        `DeviceNotReachableError --> ${this.accessory.displayName} (${this.device.address})`,
       );
       this.reachabilityState = new Error();
     } else {
       this.log.error(e.message + '\n' + e.stack);
-      throw new Error('Device request failed -> escalating error');
+      throw new Error(
+        `Device request failed -> escalating error: ${e.message}`,
+      );
     }
   };
 

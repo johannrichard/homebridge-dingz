@@ -163,8 +163,8 @@ export class MyStromPIRAccessory extends DingzDaBaseAccessory {
   }
 
   // Get updated device info and update the corresponding values
-  protected getDeviceStateUpdate(): void {
-    this.getDeviceReport()
+  protected getDeviceStateUpdate(): Promise<void> {
+    return this.getDeviceReport()
       .then((report) => {
         if (report) {
           // If we are in motion polling mode, update motion from poller
@@ -194,19 +194,14 @@ export class MyStromPIRAccessory extends DingzDaBaseAccessory {
               this.platform.Characteristic.CurrentAmbientLightLevel,
             )
             .updateValue(this.pirState.light);
+
+          return Promise.resolve();
         } else {
-          throw new DeviceNotReachableError(
-            `Device can not be reached ->
-              ${this.device.name}-> ${this.device.address}`,
-          );
+          return Promise.reject(new DeviceNotReachableError());
         }
       })
       .catch((e: Error) => {
-        this.log.error(
-          'Error -> unable to fetch DeviceMotion data',
-          e.name,
-          e.toString(),
-        );
+        return Promise.reject(e);
       });
   }
 
@@ -244,12 +239,9 @@ export class MyStromPIRAccessory extends DingzDaBaseAccessory {
 
   private async getDeviceReport(): Promise<MyStromPIRReport> {
     const getSensorsUrl = `${this.baseUrl}/api/v1/sensors`;
-    return await this.request
-      .get(getSensorsUrl)
-      .then((response) => {
-        return response.data;
-      })
-      .catch(this.handleRequestErrors.bind(this));
+    return await this.request.get(getSensorsUrl).then((response) => {
+      return response.data;
+    });
   }
 
   /*

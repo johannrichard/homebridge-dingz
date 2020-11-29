@@ -246,38 +246,33 @@ export class DingzAccessory extends DingzDaBaseAccessory {
       this.enablePIRCallback();
     }
 
-    this.getButtonCallbackUrl().then((callBackUrl) => {
-      if (!callBackUrl?.url.includes(this.platform.getCallbackUrl())) {
-        this.log.warn('Update existing callback URL ->', callBackUrl);
-        // Set the callback URL (Override!)
-        const endpoints = this.dingzDeviceInfo.has_pir
-          ? ['generic', 'pir/single']
-          : ['generic'];
-        this.platform.setButtonCallbackUrl({
-          baseUrl: this.baseUrl,
-          token: this.device.token,
-          oldUrl: callBackUrl.url,
-          endpoints: endpoints,
-        });
-      } else {
-        this.log.debug('Callback URL already set ->', callBackUrl?.url);
-      }
-    });
+    this.getButtonCallbackUrl()
+      .then((callBackUrl) => {
+        if (!callBackUrl?.url.includes(this.platform.getCallbackUrl())) {
+          this.log.warn('Update existing callback URL ->', callBackUrl);
+          // Set the callback URL (Override!)
+          const endpoints = this.dingzDeviceInfo.has_pir
+            ? ['generic', 'pir/single']
+            : ['generic'];
+          this.platform.setButtonCallbackUrl({
+            baseUrl: this.baseUrl,
+            token: this.device.token,
+            oldUrl: callBackUrl.url,
+            endpoints: endpoints,
+          });
+        } else {
+          this.log.debug('Callback URL already set ->', callBackUrl?.url);
+        }
+      })
+      .catch(this.handleRequestErrors.bind(this));
   }
 
   // Get updated device info and update the corresponding values
   // TODO: #103, #116, #120, #123 -- fetch state for all device elements
-  protected getDeviceStateUpdate(): void {
-    this.getDeviceState()
+  protected getDeviceStateUpdate(): Promise<void> {
+    return this.getDeviceState()
       .then((state) => {
         if (typeof state !== 'undefined') {
-          if (this.reachabilityState !== null) {
-            // Update reachability -- obviously, we're online again
-            this.reachabilityState = null;
-            this.log.warn(
-              `Device --> ${this.accessory.displayName} (${this.device.address}) --> recovered from unreachable state`,
-            );
-          }
           // Outputs
           this.dingzStates.Dimmers = state.dimmers;
           this.dingzStates.LED = state.led;
@@ -290,17 +285,13 @@ export class DingzAccessory extends DingzDaBaseAccessory {
 
           // Push the Update to HomeBridge
           this.eb.emit(AccessoryEvent.PUSH_STATE_UPDATE);
+          return Promise.resolve();
         } else {
-          this.log.error('Can`t get device state');
+          return Promise.reject(new DeviceNotReachableError());
         }
       })
-      .catch((e) => {
-        if (e instanceof DeviceNotReachableError) {
-          this.reachabilityState = new Error();
-          this.log.error('ERROR: Failure to retrieve state', e.message);
-        } else {
-          throw e;
-        }
+      .catch((e: Error) => {
+        return Promise.reject(e);
       });
   }
 
@@ -798,18 +789,8 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     value: CharacteristicValue,
     callback: CharacteristicSetCallback,
   ) {
-    try {
-      this.dingzStates.Dimmers[index].on = value as boolean;
-      this.setDeviceDimmer(index, value as boolean);
-    } catch (e) {
-      this.log.error(
-        'Error -> unable to set Dimmer data ',
-        index,
-        e.name,
-        e.toString(),
-      );
-    }
-    callback(this.reachabilityState);
+    this.dingzStates.Dimmers[index].on = value as boolean;
+    this.setDeviceDimmer(index, callback, value as boolean);
   }
 
   /**
@@ -829,8 +810,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     this.dingzStates.Dimmers[index].output = value as number;
     this.dingzStates.Dimmers[index].on = isOn;
 
-    await this.setDeviceDimmer(index, isOn, value as number);
-    callback(this.reachabilityState);
+    this.setDeviceDimmer(index, callback, isOn, value as number);
   }
 
   // Add WindowCovering (Blinds)
@@ -1492,6 +1472,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
   // Set individual dimmer
   private async setDeviceDimmer(
     index: DimmerId,
+    callback: CharacteristicSetCallback,
     isOn?: boolean,
     level?: number,
   ) {
@@ -1501,7 +1482,10 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     }`;
     await this.request
       .post(setDimmerEndpoint)
-      .catch(this.handleRequestErrors.bind(this));
+      .catch(this.handleRequestErrors.bind(this))
+      .finally(() => {
+        callback(this.reachabilityState);
+      });
   }
 
   // Set individual dimmer
@@ -1570,12 +1554,9 @@ export class DingzAccessory extends DingzDaBaseAccessory {
   // information for an update of all sensors and states
   private async getDeviceState(): Promise<DingzState> {
     const getDeviceStateEndpoint = `${this.baseUrl}/api/v1/state`;
-    return await this.request
-      .get(getDeviceStateEndpoint)
-      .then((response) => {
-        return response.data;
-      })
-      .catch(this.handleRequestErrors.bind(this));
+    return await this.request.get(getDeviceStateEndpoint).then((response) => {
+      return response.data;
+    });
   }
 
   /**
@@ -1584,12 +1565,9 @@ export class DingzAccessory extends DingzDaBaseAccessory {
   public async getButtonCallbackUrl(): Promise<AccessoryActionUrl> {
     const getCallbackEndpoint = '/api/v1/action/generic/generic';
     this.log.debug('Getting the callback URL -> ', getCallbackEndpoint);
-    return await this.request
-      .get(getCallbackEndpoint)
-      .then((response) => {
-        return response.data;
-      })
-      .catch(this.handleRequestErrors.bind(this));
+    return await this.request.get(getCallbackEndpoint).then((response) => {
+      return response.data;
+    });
   }
 
   /**

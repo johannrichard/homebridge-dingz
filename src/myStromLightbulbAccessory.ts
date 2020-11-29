@@ -105,8 +105,8 @@ export class MyStromLightbulbAccessory extends DingzDaBaseAccessory {
   }
 
   // Get updated device info and update the corresponding values
-  protected getDeviceStateUpdate(): void {
-    this.getDeviceReport(this.device.mac)
+  protected getDeviceStateUpdate(): Promise<void> {
+    return this.getDeviceReport(this.device.mac)
       .then((report) => {
         // FIXME: Add 'mono' as well
         if (report && report.mode === 'hsv') {
@@ -140,9 +140,12 @@ export class MyStromLightbulbAccessory extends DingzDaBaseAccessory {
         this.lightbulbService
           .getCharacteristic(this.platform.Characteristic.On)
           .updateValue(this.lightbulbState.on);
+
+        // Return promise
+        return Promise.resolve();
       })
       .catch((e) => {
-        this.platform.log.debug('Error while retrieving Device Report ->', e);
+        return Promise.reject(e);
       });
   }
 
@@ -231,10 +234,8 @@ export class MyStromLightbulbAccessory extends DingzDaBaseAccessory {
 
   private async getDeviceReport(mac: string): Promise<MyStromLightbulbReport> {
     const reportUrl = `${this.baseUrl}/api/v1/device/`;
-    return await this.request(reportUrl)
-      .then((response) => {
-        return response.data[mac];
-      })
-      .catch(this.handleRequestErrors.bind(this));
+    return await this.request(reportUrl).then((response) => {
+      return response.data[mac];
+    });
   }
 }

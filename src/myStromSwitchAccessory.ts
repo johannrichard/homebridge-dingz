@@ -112,8 +112,8 @@ export class MyStromSwitchAccessory extends DingzDaBaseAccessory {
   }
 
   // Get updated device info and update the corresponding values
-  protected getDeviceStateUpdate(): void {
-    this.getDeviceReport()
+  protected getDeviceStateUpdate(): Promise<void> {
+    return this.getDeviceReport()
       .then((report) => {
         // push the new value to HomeKit
         this.outletState = report;
@@ -130,9 +130,10 @@ export class MyStromSwitchAccessory extends DingzDaBaseAccessory {
             .getCharacteristic(this.platform.Characteristic.CurrentTemperature)
             .updateValue(this.outletState.temperature);
         }
+        return Promise.resolve();
       })
       .catch((e) => {
-        this.log.error('Error while retrieving Device Report ->', e.toString());
+        return Promise.reject(e);
       });
   }
 
@@ -178,11 +179,8 @@ export class MyStromSwitchAccessory extends DingzDaBaseAccessory {
 
   private async getDeviceReport(): Promise<MyStromSwitchReport> {
     const reportUrl = `${this.baseUrl}/report`;
-    return await this.request
-      .get(reportUrl)
-      .then((response) => {
-        return response.data;
-      })
-      .catch(this.handleRequestErrors.bind(this));
+    return await this.request.get(reportUrl).then((response) => {
+      return response.data;
+    });
   }
 }
