@@ -1196,9 +1196,11 @@ export class DingzAccessory extends DingzDaBaseAccessory {
               'D1',
             ) &&
             (updatedDingzDeviceInfo.dip_config === 1 ||
-              updatedDingzDeviceInfo.dip_config === 3)
+              updatedDingzDeviceInfo.dip_config === 3) &&
+            dimmerConfig?.dimmers[0].output !== 'not_connected'
           ) {
-            // Only add Dimmer 0 if we're not in "WindowCover" mode
+            // Only add Dimmer 0 if we're not in "WindowCover" mode *and*
+            // if output is not set to `not_connected`
             const dimmerConfig: DingzDeviceDimmerConfig | undefined = this
               .device.dimmerConfig;
 
