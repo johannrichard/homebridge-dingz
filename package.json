@@ -5,6 +5,7 @@
   "author": "johannrichard",
   "description": "Homebridge Plugin for dingz & myStrom Devices. Implements some (but not all, due to API limitations) functions of a [dingz](https://dingz.ch) Smart Home Device.",
   "license": "Apache-2.0",
+  "homepage": "https://github.com/johannrichard/homebridge-dingz#readme",
   "repository": {
     "type": "git",
     "url": "git://github.com/johannrichard/homebridge-dingz.git"
