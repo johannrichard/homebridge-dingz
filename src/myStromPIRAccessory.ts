@@ -118,12 +118,6 @@ export class MyStromPIRAccessory extends DingzDaBaseAccessory {
       'Motion',
     );
 
-    // Subscribe to the REQUEST_STATE_UPDATE event
-    this.platform.eb.on(
-      PlatformEvent.REQUEST_STATE_UPDATE,
-      this.getDeviceStateUpdate.bind(this),
-    );
-
     if (!(this.platform.config.motionPoller ?? true)) {
       // Implement *push* event handling
       this.platform.eb.on(PlatformEvent.ACTION, (mac, action) => {
