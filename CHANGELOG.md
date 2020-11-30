@@ -40,6 +40,15 @@ Overall over 60 changes have been implemented, and a lot of effort and time has 
 
 ### Detailed Changes
 
+#### 2.0.6 (2020-11-30)
+
+##### Bug Fixes
+
+- **pir:** don't double poll PIR sensor ([40aa5639](https://github.com/johannrichard/homebridge-dingz/commit/40aa5639685dfb642d3d2fa37c66117977c8659e))
+- **platform:**
+  - disable motion polling by default ([710a6e64](https://github.com/johannrichard/homebridge-dingz/commit/710a6e6484cf8ea81719cfef82632111bbf408c0))
+  - implement configurable update interval ([b9570fbb](https://github.com/johannrichard/homebridge-dingz/commit/b9570fbb937683aa760fedc568ff8eef82df65f5))
+
 #### 2.0.5 (2020-11-30)
 
 ##### Bug Fixes
