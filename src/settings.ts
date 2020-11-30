@@ -10,8 +10,8 @@ export const DINGZ_CALLBACK_PORT = 18081;
  * Settings for Axios
  */
 export const REQUEST_RETRIES = 7;
-export const RETRY_TIMEOUT = 3000;
-export const STATE_UPDATE_INTERVAL = 5000;
+export const RETRY_TIMEOUT = 3; // 3 seconds
+export const STATE_UPDATE_INTERVAL = 5; // 5 seconds
 /**
  * This must match the name of your plugin as defined the package.json
  */

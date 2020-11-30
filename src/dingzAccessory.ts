@@ -1422,7 +1422,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
 
     const config: AxiosRequestConfig = {
       baseURL: `http://${address}`,
-      timeout: RETRY_TIMEOUT, // devices can be a bit slow
+      timeout: RETRY_TIMEOUT * 1000, // devices can be a bit slow
       headers: { Token: token ?? '' },
     };
     const [
@@ -1442,7 +1442,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
         throw new DeviceNotReachableError(
           `${
             e.code ?? ''
-          }: Device ${address} not reachable after ${RETRY_TIMEOUT} ms\n\n${
+          }: Device ${address} not reachable after ${RETRY_TIMEOUT} s\n\n${
             e.stack
           }`,
         );

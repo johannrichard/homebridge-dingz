@@ -116,9 +116,17 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
         this.log.debug('Event -> PlatformEvent.REQUEST_STATE_UPDATE');
       });
 
+      // Set the update interval in seconds
+      const updateInterval: number =
+        !this.config.pollerInterval ||
+        this.config.pollerInterval < STATE_UPDATE_INTERVAL
+          ? STATE_UPDATE_INTERVAL
+          : this.config.pollerInterval;
+
+      this.log.debug(`Platform poll interval: ${updateInterval}s`);
       setInterval(() => {
         this.eb.emit(PlatformEvent.REQUEST_STATE_UPDATE);
-      }, STATE_UPDATE_INTERVAL);
+      }, updateInterval * 1000);
     });
   }
 

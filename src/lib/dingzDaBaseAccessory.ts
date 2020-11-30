@@ -46,7 +46,7 @@ export class DingzDaBaseAccessory {
     this.log = new DingzLogger(this.device.name, platform.log);
     this.request = axios.create({
       baseURL: this.baseUrl,
-      timeout: RETRY_TIMEOUT,
+      timeout: RETRY_TIMEOUT * 1000,
       headers: { Token: this.device.token ?? '' },
     });
 
@@ -117,7 +117,7 @@ export class DingzDaBaseAccessory {
 
             this.request.defaults = {
               baseURL: this.baseUrl,
-              timeout: RETRY_TIMEOUT,
+              timeout: RETRY_TIMEOUT * 1000,
               headers: { Token: this.device.token ?? '' },
             };
 

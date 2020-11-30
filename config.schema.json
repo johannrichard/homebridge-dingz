@@ -11,13 +11,17 @@
         "default": "dingz and myStrom SmartHome platform",
         "required": true
       },
-      "globalToken": {
-        "title": "Global REST API Token",
-        "type": "string",
-        "description": "Set a global authentication token. This will be used for auto-discovery on the local network and as default token for manually specified devices."
+      "pollerInterval": {
+        "title": "Update interval (in seconds)",
+        "type": "number",
+        "required": true,
+        "default": 10,
+        "minimum": 5,
+        "maximum": 60,
+        "description": "The plugin will poll all devices at regular intervals to get updated values for temperature, light or switch states, and to check whether the device is still reachable. The default value is set a 5s but can be changed to a different value. Reasonable ranges are between 5s-20s, everything below 5s will likely cause problems, longer intervals might lead to unmet user expectations e.g. with respect to automations etc."
       },
       "motionPoller": {
-        "title": "Poll Motion Sensor",
+        "title": "Poll dingz Motion Sensor",
         "type": "boolean",
         "default": true,
         "description": "By default, the dingz will be polled every 2.5 seconds for the motion state. If you disable this, the dingz will push a trigger event when motion begins and reset the motion event when the motion timer of the dingz fires at the end of the period defined in the dingz Web UI (default: 180s). While the pull puts additional strain on the dingz *and* introduces a certain lag, the push mode is dependent on the timer setting which might not be what you want."
@@ -27,6 +31,11 @@
         "type": "boolean",
         "description": "Disable this setting if you want auto-discovery to be turned off.",
         "default": true
+      },
+      "globalToken": {
+        "title": "Global REST API Token",
+        "type": "string",
+        "description": "Set a global authentication token. This will be used for auto-discovery on the local network and as default token for manually specified devices."
       },
       "callbackHostname": {
         "title": "Hostname / IP to use for button callbacks ",
@@ -54,7 +63,10 @@
                 { "title": "myStrom Switch", "enum": ["myStromSwitch"] },
                 { "title": "myStrom Lightbulb", "enum": ["myStromBulb"] },
                 { "title": "myStrom LED Strip", "enum": ["myStromLED"] },
-                { "title": "myStrom PIR (Motion) Sensor", "enum": ["myStromPIR"] },
+                {
+                  "title": "myStrom PIR (Motion) Sensor",
+                  "enum": ["myStromPIR"]
+                },
                 { "title": "myStrom Button", "enum": ["myStromButton"] }
               ],
               "required": true
