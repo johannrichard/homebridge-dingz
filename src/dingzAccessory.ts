@@ -129,64 +129,73 @@ export class DingzAccessory extends DingzDaBaseAccessory {
       address: this.device.address,
       token: this.device.token,
     })
-      .then(({ dingzDevices, inputConfig, dimmerConfig, blindConfig }) => {
-        if (
-          inputConfig?.inputs &&
-          dimmerConfig?.dimmers &&
-          dimmerConfig?.dimmers.length === 4
-        ) {
-          this.device.dingzInputInfo = inputConfig.inputs;
-          this.device.dimmerConfig = dimmerConfig;
-          this.device.windowCoveringConfig = blindConfig.blinds;
+      .then(
+        ({
+          dingzDevices,
+          inputConfig,
+          systemConfig,
+          dimmerConfig,
+          blindConfig,
+        }) => {
+          if (
+            inputConfig?.inputs &&
+            dimmerConfig?.dimmers &&
+            dimmerConfig?.dimmers.length === 4
+          ) {
+            this.device.dingzInputInfo = inputConfig.inputs;
+            this.device.systemConfig = systemConfig;
+            this.device.dimmerConfig = dimmerConfig;
+            this.device.windowCoveringConfig = blindConfig.blinds;
 
-          if (dingzDevices[this.device.mac]) {
-            this.log.debug(
-              'Updated device info received -> update accessory',
-              dingzDevices[this.device.mac],
-            );
+            if (dingzDevices[this.device.mac]) {
+              this.log.debug(
+                'Updated device info received -> update accessory',
+                dingzDevices[this.device.mac],
+              );
 
-            // Persist updated info
-            this.device.hwInfo = dingzDevices[this.device.mac];
-            this.accessory.context.device = this.device;
-            this.dingzDeviceInfo = this.device.hwInfo as DingzDeviceInfo;
-            this.baseUrl = `http://${this.device.address}`;
+              // Persist updated info
+              this.device.hwInfo = dingzDevices[this.device.mac];
+              this.accessory.context.device = this.device;
+              this.dingzDeviceInfo = this.device.hwInfo as DingzDeviceInfo;
+              this.baseUrl = `http://${this.device.address}`;
+              this.setAccessoryInformation();
+            }
             this.setAccessoryInformation();
+            this.setButtonCallbacks();
+
+            // Now we have what we need and can create the services …
+            this.addOutputServices();
+
+            // Add auxiliary services (Motion, Temperature)
+            if (this.dingzDeviceInfo.has_pir) {
+              // dingz has a Motion sensor -- let's create it
+              this.addMotionService();
+            } else {
+              this.log.info('This dingz has no Motion sensor.');
+            }
+            // dingz has a temperature sensor and an LED,
+            // make these available here
+            this.addTemperatureService();
+            this.addLEDService();
+            this.addLightSensorService();
+            this.addButtonServices();
+
+            this.services.forEach((service) => {
+              this.log.info(
+                'Service created ->',
+                service.getCharacteristic(this.platform.Characteristic.Name)
+                  .value,
+              );
+            });
+
+            // Retry at least once every day
+            retrySlow.execute(() => {
+              this.updateAccessory();
+              return true;
+            });
           }
-          this.setAccessoryInformation();
-          this.setButtonCallbacks();
-
-          // Now we have what we need and can create the services …
-          this.addOutputServices();
-
-          // Add auxiliary services (Motion, Temperature)
-          if (this.dingzDeviceInfo.has_pir) {
-            // dingz has a Motion sensor -- let's create it
-            this.addMotionService();
-          } else {
-            this.log.info('This dingz has no Motion sensor.');
-          }
-          // dingz has a temperature sensor and an LED,
-          // make these available here
-          this.addTemperatureService();
-          this.addLEDService();
-          this.addLightSensorService();
-          this.addButtonServices();
-
-          this.services.forEach((service) => {
-            this.log.info(
-              'Service created ->',
-              service.getCharacteristic(this.platform.Characteristic.Name)
-                .value,
-            );
-          });
-
-          // Retry at least once every day
-          retrySlow.execute(() => {
-            this.updateAccessory();
-            return true;
-          });
-        }
-      })
+        },
+      )
       .catch(this.handleRequestErrors.bind(this));
   }
 
@@ -1293,6 +1302,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
   }
 
   private addLEDService() {
+    const systemConfig = this.device.systemConfig;
     // get the LightBulb service if it exists, otherwise create a new LightBulb service
     // you can create multiple services for each accessory
     const ledService =
@@ -1300,8 +1310,11 @@ export class DingzAccessory extends DingzDaBaseAccessory {
       this.accessory.addService(this.platform.Service.Lightbulb, 'LED', 'LED');
 
     // set the service name, this is what is displayed as the default name on the Home app
-    ledService.setCharacteristic(this.platform.Characteristic.Name, 'LED');
-
+    let ledName = 'LED';
+    if (systemConfig?.dingz_name) {
+      ledName = `${systemConfig?.dingz_name} LED`;
+    }
+    ledService.setCharacteristic(this.platform.Characteristic.Name, ledName);
     // register handlers for the On/Off Characteristic
     ledService
       .getCharacteristic(this.platform.Characteristic.On)
