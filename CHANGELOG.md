@@ -2,11 +2,9 @@
 
 ## Release Notes
 
-### 2.0.0 (2020-11-29)
+### BREAKING v2.0
 
-#### BREAKING
-
-Version `v2.0.0` will _break_ your setup (but only if you use blinds). If you upgrade to this release candidate and have a dingz with blinds configured, you will have to
+Version `v2.0` will _break_ your setup (but only if you use blinds). If you upgrade to this version and have a dingz with blinds configured, you will have to
 
 - remove all your **dingz** accessories with blinds (but only these) from Homebridge (can easily be done in the [Homebridge Config X UI](https://github.com/oznu/homebridge-config-ui-x)); and
 - add them again (automatically or by manually adding them via the config);
@@ -15,11 +13,11 @@ Some long-standing bugs with blinds have seen changes that unfortunately will br
 
 If you only use the dimmers you should not be concerned.
 
-#### Acknowledgements
+### Acknowledgements
 
 Thanks to @granturism0, @qx54, @simonnelli for their contributions and help in crafting this release.
 
-#### Improvements and (hopefully) nice things
+### Improvements and (hopefully) nice things
 
 Besides these breaking changes, `v2.0.0` will also bring a few new features to your homebridge setup:
 
@@ -40,7 +38,23 @@ Besides these breaking changes, `v2.0.0` will also bring a few new features to y
 
 Overall over 60 changes have been implemented, and a lot of effort and time has been invested in making the plugin more robust (and logical). It still has some rough edges, though, and things might still break.
 
-#### Detailed Changes
+### Detailed Changes
+
+#### 2.0.3(2020-11-30)
+
+##### Bug Fixes
+
+- **dingz:**
+  - don't add D1 if `not_connected` ([aef7298a](https://github.com/johannrichard/homebridge-dingz/commit/aef7298aa9539ccdbc01c97b82408441bd83cd16))
+  - blinds - it's (was?) complicated ([182ba553](https://github.com/johannrichard/homebridge-dingz/commit/182ba55339c0e2cffe4b1dd46b8ba976522b0434))
+
+#### 2.0.2 (2020-11-30)
+
+##### Bug Fixes
+
+- **dingz:** don't add D1 if `not_connected` ([aef7298a](https://github.com/johannrichard/homebridge-dingz/commit/aef7298aa9539ccdbc01c97b82408441bd83cd16))
+
+#### 2.0.0 (2020-11-29)
 
 ##### Documentation Changes
 
