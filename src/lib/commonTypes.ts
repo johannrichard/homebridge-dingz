@@ -11,6 +11,7 @@ import { MyStromPIRAccessory } from '../myStromPIRAccessory';
 import {
   DingzDeviceInfo,
   DingzInputInfoItem,
+  DingzDeviceSystemConfig,
   DingzDeviceDimmerConfig,
   DingzWindowCoveringConfigItem,
 } from './dingzTypes';
@@ -43,6 +44,7 @@ export interface DeviceInfo {
   model?: string;
   token?: string;
   hwInfo?: DingzDeviceInfo | MyStromDeviceInfo;
+  systemConfig?: DingzDeviceSystemConfig;
   dimmerConfig?: DingzDeviceDimmerConfig;
   windowCoveringConfig?: DingzWindowCoveringConfigItem[];
   dingzInputInfo?: DingzInputInfoItem[];
