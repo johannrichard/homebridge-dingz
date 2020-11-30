@@ -1462,9 +1462,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
   private async getDeviceMotion(): Promise<DingzMotionData> {
     const getMotionEndpoint = '/api/v1/motion';
     return await this.request
-      .get(getMotionEndpoint, {
-        returnBody: true,
-      } as AxiosRequestConfig)
+      .get(getMotionEndpoint)
       .then((response) => {
         return response.data;
       })
