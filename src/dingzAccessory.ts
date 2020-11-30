@@ -987,7 +987,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     if (this.dingzStates.WindowCovers[id]) {
       await this.setWindowCovering({
         id: id,
-        blind: this.dingzStates.WindowCovers[id].lamella,
+        blind: this.dingzStates.WindowCovers[id].position,
         lamella: angle as number,
         callback: callback,
       });
