@@ -40,6 +40,14 @@ Overall over 60 changes have been implemented, and a lot of effort and time has 
 
 ### Detailed Changes
 
+#### 2.0.5 (2020-11-30)
+
+##### Bug Fixes
+
+- **dingz:**
+  - fixes motion pull change broken during refactoring ([acc63d07](https://github.com/johannrichard/homebridge-dingz/commit/acc63d07b076bf6b6d8e08e6599892f0ba8d6cd2)) (thanks @simonnelli)
+  - set correct TargetHorizontalTiltAngle ([e1735429](https://github.com/johannrichard/homebridge-dingz/commit/e1735429f9806d66c8cafdf4e73f22bab59b91f2)) (thanks @granturism0)
+
 #### 2.0.4 (2020-11-30)
 
 ##### Bug Fixes
