@@ -23,8 +23,8 @@
       "motionPoller": {
         "title": "Poll dingz Motion Sensor",
         "type": "boolean",
-        "default": true,
-        "description": "By default, the dingz will be polled every 2.5 seconds for the motion state. If you disable this, the dingz will push a trigger event when motion begins and reset the motion event when the motion timer of the dingz fires at the end of the period defined in the dingz Web UI (default: 180s). While the pull puts additional strain on the dingz *and* introduces a certain lag, the push mode is dependent on the timer setting which might not be what you want."
+        "default": false,
+        "description": "By default, motion events will be triggered via the callback action. With this setting, you can change this behaviour to a `polling` mode of operation. If checked, the dingz will be polled every 2.5 seconds for the motion state. If you disable this, the dingz will push a trigger event when motion begins and reset the motion event when the motion timer of the dingz fires at the end of the period defined in the dingz Web UI (default: 180s). While the pull puts additional strain on the dingz *and* introduces a certain lag, the push mode is dependent on the timer setting which might not be what you want."
       },
       "autoDiscover": {
         "title": "Auto-discovery of devices",
