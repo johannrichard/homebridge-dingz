@@ -549,9 +549,9 @@ astral-regex@^2.0.0:
   integrity sha512-Z7tMw1ytTXt5jqMcOP+OQteU1VuNK9Y02uuJtKQ1Sv69jXQKKg5cibLwGJow8yzZP+eAc18EmLGPal0bp36rvQ==
 
 async-mutex@^0.2.2:
-  version "0.2.4"
-  resolved "https://registry.yarnpkg.com/async-mutex/-/async-mutex-0.2.4.tgz#f6ea5f9cc73147f395f86fa573a2af039fe63082"
-  integrity sha512-fcQKOXUKMQc57JlmjBCHtkKNrfGpHyR7vu18RfuLfeTAf4hK9PgOadPR5cDrBQ682zasrLUhJFe7EKAHJOduDg==
+  version "0.2.6"
+  resolved "https://registry.yarnpkg.com/async-mutex/-/async-mutex-0.2.6.tgz#0d7a3deb978bc2b984d5908a2038e1ae2e54ff40"
+  integrity sha512-Hs4R+4SPgamu6rSGW8C7cV9gaWUKEHykfzCCvIRuaVv636Ju10ZdeUbvb4TBEW0INuq2DHZqXbK4Nd3yG4RaRw==
   dependencies:
     tslib "^2.0.0"
 
@@ -803,10 +803,10 @@ clone-response@^1.0.2:
   dependencies:
     mimic-response "^1.0.0"
 
-cockatiel@^2.0.0:
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/cockatiel/-/cockatiel-2.0.0.tgz#8eb1479ad0c76e6f15ff0e12d6f60192a1c8aa7a"
-  integrity sha512-zEobgx9f8RGBpPAuR8/z0nXJCuz7lrk3KcbUNEo0QxE/5/EM3fvk9LoL+Egm2CmMwFONlQyOKYbXMDwY+sXKXw==
+cockatiel@^1.1.1:
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/cockatiel/-/cockatiel-1.1.1.tgz#851fcee67df9a824c7946cb0927c9351b552d26b"
+  integrity sha512-YO02ZhTcK2HOZodksWfg4tS1GYYt1j7R6U1unAkwcQf1uoIYKSBqPrfqXlLNbsyMvkDXMwa2nuwZDHbUkB1VbQ==
 
 color-convert@^1.9.0:
   version "1.9.3"
