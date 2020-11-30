@@ -466,26 +466,26 @@ export class DingzAccessory extends DingzDaBaseAccessory {
         // i.e. if outputs 1 / 2 are for blinds, outputs 3/4 will be dimmer 0/1
         // We use the "index" value of the dingz to determine what to use
         if (
-          dimmerConfig?.dimmers[0].output &&
-          dimmerConfig?.dimmers[0].output !== 'not_connected'
+          dimmerConfig?.dimmers[2].output &&
+          dimmerConfig?.dimmers[2].output !== 'not_connected'
         ) {
           dimmerServices.push(
             this.addDimmerService({
-              name: dimmerConfig?.dimmers[0].name,
-              output: dimmerConfig?.dimmers[0].output,
+              name: dimmerConfig?.dimmers[2].name,
+              output: dimmerConfig?.dimmers[2].output,
               id: 'D3',
               index: 0,
             }),
           );
         }
         if (
-          dimmerConfig?.dimmers[1].output &&
-          dimmerConfig?.dimmers[1].output !== 'not_connected'
+          dimmerConfig?.dimmers[3].output &&
+          dimmerConfig?.dimmers[3].output !== 'not_connected'
         ) {
           dimmerServices.push(
             this.addDimmerService({
-              name: dimmerConfig?.dimmers[1].name,
-              output: dimmerConfig?.dimmers[1].output,
+              name: dimmerConfig?.dimmers[3].name,
+              output: dimmerConfig?.dimmers[3].output,
               id: 'D4',
               index: 1,
             }),
@@ -1475,9 +1475,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
   private async getDeviceMotion(): Promise<DingzMotionData> {
     const getMotionEndpoint = '/api/v1/motion';
     return await this.request
-      .get(getMotionEndpoint, {
-        returnBody: true,
-      } as AxiosRequestConfig)
+      .get(getMotionEndpoint)
       .then((response) => {
         return response.data;
       })

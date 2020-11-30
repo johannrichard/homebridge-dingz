@@ -40,19 +40,33 @@ Overall over 60 changes have been implemented, and a lot of effort and time has 
 
 ### Detailed Changes
 
-#### 2.0.3(2020-11-30)
+#### 2.0.5 (2020-11-30)
+
+##### Bug Fixes
+
+- **dingz:**
+  - fixes motion pull change broken during refactoring ([acc63d07](https://github.com/johannrichard/homebridge-dingz/commit/acc63d07b076bf6b6d8e08e6599892f0ba8d6cd2)) (thanks @simonnelli)
+  - set correct TargetHorizontalTiltAngle ([e1735429](https://github.com/johannrichard/homebridge-dingz/commit/e1735429f9806d66c8cafdf4e73f22bab59b91f2)) (thanks @granturism0)
+
+#### 2.0.4 (2020-11-30)
+
+##### Bug Fixes
+
+- **dingz:** fix naming & visibility glitch with dimmer assignment ([cc40b4f2](https://github.com/johannrichard/homebridge-dingz/commit/cc40b4f266924de30ffecc950cad237d65dd9600))
+
+#### 2.0.3 (2020-11-30)
+
+##### Build System / Dependencies
+
+- **npm:** set homepage ([5f6cfed5](https://github.com/johannrichard/homebridge-dingz/commit/5f6cfed526c81fd9bce266db668fd916a5f5c7e2))
+
+#### 2.0.2 (2020-11-30)
 
 ##### Bug Fixes
 
 - **dingz:**
   - don't add D1 if `not_connected` ([aef7298a](https://github.com/johannrichard/homebridge-dingz/commit/aef7298aa9539ccdbc01c97b82408441bd83cd16))
   - blinds - it's (was?) complicated ([182ba553](https://github.com/johannrichard/homebridge-dingz/commit/182ba55339c0e2cffe4b1dd46b8ba976522b0434))
-
-#### 2.0.2 (2020-11-30)
-
-##### Bug Fixes
-
-- **dingz:** don't add D1 if `not_connected` ([aef7298a](https://github.com/johannrichard/homebridge-dingz/commit/aef7298aa9539ccdbc01c97b82408441bd83cd16))
 
 #### 2.0.0 (2020-11-29)
 
