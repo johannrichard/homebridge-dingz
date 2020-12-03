@@ -203,7 +203,7 @@ export class DingzDaBaseAccessory {
     this.log.info(
       'Identify! -> Who am I? I am a',
       this.device.accessoryClass ?? 'unkown device type',
-      'listeting to the name of',
+      'listening to the name of',
       this.device.name,
       'a.k.a.',
       this.accessory.displayName,
