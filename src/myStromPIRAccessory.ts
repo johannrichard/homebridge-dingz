@@ -27,7 +27,6 @@ const retrySlow = Policy.handleAll()
  */
 export class MyStromPIRAccessory extends DingzDaBaseAccessory {
   private readonly mutex = new Mutex();
-  private services: Service[] = [];
   private motionService: Service;
   private temperatureService: Service;
   private lightService: Service;
@@ -57,7 +56,7 @@ export class MyStromPIRAccessory extends DingzDaBaseAccessory {
       .getService(this.platform.Service.AccessoryInformation)!
       .setCharacteristic(
         this.platform.Characteristic.Manufacturer,
-        'MyStrom AG',
+        'myStrom AG',
       )
       .setCharacteristic(
         this.platform.Characteristic.AppMatchingIdentifier,
@@ -67,7 +66,10 @@ export class MyStromPIRAccessory extends DingzDaBaseAccessory {
         this.platform.Characteristic.Model,
         this.device.model as string,
       )
-      .setCharacteristic(this.platform.Characteristic.FirmwareRevision, 'N/A')
+      .setCharacteristic(
+        this.platform.Characteristic.FirmwareRevision,
+        this.mystromDeviceInfo.version ?? 'N/A',
+      )
       .setCharacteristic(
         this.platform.Characteristic.HardwareRevision,
         'PQWBB1',
@@ -86,7 +88,7 @@ export class MyStromPIRAccessory extends DingzDaBaseAccessory {
       this.accessory.addService(this.platform.Service.TemperatureSensor);
     this.temperatureService.setCharacteristic(
       this.platform.Characteristic.Name,
-      'Temperature',
+      `Temperature ${this.device.name}`,
     );
 
     // create handlers for required characteristics
@@ -102,7 +104,7 @@ export class MyStromPIRAccessory extends DingzDaBaseAccessory {
 
     this.lightService.setCharacteristic(
       this.platform.Characteristic.Name,
-      'Light',
+      `Light ${this.device.name}`,
     );
 
     // create handlers for required characteristics
@@ -115,7 +117,7 @@ export class MyStromPIRAccessory extends DingzDaBaseAccessory {
       this.accessory.addService(this.platform.Service.MotionSensor);
     this.motionService.setCharacteristic(
       this.platform.Characteristic.Name,
-      'Motion',
+      `Motion ${this.device.name}`,
     );
 
     if (!(this.platform.config.motionPoller ?? true)) {
