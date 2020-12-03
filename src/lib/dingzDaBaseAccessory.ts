@@ -64,24 +64,21 @@ export class DingzDaBaseAccessory {
     // .. and finally set-up the interval that triggers updates or
     // changes the reachability state of the device
     this.platform.eb.on(PlatformEvent.REQUEST_STATE_UPDATE, () => {
-      const heartbeat: string =
-        this.reachabilityState === null
-          ? chalk.green('ALIVE')
-          : chalk.yellow('DEAD');
-      this.log.info(heartbeat, `(${this.device.address})`);
       this.getDeviceStateUpdate()
         .then(() => {
           // The device update was successful
           if (this.reachabilityState !== null) {
             // Update reachability -- obviously, we're online again
             this.reachabilityState = null;
-            this.log.warn(
+            this.log.info(
+              chalk.green('ALIVE'),
               `Device --> recovered from unreachable state (${this.device.address})`,
             );
           }
         })
         .catch((e) => {
           this.log.warn(
+            chalk.yellow('DEAD'),
             `Device --> entered unreachable state (${this.device.address})`,
           );
           this.handleRequestErrors(e);
