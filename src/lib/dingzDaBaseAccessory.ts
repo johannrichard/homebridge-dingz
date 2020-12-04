@@ -43,7 +43,9 @@ export class DingzDaBaseAccessory {
     this.device = this.accessory.context.device;
     this.baseUrl = `http://${this.device.address}`;
 
-    this.log = new DingzLogger(this.device.name, platform.log);
+    this.log = platform.log as DingzLogger;
+    this.log.dingzPrefix = this.device.name;
+
     this.request = axios.create({
       baseURL: this.baseUrl,
       timeout: RETRY_TIMEOUT * 1000,
