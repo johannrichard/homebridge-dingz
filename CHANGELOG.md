@@ -40,6 +40,35 @@ Overall over 60 changes have been implemented, and a lot of effort and time has 
 
 ### Detailed Changes
 
+#### 2.0.7 (2020-12-04)
+
+##### New Features
+
+- **platform:** chalk for logging with colour ([e927e1dd](https://github.com/johannrichard/homebridge-dingz/commit/e927e1dd28b50dc1bd70f4b63bb350eb3b6c8541))
+- **pir:** better naming ([5445de6d](https://github.com/johannrichard/homebridge-dingz/commit/5445de6d6e2e142e337e8c2c8026c938c29131f3))
+- **dingz:**
+  - reduce DEAD/ALIVE logging ([84b1ebb4](https://github.com/johannrichard/homebridge-dingz/commit/84b1ebb475b2546abd91b5f25099fa77fbca8d02))
+  - use DeviceSystem name for LED ([1d14c2d6](https://github.com/johannrichard/homebridge-dingz/commit/1d14c2d6a9b42294f7a5fe7a2cdbc74e8290f0ac))
+
+##### Bug Fixes
+
+- **platform:**
+  - don't bind callback server to `0.0.0.0` ([d1047085](https://github.com/johannrichard/homebridge-dingz/commit/d10470859789b5bcb12f02fba8529f8f2b22f227))
+  - callback post request ([8bc6e02d](https://github.com/johannrichard/homebridge-dingz/commit/8bc6e02de8acaae71d26ad315740c9d41042e434))
+
+##### Other Changes
+
+- //github.com/johannrichard/homebridge-dingz ([cb35acb3](https://github.com/johannrichard/homebridge-dingz/commit/cb35acb349e8dfaa45ea6fee9d92c9c837c3dda1))
+
+##### Refactors
+
+- **logging:** make logging more robust ([a5312ce6](https://github.com/johannrichard/homebridge-dingz/commit/a5312ce68b5c7ffc3c1907e8fedd23c102c48663))
+
+##### Code Style Changes
+
+- **platform:** more consistent naming ([3231facc](https://github.com/johannrichard/homebridge-dingz/commit/3231facc34554d8db2e9454928f709944e015406))
+- **dingz:** fix typo ([d3631219](https://github.com/johannrichard/homebridge-dingz/commit/d36312196fe71d021db663cec1f99096b0c415fa))
+
 #### 2.0.6 (2020-11-30)
 
 ##### Bug Fixes
