@@ -9,7 +9,7 @@ import { Mutex } from 'async-mutex';
 
 import { DingzDaHomebridgePlatform } from './platform';
 import { MyStromDeviceInfo, MyStromPIRReport } from './lib/myStromTypes';
-import { ButtonAction } from './lib/commonTypes';
+import { AccessoryActionUrl, ButtonAction } from './lib/commonTypes';
 import { DeviceNotReachableError } from './lib/errors';
 import { PlatformEvent } from './lib/platformEventBus';
 import { DingzDaBaseAccessory } from './lib/dingzDaBaseAccessory';
@@ -150,11 +150,33 @@ export class MyStromPIRAccessory extends DingzDaBaseAccessory {
 
     // Set the callback URL (Override!)
     retrySlow.execute(() => {
-      this.platform.setButtonCallbackUrl({
-        baseUrl: this.baseUrl,
-        token: this.device.token,
-        endpoints: ['pir/generic'], // Buttons need the 'generic' endpoint specifically set
-      });
+      this.getButtonCallbackUrl()
+        .then((callBackUrl) => {
+          if (!callBackUrl?.url.includes(this.platform.getCallbackUrl())) {
+            this.log.warn('Update existing callback URL ->', callBackUrl);
+            // Set the callback URL (Override!)
+            this.platform.setButtonCallbackUrl({
+              baseUrl: this.baseUrl,
+              token: this.device.token,
+              oldUrl: callBackUrl.url,
+              endpoints: ['pir/generic'],
+            });
+          } else {
+            this.log.debug('Callback URL already set ->', callBackUrl?.url);
+          }
+        })
+        .catch(this.handleRequestErrors.bind(this));
+    });
+  }
+
+  /**
+   * Returns the callback URL for the device
+   */
+  public async getButtonCallbackUrl(): Promise<AccessoryActionUrl> {
+    const getCallbackEndpoint = '/api/v1/action/pir/generic';
+    this.log.debug('Getting the callback URL -> ', getCallbackEndpoint);
+    return await this.request.get(getCallbackEndpoint).then((response) => {
+      return response.data;
     });
   }
 
