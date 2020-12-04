@@ -935,15 +935,12 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
   private callbackServer() {
     this.app.use(bodyParser.urlencoded());
     this.app.post('/button', this.handleRequest.bind(this));
-    this.app.listen(
-      this.config.callbackPort ?? DINGZ_CALLBACK_PORT,
-      '0.0.0.0',
-      () =>
-        this.log.warn(
-          `Callback server listening for POST requests on ${
-            this.config.callbackPort ?? DINGZ_CALLBACK_PORT
-          }... use ${this.getCallbackUrl()} as URL for your dingz or MyStrom callbacks`,
-        ),
+    this.app.listen(this.config.callbackPort ?? DINGZ_CALLBACK_PORT, () =>
+      this.log.warn(
+        `Callback server listening for POST requests on ${
+          this.config.callbackPort ?? DINGZ_CALLBACK_PORT
+        }... use ${this.getCallbackUrl()} as URL for your dingz or MyStrom callbacks`,
+      ),
     );
   }
 
