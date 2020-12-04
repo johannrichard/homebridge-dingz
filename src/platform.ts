@@ -919,9 +919,8 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
     endpoints.forEach((endpoint) => {
       this.log.debug(setActionUrl, 'Endpoint -> ', endpoint);
       axios
-        .post(`${setActionUrl}${endpoint}`, {
+        .post(`${setActionUrl}${endpoint}`, callbackUrl, {
           headers: { Token: token ?? '' },
-          data: callbackUrl,
         })
         .catch(this.handleError.bind(this));
     });
