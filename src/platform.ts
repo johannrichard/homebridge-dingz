@@ -12,6 +12,7 @@ import axios, { AxiosError } from 'axios';
 import axiosRetry from 'axios-retry';
 import * as bodyParser from 'body-parser';
 import i4h from 'intervals-for-humans';
+import chalk from 'chalk';
 import isValidHost from 'is-valid-host';
 import * as os from 'os';
 import e = require('express');
@@ -92,7 +93,11 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
   ) {
     axiosRetry(axios, { retries: 5, retryDelay: axiosRetry.exponentialDelay });
 
-    this.log.debug('Finished initializing platform:', this.config.name);
+    this.log.debug(
+      chalk.redBright('[Platform]'),
+      'Finished initializing platform:',
+      this.config.name,
+    );
 
     // When this event is fired it means Homebridge has restored all cached accessories from disk.
     // Dynamic Platform plugins should only register new accessories after this event was fired,
@@ -955,10 +960,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
 
         // Various types of callbacks
         if (button) {
-          this.log.warn(
-            '-> dingz/Multi-button Action from',
-            request.connection.remoteAddress,
-          );
+          this.log.info(chalk.blueBright('[ACTION] dingz'), request.ip);
           // attempt-auto add of either a dingz
           if (
             request.connection.remoteAddress &&
@@ -974,7 +976,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
           );
         } else {
           if (action) {
-            this.log.warn('-> Simple Button action');
+            this.log.info(chalk.blueBright('[ACTION] Simple'), request.ip);
             this.eb.emit(
               PlatformEvent.ACTION,
               mac,
@@ -982,7 +984,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
               battery as number,
             );
           } else {
-            this.log.warn('-> Button Heartbeat');
+            this.log.info(chalk.blueBright('[HEARTBEAT]'), request.ip);
             this.eb.emit(
               PlatformEvent.ACTION,
               mac,
