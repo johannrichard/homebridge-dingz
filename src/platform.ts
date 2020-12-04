@@ -287,7 +287,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
             address: address,
             mac: mac.toUpperCase(),
             token: token,
-            model: info.puck_hw_model ?? 'dingz',
+            model: info.front_hw_model ?? 'dingz',
             hwInfo: info,
             accessoryClass: 'DingzDaAccessory',
           };
@@ -527,7 +527,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
   // Add one device based on address and name
   private addMyStromPIRDevice({
     address,
-    name = 'Motion Sensor',
+    name,
     token,
   }: {
     address: string;
@@ -536,7 +536,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
   }): boolean {
     // Run a diacovery of changed things every 10 seconds
     this.log.debug(
-      `Add configured/discovered myStrom PIR device -> ${name} (${address})`,
+      `Add configured/discovered myStrom PIR device -> (${address})`,
     );
     const success = this.getMyStromDeviceInfo({
       address,
@@ -552,13 +552,15 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
           );
         }
 
+        const pirName: string =
+          name ?? 'my PIR ' + info.mac.toUpperCase().substr(6, 6);
         const deviceInfo: DeviceInfo = {
-          name: info.name ?? name,
+          name: pirName,
           address: address,
           mac: info.mac.toUpperCase(),
           token: token,
           model: '110',
-          hwInfo: info,
+          hwInfo: info as MyStromDeviceInfo,
           accessoryClass: 'MyStromPIRAccessory',
         };
 
