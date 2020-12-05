@@ -382,7 +382,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
         }
 
         const deviceInfo: DeviceInfo = {
-          name: info.name ?? name,
+          name: name,
           address: address,
           mac: info.mac.toUpperCase(),
           token: token,
@@ -772,6 +772,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
 
       const t: DeviceTypes = msg[6];
       const mac: string = this.byteToHexString(msg.subarray(0, 6));
+      const deviceSuffix: string = mac.substr(6, 6);
 
       if (!this.discovered.has(mac)) {
         switch (t) {
@@ -785,7 +786,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
               .execute(() => {
                 this.addMyStromButtonDevice({
                   address: remoteInfo.address,
-                  name: 'Button',
+                  name: `Button ${deviceSuffix}`,
                   token: this.config.globalToken,
                   mac: mac,
                 });
@@ -799,7 +800,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
               .execute(() => {
                 this.addMyStromLightbulbDevice({
                   address: remoteInfo.address,
-                  name: 'LED Strip',
+                  name: `LED Strip ${deviceSuffix}`,
                   token: this.config.globalToken,
                 });
               })
@@ -812,7 +813,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
               .execute(() => {
                 this.addMyStromLightbulbDevice({
                   address: remoteInfo.address,
-                  name: 'Lightbulb',
+                  name: `Lightbulb ${deviceSuffix}`,
                   token: this.config.globalToken,
                 });
               })
@@ -827,7 +828,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
               .execute(() => {
                 this.addMyStromSwitchDevice({
                   address: remoteInfo.address,
-                  name: 'Switch',
+                  name: `Switch ${deviceSuffix}`,
                   token: this.config.globalToken,
                 });
               })
@@ -840,7 +841,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
               .execute(() => {
                 this.addMyStromPIRDevice({
                   address: remoteInfo.address,
-                  name: 'Motion Sensor',
+                  name: `Motion Sensor ${deviceSuffix}`,
                   token: this.config.globalToken,
                 });
               })
@@ -853,7 +854,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
               .execute(() => {
                 this.addDingzDevice({
                   address: remoteInfo.address,
-                  name: 'dingz',
+                  name: `DINGZ ${deviceSuffix}`,
                   token: this.config.globalToken,
                 });
               })
