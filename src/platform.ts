@@ -844,7 +844,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
               .execute(() => {
                 this.addMyStromPIRDevice({
                   address: remoteInfo.address,
-                  name: `Motion Sensor ${deviceSuffix}`,
+                  name: `PIR ${deviceSuffix}`,
                   token: this.config.globalToken,
                 });
               })
