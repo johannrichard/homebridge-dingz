@@ -12,7 +12,7 @@ Please have a look at the [Wiki](https://github.com/johannrichard/homebridge-din
 - [Auto-discovery](#auto-discovery)
 - [Configuration changes (dingz only)](#configuration-changes-dingz-only)
 - [Usage](#usage)
-- [Caveats (See [CHANGELOG.md](CHANGELOG.md) as well)](#caveats-see-changelogmdchangelogmd-as-well)
+- [Caveats](#caveats)
 - [Disclaimer](#disclaimer)
 <!-- /TOC -->
 
@@ -46,7 +46,9 @@ Easy: Install and configure the plugin via [Config UI X](https://www.npmjs.com/p
 
 Harder: See [the Wiki](https://github.com/johannrichard/homebridge-dingz/wiki) for instructions.
 
-## Caveats (See [CHANGELOG.md](CHANGELOG.md) as well)
+## Caveats
+
+(See [CHANGELOG.md](CHANGELOG.md) as well for breaking changes)
 
 - The plugin is in an early (beta) stage -- lots and lots of errors when running are probably the norm, and not the exception
 - Each dingz device is created as **one** accessory. This means that all services (Lights, Blinds, Temperature and Motion) share the same room in HomeKit. This can not be changed and would require to break up the accessory into separate accessories per function. However, this would be inconsistent with HomeKit design principles and also violate some physical design/wiring constraints of the dingz.
