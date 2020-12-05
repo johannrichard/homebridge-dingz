@@ -252,11 +252,11 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
   // Add one device based on address and name
   private async addDingzDevice({
     address,
-    name = 'dingz',
+    name,
     token,
   }: {
     address: string;
-    name?: string;
+    name: string;
     token?: string;
   }): Promise<boolean> {
     // Run a diacovery of changed things every 10 seconds
@@ -283,7 +283,10 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
 
           // Fixme: Fetch more info about the Device (particularly Name)
           const deviceInfo: DeviceInfo = {
-            name: dingzConfig.dingz_name,
+            name:
+              dingzConfig.dingz_name && dingzConfig.dingz_name !== ''
+                ? dingzConfig.dingz_name
+                : name,
             address: address,
             mac: mac.toUpperCase(),
             token: token,
@@ -966,7 +969,10 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
             request.connection.remoteAddress &&
             isValidHost(request.connection.remoteAddress)
           ) {
-            this.addDingzDevice({ address: request.connection.remoteAddress });
+            this.addDingzDevice({
+              address: request.connection.remoteAddress,
+              name: `DINGZ ${mac.substr(6, 6)}`,
+            });
           }
           this.eb.emit(
             PlatformEvent.ACTION,
