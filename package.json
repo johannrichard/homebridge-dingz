@@ -28,9 +28,9 @@
     "changelog": "changelog",
     "release:candidate": "yarn version --prerelease --preid rc --no-git-tag-version && yarn publish --tag next",
     "release:nightly": "yarn version --prerelease --preid nightly --no-git-tag-version && yarn publish --tag nightly",
-    "release:major": "yarn run prepare && changelog -M && git add CHANGELOG.md && git commit -m 'ci(docs): updated CHANGELOG.md' && yarn version --major && git push origin && git push origin --tags",
-    "release:minor": "yarn run prepare && changelog -m && git add CHANGELOG.md && git commit -m 'ci(docs): updated CHANGELOG.md' && yarn version --minor && git push origin && git push origin --tags",
-    "release:patch": "yarn run prepare && changelog -p && git add CHANGELOG.md && git commit -m 'ci(docs): updated CHANGELOG.md' && yarn version --patch && git push origin && git push origin --tags"
+    "release:major": "yarn run prepare && changelog -M && git add CHANGELOG.md && yarn version --major && git push origin && git push origin --tags",
+    "release:minor": "yarn run prepare && changelog -m && git add CHANGELOG.md && yarn version --minor && git push origin && git push origin --tags",
+    "release:patch": "yarn run prepare && changelog -p && git add CHANGELOG.md && yarn version --patch && git push origin && git push origin --tags"
   },
   "keywords": [
     "homebridge-plugin",
