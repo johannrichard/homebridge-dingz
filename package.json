@@ -22,8 +22,9 @@
     "lint": "eslint src/**.ts",
     "watch": "yarn run build && yarn link && nodemon",
     "build": "rimraf ./dist && tsc",
+    "depcheck": "npx depcheck",
     "prepublishOnly": "yarn run lint && yarn run build",
-    "prepare": "yarn run lint && yarn run build",
+    "prepare": "yarn run lint && yarn run build && yarn run depcheck",
     "changelog": "changelog",
     "release:candidate": "yarn version --prerelease --preid rc --no-git-tag-version && yarn publish --tag next",
     "release:nightly": "yarn version --prerelease --preid nightly --no-git-tag-version && yarn publish --tag nightly",
@@ -88,6 +89,12 @@
     "**/*.+(js|jsx|css|less|scss|ts|tsx|md)": [
       "prettier --write",
       "git add"
+    ]
+  },
+  "depcheck": {
+    "ignores": [
+      "@commitlint/*",
+      "eslint*"
     ]
   }
 }
