@@ -10,8 +10,7 @@ Please have a look at the [Wiki](https://github.com/johannrichard/homebridge-din
 <!-- TOC -->
 
 - [Auto-discovery](#auto-discovery)
-- [Configuration changes](#configuration-changes)
-  - [Configuration changes (dingz only)](#configuration-changes-dingz-only)
+- [Configuration changes (dingz only)](#configuration-changes-dingz-only)
 - [Usage](#usage)
 - [Caveats (See [CHANGELOG.md](CHANGELOG.md) as well)](#caveats-see-changelogmdchangelogmd-as-well)
 - [Disclaimer](#disclaimer)
@@ -26,11 +25,9 @@ The plugin attempts to
 
 Older myStrom WiFi Switches don't support auto-discovery and must be added manually. Depending on your setup, you might want or have to add all your devices manually. Configuration settings will be read-out automatically in either case.
 
-## Configuration changes
+## Configuration changes (dingz only)
 
-### Configuration changes (dingz only)
-
-Initially, the plugin attempts to create the dynamic accessories based on the dingz configuration. Keeping up with configuration changes once a dingz has been added to HomeKit has become increasingly challenging and error prone. New [features in the firmware](https://github.com/johannrichard/homebridge-dingz/pull/114) and a mixed hardware and software-defined configuration (`DIP` switch and UI settings) can change **physical** properties of your dingz.
+Initially, the plugin attempts to create the dynamic accessories based on a dingz' configuration. Keeping up with configuration changes once a dingz has been added to HomeKit has become increasingly challenging and error prone. New [features in the firmware](https://github.com/johannrichard/homebridge-dingz/pull/114) and a mixed hardware and software-defined configuration (`DIP` switch and UI settings) can change **physical** properties of your dingz.
 
 This applies to the following configurable properties:
 
