@@ -1,7 +1,7 @@
 {
   "displayName": "Homebridge dingz Plugin",
   "name": "homebridge-dingz",
-  "version": "2.0.7",
+  "version": "2.0.8-rc.3",
   "author": "johannrichard",
   "description": "Homebridge Plugin for dingz & myStrom Devices. Implements some (but not all, due to API limitations) functions of a [dingz](https://dingz.ch) Smart Home Device.",
   "license": "Apache-2.0",
@@ -25,12 +25,12 @@
     "depcheck": "npx depcheck",
     "prepublishOnly": "yarn run lint && yarn run build",
     "prepare": "yarn run lint && yarn run build && yarn run depcheck",
-    "changelog": "changelog",
-    "release:candidate": "yarn version --prerelease --preid rc --no-git-tag-version && yarn publish --tag next",
+    "changelog": "changelog --exclude ci,chore",
     "release:nightly": "yarn version --prerelease --preid nightly --no-git-tag-version && yarn publish --tag nightly",
-    "release:major": "yarn run prepare && changelog -M && git add CHANGELOG.md && yarn version --major && git push origin && git push origin --tags",
-    "release:minor": "yarn run prepare && changelog -m && git add CHANGELOG.md && yarn version --minor && git push origin && git push origin --tags",
-    "release:patch": "yarn run prepare && changelog -p && git add CHANGELOG.md && yarn version --patch && git push origin && git push origin --tags"
+    "release:candidate": "yarn version --prerelease --preid rc --no-git-tag-version && yarn publish --tag next",
+    "release:major": "yarn run prepare && yarn run changelog -M && git add CHANGELOG.md && yarn version --major && git push origin && git push origin --tags",
+    "release:minor": "yarn run prepare && yarn run changelog -m && git add CHANGELOG.md && yarn version --minor && git push origin && git push origin --tags",
+    "release:patch": "yarn run prepare && yarn run changelog -p && git add CHANGELOG.md && yarn version --patch && git push origin && git push origin --tags"
   },
   "keywords": [
     "homebridge-plugin",
