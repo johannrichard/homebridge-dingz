@@ -57,12 +57,7 @@ const retrySlow = Policy.handleAll()
  * Each accessory may expose multiple services of different service types.
  */
 export class DingzAccessory extends DingzDaBaseAccessory {
-  private services: Service[] = [];
   private motionService?: Service;
-
-  private _updatedDeviceInfo?: DingzDeviceInfo;
-  private _updatedDeviceInputConfig?: DingzInputInfoItem;
-
   private dingzDeviceInfo: DingzDeviceInfo;
 
   // Todo: Make proper internal representation
@@ -176,14 +171,6 @@ export class DingzAccessory extends DingzDaBaseAccessory {
             this.addLEDService();
             this.addLightSensorService();
             this.addButtonServices();
-
-            this.services.forEach((service) => {
-              this.log.info(
-                'Service created ->',
-                service.getCharacteristic(this.platform.Characteristic.Name)
-                  .value,
-              );
-            });
 
             // Retry at least once every day
             retrySlow.execute(() => {
@@ -314,7 +301,6 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     temperatureService
       .getCharacteristic(this.platform.Characteristic.CurrentTemperature)
       .on(CharacteristicEventTypes.GET, this.getTemperature.bind(this));
-    this.services.push(temperatureService);
 
     this.eb.on(
       AccessoryEvent.PUSH_STATE_UPDATE,
@@ -349,7 +335,6 @@ export class DingzAccessory extends DingzDaBaseAccessory {
       this.accessory.addService(this.platform.Service.LightSensor);
 
     lightService.setCharacteristic(this.platform.Characteristic.Name, 'Light');
-    this.services.push(lightService);
 
     this.eb.on(
       AccessoryEvent.PUSH_STATE_UPDATE,
@@ -557,24 +542,16 @@ export class DingzAccessory extends DingzDaBaseAccessory {
       default:
         break;
     }
-
-    windowCoverServices.forEach((service) => {
-      this.services.push(service);
-    });
-
-    dimmerServices.forEach((service) => {
-      this.services.push(service);
-    });
   }
 
   private addButtonServices() {
     // Create Buttons
-    // Add Event Listeners
-    this.services.push(this.addButtonService('dingz Button 1', '1'));
-    this.services.push(this.addButtonService('dingz Button 2', '2'));
-    this.services.push(this.addButtonService('dingz Button 3', '3'));
-    this.services.push(this.addButtonService('dingz Button 4', '4'));
+    this.addButtonService('dingz Button 1', '1');
+    this.addButtonService('dingz Button 2', '2');
+    this.addButtonService('dingz Button 3', '3');
+    this.addButtonService('dingz Button 4', '4');
 
+    // Add Event Listeners
     this.platform.eb.on(
       PlatformEvent.ACTION,
       (mac, action: ButtonAction, button: ButtonId | '5') => {
@@ -1071,7 +1048,6 @@ export class DingzAccessory extends DingzDaBaseAccessory {
       this.platform.Characteristic.Name,
       'Motion',
     );
-    this.services.push(this.motionService);
     // Only check for motion if we have a PIR and set the Interval
     if (this.platform.config.motionPoller ?? true) {
       this.log.info('Motion POLLING enabled');
@@ -1270,7 +1246,6 @@ export class DingzAccessory extends DingzDaBaseAccessory {
       .getCharacteristic(this.platform.Characteristic.Saturation)
       .on(CharacteristicEventTypes.SET, this.setLEDSaturation.bind(this)); // SET - bind to the 'setBrightness` method below
 
-    this.services.push(ledService);
     this.eb.on(
       AccessoryEvent.PUSH_STATE_UPDATE,
       this.updateLEDState.bind(this, ledService),
