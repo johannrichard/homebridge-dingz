@@ -19,6 +19,7 @@ import {
   ButtonId,
   ButtonState,
   DimmerId,
+  DimmerIndex,
   DimmerState,
   DimmerTimer,
   DingzDeviceInfo,
@@ -27,7 +28,6 @@ import {
   DingzDeviceDimmerConfig,
   DingzDeviceInputConfig,
   DingzDimmerConfigValue,
-  DingzInputInfoItem,
   DingzLEDState,
   DingzMotionData,
   DingzState,
@@ -156,7 +156,8 @@ export class DingzAccessory extends DingzDaBaseAccessory {
             this.setButtonCallbacks();
 
             // Now we have what we need and can create the services …
-            this.addOutputServices();
+            this.configureOutputs(true);
+            this.configureBlinds();
 
             // Add auxiliary services (Motion, Temperature)
             if (this.dingzDeviceInfo.has_pir) {
@@ -164,6 +165,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
               this.addMotionService();
             } else {
               this.log.info('This dingz has no Motion sensor.');
+              this.removeMotionService();
             }
             // dingz has a temperature sensor and an LED,
             // make these available here
@@ -349,22 +351,19 @@ export class DingzAccessory extends DingzDaBaseAccessory {
       .updateValue(intensity);
   }
 
-  private addOutputServices() {
+  private configureBlinds(): void {
     // This is the block for the multiple services (Dimmers 1-4 / Blinds 1-2 / Buttons 1-4)
     // If "Input" is set, Dimmer 1 won't work. We have to take this into account
 
     // Get the LightBulb service if it exists, otherwise create a new LightBulb service
     // you can create multiple services for each accessory
-    const dimmerServices: Service[] = [];
-    const windowCoverServices: Service[] = [];
 
-    const inputConfig: DingzInputInfoItem[] | undefined = this.device
-      .dingzInputInfo;
-    const dimmerConfig: DingzDeviceDimmerConfig | undefined = this.device
-      .dimmerConfig;
-    const windowCoveringConfig:
-      | DingzWindowCoveringConfigItem[]
-      | undefined = this.device.windowCoveringConfig;
+    if (!this.device.windowCoveringConfig) {
+      return;
+    }
+
+    const w: DingzWindowCoveringConfigItem[] | undefined = this.device
+      .windowCoveringConfig;
 
     /** DIP Switch
      * 0			M1& M2		(2 blinds)
@@ -376,167 +375,66 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     switch (this.dingzDeviceInfo.dip_config) {
       case 3:
         // DIP = 0: D0, D1, D2, D3; (Subtypes) (Unless Input, then D1, D2, D3)
-        if (
-          inputConfig &&
-          !inputConfig[0].active &&
-          dimmerConfig?.dimmers[0].output &&
-          dimmerConfig?.dimmers[0].output !== 'not_connected'
-        ) {
-          // D0
-          dimmerServices.push(
-            this.addDimmerService({
-              name: dimmerConfig?.dimmers[0].name,
-              output: dimmerConfig?.dimmers[0].output,
-              id: 'D1',
-              index: 0,
-            }),
-          );
-        }
         // D1, D2, D3
-        if (
-          dimmerConfig?.dimmers[1].output &&
-          dimmerConfig?.dimmers[1].output !== 'not_connected'
-        ) {
-          dimmerServices.push(
-            this.addDimmerService({
-              name: dimmerConfig?.dimmers[1].name,
-              output: dimmerConfig?.dimmers[1].output,
-              id: 'D2',
-              index: 1,
-            }),
-          );
-        }
-        if (
-          dimmerConfig?.dimmers[2].output &&
-          dimmerConfig?.dimmers[2].output !== 'not_connected'
-        ) {
-          dimmerServices.push(
-            this.addDimmerService({
-              name: dimmerConfig?.dimmers[2].name,
-              output: dimmerConfig?.dimmers[2].output,
-              id: 'D3',
-              index: 2,
-            }),
-          );
-        }
-        if (
-          dimmerConfig?.dimmers[3].output &&
-          dimmerConfig?.dimmers[3].output !== 'not_connected'
-        ) {
-          dimmerServices.push(
-            this.addDimmerService({
-              name: dimmerConfig?.dimmers[3].name,
-              output: dimmerConfig?.dimmers[3].output,
-              id: 'D4',
-              index: 3,
-            }),
-          );
-        }
+        this.configureWindowCoveringService({
+          id: 'M1',
+          connected: false,
+        });
+        this.configureWindowCoveringService({
+          id: 'M2',
+          connected: false,
+        });
         break;
       case 2:
         // DIP = 1: M1, D2, D3;
-        if (windowCoveringConfig && windowCoveringConfig[0]) {
-          windowCoverServices.push(
-            this.addWindowCoveringService({
-              name: windowCoveringConfig[0].name,
-              id: 'M1',
-              index: 0,
-            }),
-          );
+        if (w && w[0]) {
+          this.configureWindowCoveringService({
+            name: w[0].name,
+            id: 'M1',
+            index: 0,
+            connected: true,
+          });
         }
+        this.configureWindowCoveringService({
+          id: 'M2',
+          connected: false,
+        });
+
         // Dimmers are always 0 based
         // i.e. if outputs 1 / 2 are for blinds, outputs 3/4 will be dimmer 0/1
         // We use the "index" value of the dingz to determine what to use
-        if (
-          dimmerConfig?.dimmers[2].output &&
-          dimmerConfig?.dimmers[2].output !== 'not_connected'
-        ) {
-          dimmerServices.push(
-            this.addDimmerService({
-              name: dimmerConfig?.dimmers[2].name,
-              output: dimmerConfig?.dimmers[2].output,
-              id: 'D3',
-              index: 0,
-            }),
-          );
-        }
-        if (
-          dimmerConfig?.dimmers[3].output &&
-          dimmerConfig?.dimmers[3].output !== 'not_connected'
-        ) {
-          dimmerServices.push(
-            this.addDimmerService({
-              name: dimmerConfig?.dimmers[3].name,
-              output: dimmerConfig?.dimmers[3].output,
-              id: 'D4',
-              index: 1,
-            }),
-          );
-        }
         break;
       case 1:
         // DIP = 2: D0, D1, M2; (Unless Input, then D1, M2);
-        if (
-          inputConfig &&
-          !inputConfig[0].active &&
-          dimmerConfig?.dimmers[0].output &&
-          dimmerConfig?.dimmers[0].output !== 'not_connected'
-        ) {
-          // D0
-          dimmerServices.push(
-            this.addDimmerService({
-              name: dimmerConfig?.dimmers[0].name,
-              output: dimmerConfig?.dimmers[0].output,
-              id: 'D1',
-              index: 0,
-            }),
-          );
-        }
-        if (
-          dimmerConfig?.dimmers[1].output &&
-          dimmerConfig?.dimmers[1].output !== 'not_connected'
-        ) {
-          dimmerServices.push(
-            this.addDimmerService({
-              name: dimmerConfig?.dimmers[1].name,
-              output: dimmerConfig?.dimmers[1].output,
-              id: 'D2',
-              index: 1,
-            }),
-          );
-        }
-        if (windowCoveringConfig && windowCoveringConfig[1]) {
+        this.configureWindowCoveringService({
+          id: 'M1',
+          connected: false,
+        });
+        if (w && w[1]) {
           // in this configuration, the second motor has the name we need
-          windowCoverServices.push(
-            this.addWindowCoveringService({
-              name: windowCoveringConfig[1].name,
-              id: 'M2',
-              index: 1,
-            }),
-          );
+          this.configureWindowCoveringService({
+            name: w[1].name,
+            id: 'M2',
+            index: 1,
+            connected: true,
+          });
         }
         break;
       case 0:
         // DIP = 3: M1, M2;
-        if (
-          windowCoveringConfig &&
-          windowCoveringConfig[0] &&
-          windowCoveringConfig[1]
-        ) {
-          windowCoverServices.push(
-            this.addWindowCoveringService({
-              name: windowCoveringConfig[0].name,
-              id: 'M1',
-              index: 0,
-            }),
-          );
-          windowCoverServices.push(
-            this.addWindowCoveringService({
-              name: windowCoveringConfig[1].name,
-              id: 'M2',
-              index: 1,
-            }),
-          );
+        if (w && w[0] && w[1]) {
+          this.configureWindowCoveringService({
+            name: w[0].name,
+            id: 'M1',
+            index: 0,
+            connected: true,
+          });
+          this.configureWindowCoveringService({
+            name: w[1].name,
+            id: 'M2',
+            index: 1,
+            connected: true,
+          });
         }
         break;
       default:
@@ -649,11 +547,6 @@ export class DingzAccessory extends DingzDaBaseAccessory {
         CharacteristicEventTypes.GET,
         this.getSwitchButtonState.bind(this, button),
       );
-    // .on(
-    //   CharacteristicEventTypes.SET,
-    //   this.setSwitchButtonState.bind(this, button),
-    // );
-
     buttonService
       .getCharacteristic(this.platform.Characteristic.ProgrammableSwitchEvent)
       .on(CharacteristicEventTypes.GET, this.getButtonState.bind(this, button));
@@ -688,19 +581,27 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     callback(this.reachabilityState);
   }
 
-  private addDimmerService({
+  private addOutputService({
     name,
     output,
     id,
     index,
+    serviceHandlers = false,
   }: {
     name: string;
-    output?: DingzDimmerConfigValue;
-    id: 'D1' | 'D2' | 'D3' | 'D4';
-    index: DimmerId;
-  }) {
-    // Service doesn't yet exist, create new one
-    const service =
+    output: DingzDimmerConfigValue;
+    id: DimmerId;
+    index: DimmerIndex;
+    serviceHandlers: boolean;
+  }): Service | undefined {
+    if (output === 'not_connected') {
+      return;
+    }
+    const exists: Service | undefined = this.accessory.getServiceById(
+      this.platform.Service.Lightbulb,
+      id,
+    );
+    const service: Service =
       this.accessory.getServiceById(this.platform.Service.Lightbulb, id) ??
       this.accessory.addService(
         this.platform.Service.Lightbulb,
@@ -711,38 +612,64 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     // Update name
     service.getCharacteristic(this.platform.Characteristic.Name).setValue(name);
 
-    // register handlers for the On/Off Characteristic
-    service
-      .getCharacteristic(this.platform.Characteristic.On)
-      .on(CharacteristicEventTypes.SET, this.setOn.bind(this, index)) // SET - bind to the `setOn` method below
-      .on(CharacteristicEventTypes.GET, this.getOn.bind(this, index)); // GET - bind to the `getOn` method below
+    // add / configure Brightness
+    if (
+      output === 'non_dimmable' &&
+      service.testCharacteristic(this.platform.Characteristic.Brightness)
+    ) {
+      service.removeCharacteristic(
+        service.getCharacteristic(this.platform.Characteristic.Brightness),
+      );
+    } else if (
+      output !== 'non_dimmable' &&
+      !service.testCharacteristic(this.platform.Characteristic.Brightness)
+    ) {
+      // Only add listeners if needed, i.e. if Characteristic is not yet defined
+      service.addCharacteristic(this.platform.Characteristic.Brightness);
+      service
+        .getCharacteristic(this.platform.Characteristic.Brightness)
+        .on(CharacteristicEventTypes.SET, this.setBrightness.bind(this, index)); // SET - bind to the 'setBrightness` method below
+    }
+
+    if (serviceHandlers || !exists) {
+      // register handlers for the On/Off Characteristic
+      service
+        .getCharacteristic(this.platform.Characteristic.On)
+        .on(CharacteristicEventTypes.SET, this.setOn.bind(this, index)) // SET - bind to the `setOn` method below
+        .on(CharacteristicEventTypes.GET, this.getOn.bind(this, index)); // GET - bind to the `getOn` method below
+    }
 
     // register handlers for the Brightness Characteristic but only if not dimmable
-    if (output && output !== 'non_dimmable') {
+    if ((serviceHandlers || !exists) && output !== 'non_dimmable') {
       service
         .getCharacteristic(this.platform.Characteristic.Brightness)
         .on(CharacteristicEventTypes.SET, this.setBrightness.bind(this, index)); // SET - bind to the 'setBrightness` method below
     }
 
     // Update State
-    this.eb.on(
-      AccessoryEvent.PUSH_STATE_UPDATE,
-      this.updateDimmerState.bind(this, index, output, service),
-    );
-    return service;
+    if (serviceHandlers || !exists) {
+      this.eb.on(
+        AccessoryEvent.PUSH_STATE_UPDATE,
+        this.updateDimmerState.bind(this, id, index, output),
+      );
+    }
   }
 
   private updateDimmerState(
-    index: number,
-    output: string | undefined,
-    service: Service,
-  ) {
-    if (index !== null) {
+    id: DimmerId,
+    index: DimmerIndex,
+    outputConfig: DingzDimmerConfigValue,
+  ): void {
+    const service = this.accessory.getServiceById(
+      this.platform.Service.Lightbulb,
+      id,
+    );
+    if (service && index !== null) {
       // index set
       const state = this.dingzStates.Dimmers[index];
       // Check that "state" is valid
       if (state) {
-        if (output && output !== 'non_dimmable') {
+        if (outputConfig !== 'non_dimmable') {
           service
             .getCharacteristic(this.platform.Characteristic.Brightness)
             .updateValue(state.output);
@@ -754,21 +681,8 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     }
   }
 
-  private removeDimmerService(id: 'D1' | 'D2' | 'D3' | 'D4') {
-    // Remove DimmerService
-    const service: Service | undefined = this.accessory.getServiceById(
-      this.platform.Service.Lightbulb,
-      id,
-    );
-    if (service) {
-      this.log.debug('Removing Dimmer ->', service.displayName);
-      clearTimeout(this.dimmerTimers[id]);
-      this.accessory.removeService(service);
-    }
-  }
-
   private setOn(
-    index: DimmerId,
+    index: DimmerIndex,
     value: CharacteristicValue,
     callback: CharacteristicSetCallback,
   ) {
@@ -779,13 +693,13 @@ export class DingzAccessory extends DingzDaBaseAccessory {
   /**
    * Handle the "GET" requests from HomeKit
    */
-  private getOn(index: DimmerId, callback: CharacteristicGetCallback) {
+  private getOn(index: DimmerIndex, callback: CharacteristicGetCallback) {
     const isOn: boolean = this.dingzStates.Dimmers[index]?.on ?? false;
     callback(this.reachabilityState, isOn);
   }
 
   private async setBrightness(
-    index: DimmerId,
+    index: DimmerIndex,
     value: CharacteristicValue,
     callback: CharacteristicSetCallback,
   ) {
@@ -794,6 +708,37 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     this.dingzStates.Dimmers[index].on = isOn;
 
     this.setDeviceDimmer(index, callback, isOn, value as number);
+  }
+
+  /**
+   * Configure a WindowCovering
+   */
+  private configureWindowCoveringService({
+    name,
+    id,
+    index,
+    connected,
+  }: {
+    name?: string;
+    id: string;
+    index?: WindowCoveringIndex;
+    connected: boolean;
+  }): void {
+    const service = this.accessory.getServiceById(
+      this.platform.Service.WindowCovering,
+      id,
+    );
+    if (connected && name && index) {
+      this.log.info(
+        `configureWindowCoveringService() -> add Blind ${name} (${id}/${index})`,
+      );
+      this.addWindowCoveringService({ name, id, index });
+    } else if (service && !connected) {
+      this.log.info(
+        `configureWindowCoveringService() -> remove Blind (${id}/${index})`,
+      );
+      this.accessory.removeService(service);
+    }
   }
 
   // Add WindowCovering (Blinds)
@@ -805,7 +750,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     name: string;
     id: string;
     index: WindowCoveringIndex;
-  }) {
+  }): void {
     const service: Service =
       this.accessory.getServiceById(this.platform.Service.WindowCovering, id) ??
       this.accessory.addService(this.platform.Service.WindowCovering, name, id);
@@ -848,7 +793,6 @@ export class DingzAccessory extends DingzDaBaseAccessory {
       AccessoryEvent.PUSH_STATE_UPDATE,
       this.updateWindowCoveringState.bind(this, index, service),
     );
-    return service;
   }
 
   // Window Covering functions
@@ -1112,7 +1056,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
       address: this.device.address,
       token: this.device.token,
     })
-      .then(({ dingzDevices, dimmerConfig }) => {
+      .then(({ dingzDevices, dimmerConfig, blindConfig }) => {
         if (this.reachabilityState !== null) {
           this.log.warn('Device recovered from unreachable state');
           this.reachabilityState = null;
@@ -1140,8 +1084,24 @@ export class DingzAccessory extends DingzDaBaseAccessory {
             }
           }
           // Update dimmer services
-          this.device.dimmerConfig = dimmerConfig;
-          this.updateDimmerServices();
+          if (
+            this.outputConfigChanged({
+              oldConfig: this.device.dimmerConfig,
+              newConfig: dimmerConfig,
+            })
+          ) {
+            this.device.dimmerConfig = dimmerConfig;
+            this.configureOutputs();
+          }
+          if (
+            this.blindConfigChanged({
+              oldConfig: this.device.windowCoveringConfig,
+              newConfig: blindConfig.blinds,
+            })
+          ) {
+            this.device.windowCoveringConfig = blindConfig.blinds;
+            this.configureBlinds();
+          }
         } finally {
           if (updatedDingzDeviceInfo) {
             this.accessory.context.device.dingzDeviceInfo = updatedDingzDeviceInfo;
@@ -1151,63 +1111,186 @@ export class DingzAccessory extends DingzDaBaseAccessory {
       .catch(this.handleRequestErrors.bind(this));
   }
 
-  // Updates the Dimemr Services with their correct name
-  private updateDimmerServices(): void {
+  /**
+   * Updates the dimemr services based on their current configuration
+   * @param setupHandlers: setup event handlers
+   */
+  private configureOutputs(setupHandlers = false): void {
     // Figure out what we have here
     if (!this.device.dimmerConfig) {
       return;
     }
 
     const d = this.device.dimmerConfig.dimmers;
+    const i = this.device.dingzInputInfo;
     switch (this.dingzDeviceInfo.dip_config) {
       case 3:
-        this.setDimmerConfig(d[0].name ?? 'Dimmer 1', 'D1', 0, d[0].output);
-        this.setDimmerConfig(d[1].name ?? 'Dimmer 2', 'D2', 1, d[1].output);
-        this.setDimmerConfig(d[2].name ?? 'Dimmer 3', 'D3', 2, d[2].output);
-        this.setDimmerConfig(d[3].name ?? 'Dimmer 4', 'D4', 3, d[3].output);
+        if (i && !i[0].active) {
+          this.configureOutput({
+            name: d[0].name ?? 'Output 1',
+            id: 'D1',
+            index: 0,
+            output: d[0].output,
+            serviceHandlers: setupHandlers,
+          });
+        } else {
+          this.configureOutput({
+            id: 'D1',
+            output: 'not_connected',
+          });
+        }
+        this.configureOutput({
+          name: d[1].name ?? 'Output 2',
+          id: 'D2',
+          index: 1,
+          output: d[1].output,
+          serviceHandlers: setupHandlers,
+        });
+        this.configureOutput({
+          name: d[2].name ?? 'Output 3',
+          id: 'D3',
+          index: 2,
+          output: d[2].output,
+          serviceHandlers: setupHandlers,
+        });
+        this.configureOutput({
+          name: d[3].name ?? 'Output 4',
+          id: 'D4',
+          index: 3,
+          output: d[3].output,
+          serviceHandlers: setupHandlers,
+        });
         break;
       case 2:
-        this.setDimmerConfig(d[2].name ?? 'Dimmer 3', 'D3', 0, d[2].output);
-        this.setDimmerConfig(d[3].name ?? 'Dimmer 4', 'D4', 1, d[3].output);
+        this.configureOutput({
+          id: 'D1',
+          output: 'not_connected',
+        });
+        this.configureOutput({
+          id: 'D2',
+          output: 'not_connected',
+        });
+        this.configureOutput({
+          name: d[2].name ?? 'Output 3',
+          id: 'D3',
+          index: 0,
+          output: d[2].output,
+          serviceHandlers: setupHandlers,
+        });
+        this.configureOutput({
+          name: d[3].name ?? 'Output 4',
+          id: 'D4',
+          index: 1,
+          output: d[3].output,
+          serviceHandlers: setupHandlers,
+        });
         break;
       case 1:
-        this.setDimmerConfig(d[0].name ?? 'Dimmer 1', 'D1', 0, d[0].output);
-        this.setDimmerConfig(d[1].name ?? 'Dimmer 2', 'D2', 1, d[1].output);
+        if (i && !i[0].active) {
+          this.configureOutput({
+            name: d[0].name ?? 'Output 1',
+            id: 'D1',
+            index: 0,
+            output: d[0].output,
+            serviceHandlers: setupHandlers,
+          });
+        } else {
+          this.configureOutput({
+            id: 'D1',
+            output: 'not_connected',
+          });
+        }
+        this.configureOutput({
+          name: d[1].name ?? 'Output 2',
+          id: 'D2',
+          index: 1,
+          output: d[1].output,
+          serviceHandlers: setupHandlers,
+        });
+        this.configureOutput({
+          id: 'D3',
+          output: 'not_connected',
+        });
+        this.configureOutput({
+          id: 'D4',
+          output: 'not_connected',
+        });
         break;
       case 0:
+        this.configureOutput({
+          id: 'D1',
+          output: 'not_connected',
+        });
+        this.configureOutput({
+          id: 'D2',
+          output: 'not_connected',
+        });
+        this.configureOutput({
+          id: 'D3',
+          output: 'not_connected',
+        });
+        this.configureOutput({
+          id: 'D4',
+          output: 'not_connected',
+        });
+        break;
       default:
         break;
     }
   }
 
-  private setDimmerConfig(
-    name: string,
-    id: 'D1' | 'D2' | 'D3' | 'D4',
-    index: DimmerId,
-    output: DingzDimmerConfigValue,
-  ) {
+  /**
+   * Sets/updates the configuration of an output
+   * @param name Name of the output
+   * @param id service id of the dimmer (used to distinguish in HomeKit)
+   * @param index index of the dimmer (used to access data from dingz)
+   * @param output type of output / incl. 'not_connected'
+   */
+  private configureOutput({
+    name = 'NC',
+    id,
+    index,
+    output,
+    serviceHandlers = false,
+  }: {
+    name?: string;
+    id: DimmerId;
+    index?: DimmerIndex;
+    output: DingzDimmerConfigValue;
+    serviceHandlers?: boolean;
+  }) {
+    this.log.debug(
+      `setDimmerConfig() -> Updating output '${name}' as '${output}' (${id}/${index})`,
+    );
     const service: Service | undefined = this.accessory.getServiceById(
       this.platform.Service.Lightbulb,
       id,
     );
-    if (service) {
-      service.setCharacteristic(this.platform.Characteristic.Name, name);
-      if (output === 'non_dimmable') {
-        service.removeCharacteristic(
-          service.getCharacteristic(this.platform.Characteristic.Brightness),
-        );
-      } else if (
-        !service.testCharacteristic(this.platform.Characteristic.Brightness)
-      ) {
-        // Only add listeners if needed, i.e. if Characteristic is not yet defined
-        service.addCharacteristic(this.platform.Characteristic.Brightness);
-        service
-          .getCharacteristic(this.platform.Characteristic.Brightness)
-          .on(
-            CharacteristicEventTypes.SET,
-            this.setBrightness.bind(this, index),
-          ); // SET - bind to the 'setBrightness` method below
-      }
+
+    switch (output) {
+      case 'not_connected':
+        if (service) {
+          // Remove dimmer since not connected
+          this.log.info(
+            `setDimmerConfig() -> Removing output '${name}' as '${output}' (${id}/${index})`,
+          );
+          this.accessory.removeService(service);
+        }
+        break;
+      default:
+        if (index && name) {
+          this.log.info(
+            `setDimmerConfig() -> Configuring output '${name}' as '${output}' (${id}/${index})`,
+          );
+          this.addOutputService({
+            name: name,
+            output: output,
+            id: id,
+            index: index,
+            serviceHandlers: serviceHandlers,
+          });
+        }
+        break;
     }
   }
 
@@ -1393,7 +1476,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
 
   // Set individual dimmer
   private async setDeviceDimmer(
-    index: DimmerId,
+    index: DimmerIndex,
     callback: CharacteristicSetCallback,
     isOn?: boolean,
     level?: number,
@@ -1518,5 +1601,28 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     this.request
       .post(setActionEndpoint)
       .catch(this.handleRequestErrors.bind(this));
+  }
+
+  /**
+   * compare two configs
+   */
+  private outputConfigChanged({
+    oldConfig,
+    newConfig,
+  }: {
+    oldConfig: DingzDeviceDimmerConfig | undefined;
+    newConfig: DingzDeviceDimmerConfig;
+  }): boolean {
+    return JSON.stringify(oldConfig) !== JSON.stringify(newConfig);
+  }
+
+  private blindConfigChanged({
+    oldConfig,
+    newConfig,
+  }: {
+    oldConfig: DingzWindowCoveringConfigItem[] | undefined;
+    newConfig: DingzWindowCoveringConfigItem[];
+  }): boolean {
+    return JSON.stringify(oldConfig) !== JSON.stringify(newConfig);
   }
 }
