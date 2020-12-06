@@ -90,14 +90,14 @@ export interface DingzLEDState {
 }
 
 export type DingzDimmerConfigValue =
+  | 'not_connected'
   | 'non_dimmable'
   | 'linear'
   | 'incandescent'
   | 'halogen'
   | 'led'
   | 'pulse'
-  | 'ohmic'
-  | 'not_connected';
+  | 'ohmic';
 
 export interface DingzDeviceDimmerConfig {
   dimmers: [
