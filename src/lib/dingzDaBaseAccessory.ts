@@ -127,7 +127,6 @@ export class DingzDaBaseAccessory {
           // Set accessory to reachable and
           // updateAccessory()
           this.reachabilityState = null;
-          this.updateAccessory();
         }
       },
     );
@@ -135,13 +134,6 @@ export class DingzDaBaseAccessory {
 
   // Override these if specific actions needed on updates on restore
   protected setAccessoryInformation(): void {
-    this.log.debug(
-      'setAccessoryInformation() not implemented for',
-      this.device.accessoryClass,
-    );
-  }
-
-  protected updateAccessory(): void {
     this.log.debug(
       'setAccessoryInformation() not implemented for',
       this.device.accessoryClass,
