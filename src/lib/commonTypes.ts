@@ -48,7 +48,7 @@ export interface DeviceInfo {
   dimmerConfig?: DingzDeviceDimmerConfig;
   windowCoveringConfig?: DingzWindowCoveringConfigItem[];
   dingzInputInfo?: DingzInputInfoItem[];
-  lastUpdate?: Date;
+  configTimestamp?: number;
   accessoryClass?:
     | 'DingzDaAccessory'
     | 'MyStromSwitchAccessory'

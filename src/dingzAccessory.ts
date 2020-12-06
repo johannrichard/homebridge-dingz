@@ -8,7 +8,6 @@ import {
 } from 'homebridge';
 
 import { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
-import { Policy } from 'cockatiel';
 import simpleColorConverter from 'simple-color-converter';
 import qs from 'qs';
 import semver from 'semver';
@@ -44,12 +43,6 @@ import { DingzDaHomebridgePlatform } from './platform';
 import { PlatformEvent } from './lib/platformEventBus';
 import { DingzDaBaseAccessory } from './lib/dingzDaBaseAccessory';
 import { AccessoryEvent } from './lib/accessoryEventBus';
-
-// Policy for long running tasks, retry every hour
-const retrySlow = Policy.handleAll()
-  .orWhenResult((retry) => retry === true)
-  .retry()
-  .exponential({ initialDelay: 10000, maxDelay: 60 * 60 * 1000 });
 
 /**
  * Platform Accessory
@@ -173,12 +166,6 @@ export class DingzAccessory extends DingzDaBaseAccessory {
             this.addLEDService();
             this.addLightSensorService();
             this.addButtonServices();
-
-            // Retry at least once every day
-            retrySlow.execute(() => {
-              this.updateAccessory();
-              return true;
-            });
           }
         },
       )
@@ -278,6 +265,12 @@ export class DingzAccessory extends DingzDaBaseAccessory {
           // TODO: assign right values
           this.dingzStates.WindowCovers = state.blinds;
 
+          if (this.device.configTimestamp !== state.config.timestamp) {
+            // Push config change
+            this.device.configTimestamp = state.config.timestamp;
+            this.log.debug('Config changes, update accessories');
+            this.updateAccessory();
+          }
           // Push the Update to HomeBridge
           this.eb.emit(AccessoryEvent.PUSH_STATE_UPDATE);
           return Promise.resolve();
@@ -1049,7 +1042,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     this.log.info(
       'Update accessory',
       this.device.address,
-      '-> Check for changed config.',
+      '-> config changed.',
     );
 
     DingzAccessory.getConfigs({
