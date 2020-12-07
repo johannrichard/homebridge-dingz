@@ -59,7 +59,8 @@ export interface DingzDeviceSystemConfig {
 }
 
 // Internal representation of Dimmer in Plugin
-export type DimmerId = 0 | 1 | 2 | 3;
+export type DimmerId = 'D1' | 'D2' | 'D3' | 'D4';
+export type DimmerIndex = 0 | 1 | 2 | 3;
 export type ButtonId = '1' | '2' | '3' | '4';
 export enum ButtonState {
   OFF = 0,
@@ -77,7 +78,7 @@ export interface DimmerState {
     absolute: number;
   };
 }
-export type DimmerProps = Record<DimmerId, DimmerState>;
+export type DimmerProps = Record<DimmerIndex, DimmerState>;
 
 export interface DingzLEDState {
   on: boolean;
