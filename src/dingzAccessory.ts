@@ -138,12 +138,17 @@ export class DingzAccessory extends DingzDaBaseAccessory {
                 dingzDevices[this.device.mac],
               );
 
+              const dip_config = dingzDevices[this.device.mac].dip_config;
+              if (this.dingzDeviceInfo.dip_config !== dip_config) {
+                // DIP config has changes, invalidate config
+                this.device.configTimestamp = undefined;
+              }
+
               // Persist updated info
               this.device.hwInfo = dingzDevices[this.device.mac];
               this.accessory.context.device = this.device;
               this.dingzDeviceInfo = this.device.hwInfo as DingzDeviceInfo;
               this.baseUrl = `http://${this.device.address}`;
-              this.setAccessoryInformation();
             }
             this.setAccessoryInformation();
             this.setButtonCallbacks();
