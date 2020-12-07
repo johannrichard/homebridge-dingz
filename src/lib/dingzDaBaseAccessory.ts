@@ -125,7 +125,6 @@ export class DingzDaBaseAccessory {
           }
 
           // Set accessory to reachable and
-          // updateAccessory()
           this.reachabilityState = null;
         }
       },
