@@ -49,13 +49,15 @@ export interface DeviceInfo {
   windowCoveringConfig?: DingzWindowCoveringConfigItem[];
   dingzInputInfo?: DingzInputInfoItem[];
   configTimestamp?: number;
-  accessoryClass?:
-    | 'DingzDaAccessory'
-    | 'MyStromSwitchAccessory'
-    | 'MyStromLightbulbAccessory'
-    | 'MyStromButtonAccessory'
-    | 'MyStromPIRAccessory';
+  accessoryClass?: AccessoryClass;
 }
+
+export type AccessoryClass =
+  | 'DingzAccessory'
+  | 'MyStromSwitchAccessory'
+  | 'MyStromLightbulbAccessory'
+  | 'MyStromButtonAccessory'
+  | 'MyStromPIRAccessory';
 
 export type AccessoryType =
   | DingzAccessory

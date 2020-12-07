@@ -1,6 +1,6 @@
 import { PlatformAccessory } from 'homebridge';
 import { DingzDaHomebridgePlatform } from '../platform';
-import { DeviceInfo } from './commonTypes';
+import { DeviceInfo, AccessoryClass } from './commonTypes';
 import { PlatformEvent } from './platformEventBus';
 import { DingzLogger } from './dingzLogHelper';
 
@@ -41,6 +41,7 @@ export class DingzDaBaseAccessory {
   ) {
     // Set-up axios instances
     this.device = this.accessory.context.device;
+    this.device.accessoryClass = this.constructor.name as AccessoryClass;
     this.baseUrl = `http://${this.device.address}`;
 
     this.log = platform.log as DingzLogger;

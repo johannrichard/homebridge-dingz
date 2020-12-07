@@ -158,6 +158,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
 
       switch (context.device.accessoryClass) {
         case 'DingzDaAccessory':
+        case 'DingzAccessory':
           // add the restored accessory to the accessories cache so we can track if it has already been registered
           platformAccessory = new DingzAccessory(this, accessory);
           break;
@@ -292,7 +293,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
             token: token,
             model: info.front_hw_model ?? 'dingz',
             hwInfo: info,
-            accessoryClass: 'DingzDaAccessory',
+            accessoryClass: 'DingzAccessory',
           };
 
           const uuid = this.api.hap.uuid.generate(deviceInfo.mac);
