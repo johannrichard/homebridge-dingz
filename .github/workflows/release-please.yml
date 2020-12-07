@@ -1,0 +1,34 @@
+on:
+  push:
+    branches:
+      - main
+name: release-please
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: GoogleCloudPlatform/release-please-action@v2
+        id: release
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          release-type: node
+          package-name: release-please-action
+          changelog-types: '[{"type":"feat","section":"Features","hidden":false},{"type":"fix","section":"Bug Fixes","hidden":false},{"type":"chore","section":"Miscellaneous","hidden":false}]'
+      # # The logic below handles the npm publication:
+      # - uses: actions/checkout@v2
+      #   # these if statements ensure that a publication only occurs when
+      #   # a new release is created:
+      #   if: ${{ steps.release.outputs.release_created }}
+      # - uses: actions/setup-node@v1
+      #   with:
+      #     node-version: 12
+      #     registry-url: 'https://registry.npmjs.org'
+      #   if: ${{ steps.release.outputs.release_created }}
+      # - run: yarn
+      # - run: yarn run lint
+      # - run: yarn run build
+      #   if: ${{ steps.release.outputs.release_created }}
+      # - run: yarn publish
+      #   env:
+      #     NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
+      #   if: ${{ steps.release.outputs.release_created }}
