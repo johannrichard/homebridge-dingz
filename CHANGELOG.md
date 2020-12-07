@@ -266,6 +266,23 @@ Overall over 60 changes have been implemented, and a lot of effort and time has 
 - **dingz:** closes [#17](https://github.com/johannrichard/homebridge-dingz/issues/17): implement support for reachability ([73298a5](https://github.com/johannrichard/homebridge-dingz/commit/73298a58f2cfbf3dff2a12e146ab1d137b2aac64))
 - **dingz:** update accessory from dingz ([038a33a](https://github.com/johannrichard/homebridge-dingz/commit/038a33af27d9bcc8b9d5a8fe05a7745ee3b96e87))
 
+## [2.1.0](https://www.github.com/johannrichard/homebridge-dingz/compare/v2.0.7...v2.1.0) (2020-12-07)
+
+
+### Features
+
+* **dingz:** streamline update code, name changes ([e652324](https://www.github.com/johannrichard/homebridge-dingz/commit/e652324cf9ea49bd08a6f379e548521f3f9e5973)), closes [#103](https://www.github.com/johannrichard/homebridge-dingz/issues/103)
+* **github:** release please ([eec9644](https://www.github.com/johannrichard/homebridge-dingz/commit/eec9644b32a4bf90af3b36e2b67e9439f10c64da))
+* **platform:** consolidate auto-discovery names ([c585395](https://www.github.com/johannrichard/homebridge-dingz/commit/c585395413a2506ca5ed241007ae27287e8679a9))
+* **platform:** device naming w/ MAC ([b457310](https://www.github.com/johannrichard/homebridge-dingz/commit/b4573104e4f6efdcc9a00279cd2d2f78eed1b5d5)), closes [#146](https://www.github.com/johannrichard/homebridge-dingz/issues/146)
+
+
+### Bug Fixes
+
+* **dingz:** remove unused / unnecessary code ([75e4507](https://www.github.com/johannrichard/homebridge-dingz/commit/75e450787dc153345803e134e42c7ae34e6d8925))
+* **pir:** properly set callback url if one exists ([fa01c46](https://www.github.com/johannrichard/homebridge-dingz/commit/fa01c46ea17ce989e280869170b2707c7d069187))
+* **platform:** ensure dingz accessories have a name ([86b7d07](https://www.github.com/johannrichard/homebridge-dingz/commit/86b7d0735856e73cdd5ab3b7cc7cca71030b4b14))
+
 ## [1.7.1](https://github.com/johannrichard/homebridge-dingz/compare/v1.7.0...v1.7.1) (2020-11-14)
 
 ### Bug Fixes
