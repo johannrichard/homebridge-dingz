@@ -1,8 +1,14 @@
 # Changelog
 
-## [∞](#release-notes) Release Notes
+`v3.0.0` changes a lot under the hood but does not introduce many new features. Nevertheless, because a `release-please` has been introduced _and_ some changes are made which _might_ break your setup, the version number was bumped up.
 
-### [∞](#breaking-v20) BREAKING v2.0
+Notable changes include:
+
+- **discovery of changed configurations**: both changes of teh dip switch as well as input _and_ output settings (e.g. `not_connected`) are automatically reflected in the exposed accessories. This means that you can change the configuration of the outputs both in hardware (`DIP` switch) or software (output configs) and it will be automatically reflected in the exposed accessories.
+- **naming of (newly discovered) devices**: new devices added by auto-discovery will now more closely follow the native naming and use the type of device plus parts of the MAC address to create the name in HomeKit.
+- **further fixes**: In rare cases, if your dingz did not have a proper name set in the UI, it wouldn't run. By catching this, the plugin has become more stable.
+
+## [∞](#breaking-v20) BREAKING v2.0
 
 Version `v2.0` will _break_ your setup (but only if you use blinds). If you upgrade to this version and have a dingz with blinds configured, you will have to
 
@@ -38,7 +44,7 @@ Besides these breaking changes, `v2.0.0` will also bring a few new features to y
 
 Overall over 60 changes have been implemented, and a lot of effort and time has been invested in making the plugin more robust (and logical). It still has some rough edges, though, and things might still break.
 
-### [∞](#detailed-changes) Detailed Changes
+# [∞](#detailed-changes) Detailed Changes
 
 ## [∞](#207-2020-12-04) 2.0.7 (2020-12-04)
 
