@@ -1072,7 +1072,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
       address: this.device.address,
       token: this.device.token,
     })
-      .then(({ dingzDevices, dimmerConfig, blindConfig }) => {
+      .then(({ dingzDevices, inputConfig, dimmerConfig, blindConfig }) => {
         if (this.reachabilityState !== null) {
           this.log.warn('Device recovered from unreachable state');
           this.reachabilityState = null;
@@ -1099,7 +1099,8 @@ export class DingzAccessory extends DingzDaBaseAccessory {
               this.removeMotionService();
             }
           }
-          // Update dimmer services
+          // Update output, blind, input services
+          this.device.dingzInputInfo = inputConfig.inputs;
           this.device.dimmerConfig = dimmerConfig;
           this.device.windowCoveringConfig = blindConfig.blinds;
 
