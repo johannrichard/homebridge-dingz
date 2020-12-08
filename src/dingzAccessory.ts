@@ -480,7 +480,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
               this.log.debug('Motion Update from CALLBACK');
               this.motionService
                 ?.getCharacteristic(this.platform.Characteristic.MotionDetected)
-                .updateValue(
+                .setValue(
                   action === ButtonAction.PIR_MOTION_START ? true : false,
                 );
             }
@@ -541,10 +541,14 @@ export class DingzAccessory extends DingzDaBaseAccessory {
       ) ??
       this.accessory.addService(
         this.platform.Service.StatelessProgrammableSwitch,
-        name ?? `dingz Button ${button}`, // Name Dimmers according to WebUI, not API info
+        name ?? `Button ${button}`, // Name Dimmers according to WebUI, not API info
         button,
       );
 
+    buttonService.setCharacteristic(
+      this.platform.Characteristic.Name,
+      name ?? `Button ${button}`,
+    );
     buttonService.setCharacteristic(
       this.platform.Characteristic.ServiceLabelIndex,
       button,
