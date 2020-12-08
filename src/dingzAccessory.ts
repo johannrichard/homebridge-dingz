@@ -505,26 +505,26 @@ export class DingzAccessory extends DingzDaBaseAccessory {
               `Button ${button} (${service?.displayName}) pressed -> ${action}`,
             );
 
-            // Immediately update states after button pressed
-            this.getDeviceStateUpdate();
-
             switch (action) {
               case ButtonAction.SINGLE_PRESS:
                 service
                   ?.getCharacteristic(ProgrammableSwitchEvent)
-                  .updateValue(ProgrammableSwitchEvent.SINGLE_PRESS);
+                  .setValue(ProgrammableSwitchEvent.SINGLE_PRESS);
                 break;
               case ButtonAction.DOUBLE_PRESS:
                 service
                   ?.getCharacteristic(ProgrammableSwitchEvent)
-                  .updateValue(ProgrammableSwitchEvent.DOUBLE_PRESS);
+                  .setValue(ProgrammableSwitchEvent.DOUBLE_PRESS);
                 break;
               case ButtonAction.LONG_PRESS:
                 service
                   ?.getCharacteristic(ProgrammableSwitchEvent)
-                  .updateValue(ProgrammableSwitchEvent.LONG_PRESS);
+                  .setValue(ProgrammableSwitchEvent.LONG_PRESS);
                 break;
             }
+
+            // Immediately update states after button pressed
+            this.getDeviceStateUpdate();
           }
         }
       },
