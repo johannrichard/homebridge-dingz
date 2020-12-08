@@ -152,7 +152,17 @@ export class MyStromPIRAccessory extends DingzDaBaseAccessory {
     retrySlow.execute(() => {
       this.getButtonCallbackUrl()
         .then((callBackUrl) => {
-          if (!callBackUrl?.url.includes(this.platform.getCallbackUrl())) {
+          if (this.platform.config.callbackOverride) {
+            this.log.warn('Override callback URL ->', callBackUrl);
+            // Set the callback URL (Override!)
+            this.platform.setButtonCallbackUrl({
+              baseUrl: this.baseUrl,
+              token: this.device.token,
+              endpoints: ['pir/generic'],
+            });
+          } else if (
+            !callBackUrl?.url.includes(this.platform.getCallbackUrl())
+          ) {
             this.log.warn('Update existing callback URL ->', callBackUrl);
             // Set the callback URL (Override!)
             this.platform.setButtonCallbackUrl({

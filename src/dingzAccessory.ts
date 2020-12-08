@@ -253,7 +253,18 @@ export class DingzAccessory extends DingzDaBaseAccessory {
 
     this.getButtonCallbackUrl()
       .then((callBackUrl) => {
-        if (!callBackUrl?.url.includes(this.platform.getCallbackUrl())) {
+        if (this.platform.config.callbackOverride) {
+          this.log.warn('Override callback URL ->', callBackUrl);
+          // Set the callback URL (Override!)
+          const endpoints = this.dingzDeviceInfo.has_pir
+            ? ['generic', 'pir/single']
+            : ['generic'];
+          this.platform.setButtonCallbackUrl({
+            baseUrl: this.baseUrl,
+            token: this.device.token,
+            endpoints: endpoints,
+          });
+        } else if (!callBackUrl?.url.includes(this.platform.getCallbackUrl())) {
           this.log.warn('Update existing callback URL ->', callBackUrl);
           // Set the callback URL (Override!)
           const endpoints = this.dingzDeviceInfo.has_pir

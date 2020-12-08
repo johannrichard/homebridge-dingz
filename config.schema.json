@@ -48,6 +48,11 @@
         "type": "number",
         "description": "In order to implement button actions, the dingz plugin exposes a webserver for callbacks. By default, it listens on port 18081. Add this setting if you want to change this."
       },
+      "callbackOverride": {
+        "title": "Override generic callbacks",
+        "type": "boolean",
+        "description": "If set, actions will be overriden, that is, existing action URLs (for the 'generic' endpoint) will be <em>replaced</em> by an action to this server only. Useful for testing and/or resetting your devices if you homebridge server's address changes."
+      },
       "devices": {
         "title": "dingz Devices",
         "type": "array",
