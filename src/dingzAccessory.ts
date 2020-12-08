@@ -789,7 +789,11 @@ export class DingzAccessory extends DingzDaBaseAccessory {
       : 100;
     service
       .getCharacteristic(this.platform.Characteristic.TargetHorizontalTiltAngle)
-      .setProps({ minValue: 0, maxValue: maxTiltValue }) // dingz Maximum values
+      .setProps({
+        minValue: 0,
+        maxValue: maxTiltValue,
+        minStep: this.platform.config.minStepTiltAngle,
+      }) // dingz Maximum values
       .on(CharacteristicEventTypes.SET, this.setTiltAngle.bind(this, index));
 
     service
