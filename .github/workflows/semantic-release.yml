@@ -4,7 +4,7 @@ on:
   push:
     branches: [master, next, beta, alpha, next-major]
 jobs:
-  release-please:
+  semantic-release:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
