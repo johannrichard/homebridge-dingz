@@ -8,6 +8,56 @@ Notable changes include:
 - **naming of (newly discovered) devices**: new devices added by auto-discovery will now more closely follow the native naming and use the type of device plus parts of the MAC address to create the name in HomeKit.
 - **further fixes**: In rare cases, if your dingz did not have a proper name set in the UI, it wouldn't run. By catching this, the plugin has become more stable.
 
+## [3.0.0](https://www.github.com/johannrichard/homebridge-dingz/compare/v2.0.7...v3.0.0) (2020-12-08)
+
+
+### ⚠ BREAKING CHANGES
+
+* **dingz:** *might* break your setup
+
+### Features
+
+* **dingz:** actively identify config changes ([55c8326](https://www.github.com/johannrichard/homebridge-dingz/commit/55c832655db1bfc33e7feef73d8afdbfbedb8145))
+* **dingz:** dynamic output configuration ([47902d9](https://www.github.com/johannrichard/homebridge-dingz/commit/47902d9c85eb0d069dedc03594d2320012419728))
+* **dingz:** streamline update code, name changes ([e652324](https://www.github.com/johannrichard/homebridge-dingz/commit/e652324cf9ea49bd08a6f379e548521f3f9e5973)), closes [#103](https://www.github.com/johannrichard/homebridge-dingz/issues/103)
+* **dingz,pir:** event callback override ([a2fc989](https://www.github.com/johannrichard/homebridge-dingz/commit/a2fc989ee4848a0fe16b0004dfee692359a67399))
+* **github:** release please ([eec9644](https://www.github.com/johannrichard/homebridge-dingz/commit/eec9644b32a4bf90af3b36e2b67e9439f10c64da))
+* **platform:** consolidate auto-discovery names ([c585395](https://www.github.com/johannrichard/homebridge-dingz/commit/c585395413a2506ca5ed241007ae27287e8679a9))
+* **platform:** device naming w/ MAC ([b457310](https://www.github.com/johannrichard/homebridge-dingz/commit/b4573104e4f6efdcc9a00279cd2d2f78eed1b5d5)), closes [#146](https://www.github.com/johannrichard/homebridge-dingz/issues/146)
+
+
+### Bug Fixes
+
+* **dingz:** changes to button action handling ([66752b0](https://www.github.com/johannrichard/homebridge-dingz/commit/66752b04f946d42039c9343990fe1847bcd831a6))
+* **dingz:** don't call updateAccessory() on startup ([b4c8c3b](https://www.github.com/johannrichard/homebridge-dingz/commit/b4c8c3be811c9d3c6a85e015509f91fa669288e4))
+* **dingz:** fix (another) crash on empty / undefined sn ([795dea2](https://www.github.com/johannrichard/homebridge-dingz/commit/795dea26978cd2e238447132cae9c0296ccd6a26)), closes [#116](https://www.github.com/johannrichard/homebridge-dingz/issues/116) [homebridge/HAP-NodeJS#824](https://www.github.com/homebridge/HAP-NodeJS/issues/824)
+* **dingz:** fix accessory class names ([310c611](https://www.github.com/johannrichard/homebridge-dingz/commit/310c6117d813d26d24598c95d8aa6f4bed5b028d)), closes [#155](https://www.github.com/johannrichard/homebridge-dingz/issues/155)
+* **dingz:** motion event handling ([bee80d9](https://www.github.com/johannrichard/homebridge-dingz/commit/bee80d9179c190b16bed8d8b5571e0230bf1b10c))
+* **dingz:** remove unused / unnecessary code ([75e4507](https://www.github.com/johannrichard/homebridge-dingz/commit/75e450787dc153345803e134e42c7ae34e6d8925))
+* **dingz:** track changed dip config ([1cafb60](https://www.github.com/johannrichard/homebridge-dingz/commit/1cafb60d672408964737d60cb28b7c83b2cab751)), closes [#118](https://www.github.com/johannrichard/homebridge-dingz/issues/118)
+* **dingz:input:** dynamic config ([d720d7d](https://www.github.com/johannrichard/homebridge-dingz/commit/d720d7dbeaf10de4a6aab7e3d575530665a05c91))
+* **pir:** properly set callback url if one exists ([fa01c46](https://www.github.com/johannrichard/homebridge-dingz/commit/fa01c46ea17ce989e280869170b2707c7d069187))
+* **platform:** ensure dingz accessories have a name ([86b7d07](https://www.github.com/johannrichard/homebridge-dingz/commit/86b7d0735856e73cdd5ab3b7cc7cca71030b4b14))
+
+
+### Miscellaneous
+
+* **changelog:** release-please fitness ([de46ef7](https://www.github.com/johannrichard/homebridge-dingz/commit/de46ef7fb4d981ee6d307bafbc830d973497c4c5))
+
+
+### Build system
+
+* **deps:** cleanup dependencies ([f6c28a7](https://www.github.com/johannrichard/homebridge-dingz/commit/f6c28a7d0e2e5780ae0c631d1d63c05a6b796b46))
+* **deps-dev:** add depcheck ([de9ae44](https://www.github.com/johannrichard/homebridge-dingz/commit/de9ae44b72814c1d5e02592561c5cb7d0b37eb82))
+* **deps-dev:** bump @typescript-eslint/eslint-plugin ([4c228d7](https://www.github.com/johannrichard/homebridge-dingz/commit/4c228d7a0a4d24e281e671824bac6429d9ce88b0))
+* **deps-dev:** bump @typescript-eslint/parser from 4.9.0 to 4.9.1 ([f117b68](https://www.github.com/johannrichard/homebridge-dingz/commit/f117b682014d0e858c347952405ef2f23f2eb264))
+* **deps-dev:** bump eslint from 6.8.0 to 7.15.0 ([3d630cf](https://www.github.com/johannrichard/homebridge-dingz/commit/3d630cf2583eacb5dea84b80e4bc3fbfe9731b8d))
+* **deps-dev:** bump husky from 4.3.0 to 4.3.5 ([9e32c49](https://www.github.com/johannrichard/homebridge-dingz/commit/9e32c49b32bb022e4cbd7bf95e270a736f8cd549))
+* **deps-dev:** bump lint-staged from 10.5.2 to 10.5.3 ([4d94909](https://www.github.com/johannrichard/homebridge-dingz/commit/4d949090f887173be6853f635c2bfd64e45e3dbd))
+* **deps-dev:** clean up dependencies ([03f3073](https://www.github.com/johannrichard/homebridge-dingz/commit/03f3073a0563f03f947e27450a6c11084c058931))
+* **github:** release please ([c26acd7](https://www.github.com/johannrichard/homebridge-dingz/commit/c26acd713d9aeacb1aa486a8dcd5feedb7515220))
+* **ts:** typescript module declaration fix ([e4d9306](https://www.github.com/johannrichard/homebridge-dingz/commit/e4d9306a5fa246d6fa98265169583c08636a5c00))
+
 ## [∞](#breaking-v20) BREAKING v2.0
 
 Version `v2.0` will _break_ your setup (but only if you use blinds). If you upgrade to this version and have a dingz with blinds configured, you will have to
