@@ -138,12 +138,17 @@ export class DingzAccessory extends DingzDaBaseAccessory {
                 dingzDevices[this.device.mac],
               );
 
+              const dip_config = dingzDevices[this.device.mac].dip_config;
+              if (this.dingzDeviceInfo.dip_config !== dip_config) {
+                // DIP config has changes, invalidate config
+                this.device.configTimestamp = undefined;
+              }
+
               // Persist updated info
               this.device.hwInfo = dingzDevices[this.device.mac];
               this.accessory.context.device = this.device;
               this.dingzDeviceInfo = this.device.hwInfo as DingzDeviceInfo;
               this.baseUrl = `http://${this.device.address}`;
-              this.setAccessoryInformation();
             }
             this.setAccessoryInformation();
             this.setButtonCallbacks();
@@ -248,7 +253,18 @@ export class DingzAccessory extends DingzDaBaseAccessory {
 
     this.getButtonCallbackUrl()
       .then((callBackUrl) => {
-        if (!callBackUrl?.url.includes(this.platform.getCallbackUrl())) {
+        if (this.platform.config.callbackOverride) {
+          this.log.warn('Override callback URL ->', callBackUrl);
+          // Set the callback URL (Override!)
+          const endpoints = this.dingzDeviceInfo.has_pir
+            ? ['generic', 'pir/single']
+            : ['generic'];
+          this.platform.setButtonCallbackUrl({
+            baseUrl: this.baseUrl,
+            token: this.device.token,
+            endpoints: endpoints,
+          });
+        } else if (!callBackUrl?.url.includes(this.platform.getCallbackUrl())) {
           this.log.warn('Update existing callback URL ->', callBackUrl);
           // Set the callback URL (Override!)
           const endpoints = this.dingzDeviceInfo.has_pir
@@ -475,7 +491,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
               this.log.debug('Motion Update from CALLBACK');
               this.motionService
                 ?.getCharacteristic(this.platform.Characteristic.MotionDetected)
-                .updateValue(
+                .setValue(
                   action === ButtonAction.PIR_MOTION_START ? true : false,
                 );
             }
@@ -500,26 +516,26 @@ export class DingzAccessory extends DingzDaBaseAccessory {
               `Button ${button} (${service?.displayName}) pressed -> ${action}`,
             );
 
-            // Immediately update states after button pressed
-            this.getDeviceStateUpdate();
-
             switch (action) {
               case ButtonAction.SINGLE_PRESS:
                 service
                   ?.getCharacteristic(ProgrammableSwitchEvent)
-                  .updateValue(ProgrammableSwitchEvent.SINGLE_PRESS);
+                  .setValue(ProgrammableSwitchEvent.SINGLE_PRESS);
                 break;
               case ButtonAction.DOUBLE_PRESS:
                 service
                   ?.getCharacteristic(ProgrammableSwitchEvent)
-                  .updateValue(ProgrammableSwitchEvent.DOUBLE_PRESS);
+                  .setValue(ProgrammableSwitchEvent.DOUBLE_PRESS);
                 break;
               case ButtonAction.LONG_PRESS:
                 service
                   ?.getCharacteristic(ProgrammableSwitchEvent)
-                  .updateValue(ProgrammableSwitchEvent.LONG_PRESS);
+                  .setValue(ProgrammableSwitchEvent.LONG_PRESS);
                 break;
             }
+
+            // Immediately update states after button pressed
+            this.getDeviceStateUpdate();
           }
         }
       },
@@ -536,10 +552,14 @@ export class DingzAccessory extends DingzDaBaseAccessory {
       ) ??
       this.accessory.addService(
         this.platform.Service.StatelessProgrammableSwitch,
-        name ?? `dingz Button ${button}`, // Name Dimmers according to WebUI, not API info
+        name ?? `Button ${button}`, // Name Dimmers according to WebUI, not API info
         button,
       );
 
+    buttonService.setCharacteristic(
+      this.platform.Characteristic.Name,
+      name ?? `Button ${button}`,
+    );
     buttonService.setCharacteristic(
       this.platform.Characteristic.ServiceLabelIndex,
       button,
@@ -1052,7 +1072,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
       address: this.device.address,
       token: this.device.token,
     })
-      .then(({ dingzDevices, dimmerConfig, blindConfig }) => {
+      .then(({ dingzDevices, inputConfig, dimmerConfig, blindConfig }) => {
         if (this.reachabilityState !== null) {
           this.log.warn('Device recovered from unreachable state');
           this.reachabilityState = null;
@@ -1079,7 +1099,8 @@ export class DingzAccessory extends DingzDaBaseAccessory {
               this.removeMotionService();
             }
           }
-          // Update dimmer services
+          // Update output, blind, input services
+          this.device.dingzInputInfo = inputConfig.inputs;
           this.device.dimmerConfig = dimmerConfig;
           this.device.windowCoveringConfig = blindConfig.blinds;
 
