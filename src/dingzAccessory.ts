@@ -207,9 +207,12 @@ export class DingzAccessory extends DingzDaBaseAccessory {
       `Attempting to set SerialNumber (which can not be empty) -> front_sn: <${this.dingzDeviceInfo.front_sn}>`,
     );
     const serialNumber: string =
-      this.dingzDeviceInfo.front_sn === ''
-        ? this.device.mac // MAC will always be defined for a correct device
-        : this.dingzDeviceInfo.front_sn;
+      !this.dingzDeviceInfo.front_sn || '' === this.dingzDeviceInfo.front_sn
+        ? this.device.mac
+        : this.dingzDeviceInfo.front_sn; // MAC will always be defined for a correct device
+    this.log.debug(
+      `Setting SerialNumber (which can not be empty) -> : <${serialNumber}>`,
+    );
     this.accessory
       .getService(this.platform.Service.AccessoryInformation)!
       .setCharacteristic(this.platform.Characteristic.Manufacturer, 'iolo AG')
