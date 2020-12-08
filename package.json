@@ -90,7 +90,8 @@
   "depcheck": {
     "ignores": [
       "@commitlint/*",
-      "eslint*"
+      "eslint*",
+      "semantic-release"
     ]
   }
 }
