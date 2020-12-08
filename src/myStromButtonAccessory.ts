@@ -99,10 +99,6 @@ export class MyStromButtonAccessory extends DingzDaBaseAccessory {
         this.platform.Characteristic.ProgrammableSwitchOutputState,
       )
       .on(CharacteristicEventTypes.GET, this.getButtonState.bind(this));
-    // .on(
-    //   CharacteristicEventTypes.SET,
-    //   this.setSwitchButtonState.bind(this, button),
-    // );
 
     const batteryService: Service =
       this.accessory.getService(this.platform.Service.BatteryService) ??
