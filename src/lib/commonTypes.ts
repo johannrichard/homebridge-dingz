@@ -9,13 +9,14 @@ import { MyStromPIRAccessory } from '../myStromPIRAccessory';
 
 // Types
 import {
-  DingzDeviceInfo,
+  DingzDeviceHWInfo,
   DingzInputInfoItem,
   DingzDeviceSystemConfig,
   DingzDeviceDimmerConfig,
   DingzWindowCoveringConfigItem,
+  DingzButtonConfig,
 } from './dingzTypes';
-import { MyStromDeviceInfo } from './myStromTypes';
+import { MyStromDeviceInfo as MyStromDeviceHWInfo } from './myStromTypes';
 
 export enum DeviceTypes {
   MYSTROM_SWITCH_CHV1 = 101,
@@ -37,16 +38,18 @@ export enum ButtonAction {
   PIR_MOTION_STOP = '9',
 }
 
+// FIXME: Create separate inherited interfaces
 export interface DeviceInfo {
   name: string;
   address: string;
   mac: string;
   model?: string;
   token?: string;
-  hwInfo?: DingzDeviceInfo | MyStromDeviceInfo;
+  hwInfo?: DingzDeviceHWInfo | MyStromDeviceHWInfo;
   systemConfig?: DingzDeviceSystemConfig;
   dimmerConfig?: DingzDeviceDimmerConfig;
   windowCoveringConfig?: DingzWindowCoveringConfigItem[];
+  buttonConfig?: DingzButtonConfig;
   dingzInputInfo?: DingzInputInfoItem[];
   configTimestamp?: number;
   accessoryClass?: AccessoryClass;

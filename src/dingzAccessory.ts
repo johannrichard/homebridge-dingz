@@ -20,8 +20,7 @@ import {
   DimmerId,
   DimmerIndex,
   DimmerState,
-  DimmerTimer,
-  DingzDeviceInfo,
+  DingzDeviceHWInfo,
   DingzDevices,
   DingzDeviceSystemConfig,
   DingzDeviceDimmerConfig,
@@ -31,7 +30,6 @@ import {
   DingzMotionData,
   DingzState,
   WindowCoveringIndex,
-  WindowCoveringTimer,
   WindowCoveringStates,
   DingzDeviceWindowCoveringConfig,
   DingzWindowCoveringConfigItem,
@@ -51,7 +49,7 @@ import { AccessoryEvent } from './lib/accessoryEventBus';
  */
 export class DingzAccessory extends DingzDaBaseAccessory {
   private motionService?: Service;
-  private dingzDeviceInfo: DingzDeviceInfo;
+  private dingzDeviceInfo: DingzDeviceHWInfo;
 
   // Todo: Make proper internal representation
   private dingzStates = {
@@ -78,8 +76,6 @@ export class DingzAccessory extends DingzDaBaseAccessory {
   };
 
   private motionTimer?: NodeJS.Timer;
-  private dimmerTimers = {} as DimmerTimer;
-  private windowCoveringTimers = {} as WindowCoveringTimer;
 
   /**
    * DingzAccessory constructor
@@ -93,7 +89,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     super(_platform, _accessory);
 
     // Set base info
-    this.dingzDeviceInfo = this.device.hwInfo as DingzDeviceInfo;
+    this.dingzDeviceInfo = this.device.hwInfo as DingzDeviceHWInfo;
 
     // Remove Reachability service if still present
     const bridgingService: Service | undefined = this.accessory.getService(
@@ -147,7 +143,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
               // Persist updated info
               this.device.hwInfo = dingzDevices[this.device.mac];
               this.accessory.context.device = this.device;
-              this.dingzDeviceInfo = this.device.hwInfo as DingzDeviceInfo;
+              this.dingzDeviceInfo = this.device.hwInfo as DingzDeviceHWInfo;
               this.baseUrl = `http://${this.device.address}`;
             }
             this.setAccessoryInformation();
@@ -1081,10 +1077,10 @@ export class DingzAccessory extends DingzDaBaseAccessory {
           this.reachabilityState = null;
         }
 
-        let updatedDingzDeviceInfo: DingzDeviceInfo | undefined;
+        let updatedDingzDeviceInfo: DingzDeviceHWInfo | undefined;
         try {
-          const currentDingzDeviceInfo: DingzDeviceInfo = this.accessory.context
-            .device.dingzDeviceInfo;
+          const currentDingzDeviceInfo: DingzDeviceHWInfo = this.accessory
+            .context.device.dingzDeviceInfo;
           updatedDingzDeviceInfo =
             dingzDevices[this.device.mac] ?? currentDingzDeviceInfo;
 

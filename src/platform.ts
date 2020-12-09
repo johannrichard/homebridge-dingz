@@ -18,7 +18,7 @@ import * as os from 'os';
 import e = require('express');
 
 // Internal Types
-import { ButtonId, DingzDeviceInfo } from './lib/dingzTypes';
+import { ButtonId, DingzDeviceHWInfo } from './lib/dingzTypes';
 import { MyStromDeviceInfo, MyStromSwitchTypes } from './lib/myStromTypes';
 
 import {
@@ -274,7 +274,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
         if (typeof dingzDevices !== 'undefined') {
           const keys = Object.keys(dingzDevices);
           const mac = keys[0]; // keys[0]
-          const info: DingzDeviceInfo = dingzDevices[mac];
+          const info: DingzDeviceHWInfo = dingzDevices[mac];
 
           if (info.type !== 'dingz') {
             throw new InvalidTypeError(
