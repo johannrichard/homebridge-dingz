@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events';
-import { ButtonAction, DeviceInfo } from './commonTypes';
-import { ButtonId } from './dingzTypes';
+import { DeviceInfo, ButtonAction } from './commonTypes';
+import { ButtonId, DingzDeviceConfig } from './dingzTypes';
 
 // Platform elements
 // EVENT TYPES
@@ -23,6 +23,10 @@ export declare interface PlatformEventBus {
     event: PlatformEvent.UPDATE_DEVICE_INFO,
     listener: (deviceInfo: DeviceInfo) => void,
   ): this;
+  on(
+    event: PlatformEvent.UPDATE_DEVICE_INFO,
+    listener: (deviceInfo: DeviceInfo, deviceConfig: DingzDeviceConfig) => void,
+  ): this;
   on(event: PlatformEvent.REQUEST_STATE_UPDATE, listener: () => void): this;
 
   emit(
@@ -40,6 +44,11 @@ export declare interface PlatformEventBus {
   emit(
     event: PlatformEvent.UPDATE_DEVICE_INFO,
     deviceInfo: DeviceInfo,
+  ): boolean;
+  emit(
+    event: PlatformEvent.UPDATE_DEVICE_INFO,
+    deviceInfo: DeviceInfo,
+    deviceConfig: DingzDeviceConfig,
   ): boolean;
   emit(event: PlatformEvent.REQUEST_STATE_UPDATE): boolean;
 }

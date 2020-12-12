@@ -20,20 +20,15 @@ import {
   DimmerId,
   DimmerIndex,
   DimmerState,
-  DimmerTimer,
-  DingzDeviceInfo,
+  DingzDeviceHWInfo,
+  DingzDeviceConfig,
   DingzDevices,
-  DingzDeviceSystemConfig,
-  DingzDeviceDimmerConfig,
-  DingzDeviceInputConfig,
   DingzDimmerConfigValue,
   DingzLEDState,
   DingzMotionData,
   DingzState,
   WindowCoveringIndex,
-  WindowCoveringTimer,
   WindowCoveringStates,
-  DingzDeviceWindowCoveringConfig,
   DingzWindowCoveringConfigItem,
 } from './lib/dingzTypes';
 import { ButtonAction, AccessoryActionUrl } from './lib/commonTypes';
@@ -50,9 +45,8 @@ import { AccessoryEvent } from './lib/accessoryEventBus';
  * Each accessory may expose multiple services of different service types.
  */
 export class DingzAccessory extends DingzDaBaseAccessory {
+  private mustInit = false;
   private motionService?: Service;
-  private dingzDeviceInfo: DingzDeviceInfo;
-
   // Todo: Make proper internal representation
   private dingzStates = {
     // Outputs
@@ -78,8 +72,10 @@ export class DingzAccessory extends DingzDaBaseAccessory {
   };
 
   private motionTimer?: NodeJS.Timer;
-  private dimmerTimers = {} as DimmerTimer;
-  private windowCoveringTimers = {} as WindowCoveringTimer;
+
+  private config: DingzDeviceConfig;
+  private hw: DingzDeviceHWInfo;
+  private configTimestamp = 0;
 
   /**
    * DingzAccessory constructor
@@ -92,8 +88,20 @@ export class DingzAccessory extends DingzDaBaseAccessory {
   ) {
     super(_platform, _accessory);
 
-    // Set base info
-    this.dingzDeviceInfo = this.device.hwInfo as DingzDeviceInfo;
+    // _accessory will contain the current config
+    // regardless of wheter it is a new or a restored accessory
+    this.config = this.accessory.context.config;
+    this.hw = this.device.hwInfo as DingzDeviceHWInfo;
+
+    if (this.config) {
+      // only run 'reconfigureAccessory()' is we have a config
+      this.log.info('Config available, initialization started');
+      this.mustInit = false;
+      this.reconfigureAccessory(true);
+    } else {
+      this.log.warn('Config not available, initialization deferred');
+      this.mustInit = true;
+    }
 
     // Remove Reachability service if still present
     const bridgingService: Service | undefined = this.accessory.getService(
@@ -102,79 +110,6 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     if (bridgingService) {
       this.accessory.removeService(bridgingService);
     }
-
-    // Add Dimmers, Blinds etc.
-    this.log.info(
-      'Adding output devices for ',
-      this.device.address,
-      ' -> [...]',
-    );
-
-    DingzAccessory.getConfigs({
-      address: this.device.address,
-      token: this.device.token,
-    })
-      .then(
-        ({
-          dingzDevices,
-          inputConfig,
-          systemConfig,
-          dimmerConfig,
-          blindConfig,
-        }) => {
-          if (
-            inputConfig?.inputs &&
-            dimmerConfig?.dimmers &&
-            dimmerConfig?.dimmers.length === 4
-          ) {
-            this.device.dingzInputInfo = inputConfig.inputs;
-            this.device.systemConfig = systemConfig;
-            this.device.dimmerConfig = dimmerConfig;
-            this.device.windowCoveringConfig = blindConfig.blinds;
-
-            if (dingzDevices[this.device.mac]) {
-              this.log.debug(
-                'Updated device info received -> update accessory',
-                dingzDevices[this.device.mac],
-              );
-
-              const dip_config = dingzDevices[this.device.mac].dip_config;
-              if (this.dingzDeviceInfo.dip_config !== dip_config) {
-                // DIP config has changes, invalidate config
-                this.device.configTimestamp = undefined;
-              }
-
-              // Persist updated info
-              this.device.hwInfo = dingzDevices[this.device.mac];
-              this.accessory.context.device = this.device;
-              this.dingzDeviceInfo = this.device.hwInfo as DingzDeviceInfo;
-              this.baseUrl = `http://${this.device.address}`;
-            }
-            this.setAccessoryInformation();
-            this.setButtonCallbacks();
-
-            // Now we have what we need and can create the services …
-            this.configureOutputs(true);
-            this.configureBlinds(true);
-
-            // Add auxiliary services (Motion, Temperature)
-            if (this.dingzDeviceInfo.has_pir) {
-              // dingz has a Motion sensor -- let's create it
-              this.addMotionService();
-            } else {
-              this.log.info('This dingz has no Motion sensor.');
-              this.removeMotionService();
-            }
-            // dingz has a temperature sensor and an LED,
-            // make these available here
-            this.addTemperatureService();
-            this.addLEDService();
-            this.addLightSensorService();
-            this.addButtonServices();
-          }
-        },
-      )
-      .catch(this.handleRequestErrors.bind(this));
   }
 
   private setOutputHandlers(outputService: Service, index: number) {
@@ -201,15 +136,17 @@ export class DingzAccessory extends DingzDaBaseAccessory {
    * - Manufacturer
    * - S/N etc.
    */
-  protected setAccessoryInformation(): void {
+  protected reconfigureAccessory(init = false): void {
+    // Set base info
+    // Persist updated info
     // Sanity check for "empty" SerialNumber
     this.log.debug(
-      `Attempting to set SerialNumber (which can not be empty) -> front_sn: <${this.dingzDeviceInfo.front_sn}>`,
+      `Attempting to set SerialNumber (which can not be empty) -> front_sn: <${this.hw.front_sn}>`,
     );
     const serialNumber: string =
-      !this.dingzDeviceInfo.front_sn || '' === this.dingzDeviceInfo.front_sn
+      !this.hw.front_sn || '' === this.hw.front_sn
         ? this.device.mac
-        : this.dingzDeviceInfo.front_sn; // MAC will always be defined for a correct device
+        : this.hw.front_sn; // MAC will always be defined for a correct device
     this.log.debug(
       `Setting SerialNumber (which can not be empty) -> : <${serialNumber}>`,
     );
@@ -235,21 +172,49 @@ export class DingzAccessory extends DingzDaBaseAccessory {
       )
       .setCharacteristic(
         this.platform.Characteristic.FirmwareRevision,
-        this.dingzDeviceInfo.fw_version ?? 'Unknown',
+        this.hw.fw_version ?? 'Unknown',
       )
       .setCharacteristic(
         this.platform.Characteristic.HardwareRevision,
-        this.dingzDeviceInfo.hw_version_puck ?? 'Unknown',
+        this.hw.hw_version_puck ?? 'Unknown',
       )
       .setCharacteristic(
         this.platform.Characteristic.SerialNumber,
         serialNumber,
       );
+
+    // Add Dimmers, Blinds etc.
+    this.log.info(
+      'Adding output devices for ',
+      this.device.address,
+      ' -> [...]',
+    );
+
+    this.setButtonCallbacks();
+
+    // Now we have what we need and can create the services …
+    this.configureOutputs(init);
+    this.configureBlinds(init);
+    this.configureButtons(init);
+
+    // Add auxiliary services (Motion, Temperature)
+    if (this.hw.has_pir) {
+      // dingz has a Motion sensor -- let's create it
+      this.addMotionService();
+    } else {
+      this.log.info('This dingz has no Motion sensor.');
+      this.removeMotionService();
+    }
+    // dingz has a temperature sensor and an LED,
+    // make these available here
+    this.addTemperatureService();
+    this.addLEDService();
+    this.addLightSensorService();
   }
 
   private setButtonCallbacks() {
     // Only necessary for firmware version < 1.2.x
-    if (semver.lt(this.dingzDeviceInfo.fw_version, '1.2.0')) {
+    if (semver.lt(this.hw.fw_version, '1.2.0')) {
       this.log.debug('Enable PIR callback for older firmware revisions');
       this.enablePIRCallback();
     }
@@ -259,9 +224,12 @@ export class DingzAccessory extends DingzDaBaseAccessory {
         if (this.platform.config.callbackOverride) {
           this.log.warn('Override callback URL ->', callBackUrl);
           // Set the callback URL (Override!)
-          const endpoints = this.dingzDeviceInfo.has_pir
-            ? ['generic', 'pir/single']
-            : ['generic'];
+          const endpoints = // Only set `pir/single` for older FW
+            this.hw.has_pir && semver.lt(this.hw.fw_version, '1.2.0')
+              ? ['generic', 'pir/single']
+              : this.hw.has_pir
+              ? ['generic', 'pir/generic', 'pir/rise', 'pir/fall']
+              : ['generic'];
           this.platform.setButtonCallbackUrl({
             baseUrl: this.baseUrl,
             token: this.device.token,
@@ -270,9 +238,12 @@ export class DingzAccessory extends DingzDaBaseAccessory {
         } else if (!callBackUrl?.url.includes(this.platform.getCallbackUrl())) {
           this.log.warn('Update existing callback URL ->', callBackUrl);
           // Set the callback URL (Override!)
-          const endpoints = this.dingzDeviceInfo.has_pir
-            ? ['generic', 'pir/single']
-            : ['generic'];
+          const endpoints =
+            this.hw.has_pir && semver.lt(this.hw.fw_version, '1.2.0')
+              ? ['generic', 'pir/single']
+              : this.hw.has_pir
+              ? ['generic', 'pir/generic', 'pir/rise', 'pir/fall']
+              : ['generic'];
           this.platform.setButtonCallbackUrl({
             baseUrl: this.baseUrl,
             token: this.device.token,
@@ -287,7 +258,6 @@ export class DingzAccessory extends DingzDaBaseAccessory {
   }
 
   // Get updated device info and update the corresponding values
-  // TODO: #103, #116, #120, #123 -- fetch state for all device elements
   protected getDeviceStateUpdate(): Promise<void> {
     return this.getDeviceState()
       .then((state) => {
@@ -299,14 +269,39 @@ export class DingzAccessory extends DingzDaBaseAccessory {
           this.dingzStates.Temperature = state.sensors.room_temperature;
           this.dingzStates.Brightness = state.sensors.brightness;
           // Lamellas
-          // TODO: assign right values
           this.dingzStates.WindowCovers = state.blinds;
 
-          if (this.device.configTimestamp !== state.config.timestamp) {
+          if (
+            this.reachabilityState ||
+            this.configTimestamp !== state.config.timestamp
+          ) {
             // Push config change
-            this.device.configTimestamp = state.config.timestamp;
             this.log.debug('Config changes, update accessories');
-            this.updateAccessory();
+            DingzAccessory.getConfig({
+              address: this.device.address,
+              token: this.device.token,
+            })
+              .then(({ dingzDevices, dingzConfig }) => {
+                const newHw = dingzDevices[this.device.mac];
+
+                this.configTimestamp = state.config.timestamp;
+                if (this.mustInit) {
+                  this.log.warn('Deferred initialization started');
+                  this.mustInit = false;
+                  this.device.hwInfo = newHw;
+                  this.hw = newHw;
+                  this.config = dingzConfig;
+                  this.accessory.context.device = this.device;
+                  this.accessory.context.config = this.config;
+                  this.reconfigureAccessory(true);
+                } else {
+                  this.updateAccessory({
+                    deviceHwInfo: newHw,
+                    dingzConfig: dingzConfig,
+                  });
+                }
+              })
+              .catch(this.handleRequestErrors.bind(this));
           }
           // Push the Update to HomeBridge
           this.eb.emit(AccessoryEvent.PUSH_STATE_UPDATE);
@@ -316,6 +311,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
         }
       })
       .catch((e: Error) => {
+        // invalidate config
         return Promise.reject(e);
       });
   }
@@ -384,11 +380,11 @@ export class DingzAccessory extends DingzDaBaseAccessory {
   private configureBlinds(initHandlers = false): void {
     // This is the block for the multiple services (Dimmers 1-4 / Blinds 1-2 / Buttons 1-4)
     // If "Input" is set, Dimmer 1 won't work. We have to take this into account
-    if (!this.device.windowCoveringConfig) {
+    if (!this.config.windowCoveringConfig) {
       return;
     }
 
-    const w: DingzWindowCoveringConfigItem[] | undefined = this.device
+    const w: DingzWindowCoveringConfigItem[] | undefined = this.config
       .windowCoveringConfig;
 
     /** DIP Switch
@@ -398,7 +394,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
      * 3			1/2/3/4L		(4 lights)
      */
 
-    switch (this.dingzDeviceInfo.dip_config) {
+    switch (this.hw.dip_config) {
       case 3:
         // DIP = 0: D0, D1, D2, D3; (Subtypes) (Unless Input, then D1, D2, D3)
         // D1, D2, D3
@@ -472,12 +468,29 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     }
   }
 
-  private addButtonServices() {
+  private configureButtons(initHandler = false) {
     // Create Buttons
-    this.addButtonService('dingz Button 1', '1');
-    this.addButtonService('dingz Button 2', '2');
-    this.addButtonService('dingz Button 3', '3');
-    this.addButtonService('dingz Button 4', '4');
+    const b = this.config.buttonConfig.buttons;
+    this.reconfigureButtonService({
+      name: b[0].name && b[0].name !== '' ? b[0].name : 'Button 1',
+      button: '1',
+      initHandler,
+    });
+    this.reconfigureButtonService({
+      name: b[1].name && b[1].name !== '' ? b[1].name : 'Button 2',
+      button: '2',
+      initHandler,
+    });
+    this.reconfigureButtonService({
+      name: b[2].name && b[2].name !== '' ? b[2].name : 'Button 3',
+      button: '3',
+      initHandler,
+    });
+    this.reconfigureButtonService({
+      name: b[3].name && b[3].name !== '' ? b[3].name : 'Button 4',
+      button: '4',
+      initHandler,
+    });
 
     // Add Event Listeners
     this.platform.eb.on(
@@ -489,15 +502,13 @@ export class DingzAccessory extends DingzDaBaseAccessory {
           );
           if (button === '5') {
             // PUSH MOTION
-            if (!(this.platform.config.motionPoller ?? true)) {
-              this.log.debug(`Button ${button} Motion -> ${action}`);
-              this.log.debug('Motion Update from CALLBACK');
-              this.motionService
-                ?.getCharacteristic(this.platform.Characteristic.MotionDetected)
-                .setValue(
-                  action === ButtonAction.PIR_MOTION_START ? true : false,
-                );
-            }
+            this.log.info(`Button ${button} Motion -> ${action}`);
+            this.log.debug('Motion Update from CALLBACK');
+            this.motionService
+              ?.getCharacteristic(this.platform.Characteristic.MotionDetected)
+              .setValue(
+                action === ButtonAction.PIR_MOTION_START ? true : false,
+              );
           } else {
             this.dingzStates.Buttons[button].event = action ?? 1;
             this.dingzStates.Buttons[button].state =
@@ -545,8 +556,16 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     );
   }
 
-  private addButtonService(name: string, button: ButtonId): Service {
-    this.log.debug('Adding Button Service ->', name, ' -> ', button);
+  private reconfigureButtonService({
+    name,
+    button,
+    initHandler = false,
+  }: {
+    name: string;
+    button: ButtonId;
+    initHandler?: boolean | undefined;
+  }): Service {
+    this.log.info('Adding Button Service ->', name, ' -> ', button);
 
     const buttonService =
       this.accessory.getServiceById(
@@ -573,18 +592,22 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     // StatelessProgrammableSwitch (i.e., a button), can be read out -- and used --
     // by third-party apps for HomeKite, allowing users to create automations
     // not only based on the button events, but also based on a state that's toggled
-    buttonService
-      .getCharacteristic(
-        this.platform.Characteristic.ProgrammableSwitchOutputState,
-      )
-      .on(
-        CharacteristicEventTypes.GET,
-        this.getSwitchButtonState.bind(this, button),
-      );
-    buttonService
-      .getCharacteristic(this.platform.Characteristic.ProgrammableSwitchEvent)
-      .on(CharacteristicEventTypes.GET, this.getButtonState.bind(this, button));
-
+    if (initHandler) {
+      buttonService
+        .getCharacteristic(
+          this.platform.Characteristic.ProgrammableSwitchOutputState,
+        )
+        .on(
+          CharacteristicEventTypes.GET,
+          this.getSwitchButtonState.bind(this, button),
+        );
+      buttonService
+        .getCharacteristic(this.platform.Characteristic.ProgrammableSwitchEvent)
+        .on(
+          CharacteristicEventTypes.GET,
+          this.getButtonState.bind(this, button),
+        );
+    }
     return buttonService;
   }
 
@@ -784,12 +807,14 @@ export class DingzAccessory extends DingzDaBaseAccessory {
 
     // Set min/max Values
     // FIXME: Implement different lamella/blind modes #24
-    const maxTiltValue = semver.lt(this.dingzDeviceInfo.fw_version, '1.2.0')
-      ? 90
-      : 100;
+    const maxTiltValue = semver.lt(this.hw.fw_version, '1.2.0') ? 90 : 100;
     service
       .getCharacteristic(this.platform.Characteristic.TargetHorizontalTiltAngle)
-      .setProps({ minValue: 0, maxValue: maxTiltValue }) // dingz Maximum values
+      .setProps({
+        minValue: 0,
+        maxValue: maxTiltValue,
+        minStep: this.platform.config.minStepTiltAngle,
+      }) // dingz Maximum values
       .on(CharacteristicEventTypes.SET, this.setTiltAngle.bind(this, index));
 
     service
@@ -815,7 +840,6 @@ export class DingzAccessory extends DingzDaBaseAccessory {
   }
 
   // Window Covering functions
-  // TODO: Use available information to more accurately set WindowCovering State
   private updateWindowCoveringState(
     index: WindowCoveringIndex,
     service: Service,
@@ -830,9 +854,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
        * - We're moving by pressing the "up/down" buttons in the UI or Hardware [x]
        */
 
-      const maxTiltValue = semver.lt(this.dingzDeviceInfo.fw_version, '1.2.0')
-        ? 90
-        : 100;
+      const maxTiltValue = semver.lt(this.hw.fw_version, '1.2.0') ? 90 : 100;
 
       service
         .getCharacteristic(this.platform.Characteristic.TargetPosition)
@@ -1004,6 +1026,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
    * Motion Service Methods
    */
   private addMotionService() {
+    this.log.info('addMotionService() -> adding motion service');
     this.motionService =
       this.accessory.getService(this.platform.Service.MotionSensor) ??
       this.accessory.addService(this.platform.Service.MotionSensor);
@@ -1058,64 +1081,59 @@ export class DingzAccessory extends DingzDaBaseAccessory {
       this.platform.Service.MotionSensor,
     );
     if (service) {
-      this.log.info('Removing Motion service ->', service.displayName);
+      this.log.info(
+        'removeMotionService(): Removing Motion service ->',
+        service.displayName,
+      );
       this.accessory.removeService(service);
     }
   }
 
   // Updates the Accessory (e.g. if the config has changed)
-  protected updateAccessory(): void {
-    this.log.info(
-      'Update accessory',
-      this.device.address,
-      '-> config changed.',
+  protected updateAccessory({
+    deviceHwInfo,
+    dingzConfig,
+  }: {
+    deviceHwInfo: DingzDeviceHWInfo;
+    dingzConfig: DingzDeviceConfig;
+  }): void {
+    if (this.reachabilityState !== null) {
+      this.log.warn('Device recovered from unreachable state');
+      this.reachabilityState = null;
+    }
+
+    this.log.warn(
+      `Config changed -> will update accessory (${this.device.address})`,
     );
-
-    DingzAccessory.getConfigs({
-      address: this.device.address,
-      token: this.device.token,
-    })
-      .then(({ dingzDevices, inputConfig, dimmerConfig, blindConfig }) => {
-        if (this.reachabilityState !== null) {
-          this.log.warn('Device recovered from unreachable state');
-          this.reachabilityState = null;
+    let updatedDingzDeviceInfo: DingzDeviceHWInfo | undefined;
+    try {
+      updatedDingzDeviceInfo = deviceHwInfo ?? this.hw;
+      if (this.hw && this.hw.has_pir !== updatedDingzDeviceInfo.has_pir) {
+        // Update PIR Service
+        this.log.warn('Update accessory -> PIR config changed.');
+        if (updatedDingzDeviceInfo.has_pir) {
+          // Add PIR service
+          this.addMotionService();
+        } else {
+          // Remove PIR service
+          this.removeMotionService();
         }
+      }
+      // Update output, blind, input services
+      this.device.hwInfo = deviceHwInfo;
+      this.hw = deviceHwInfo;
+      this.config = dingzConfig;
+      this.accessory.context.device = this.device;
+      this.accessory.context.config = this.config;
 
-        let updatedDingzDeviceInfo: DingzDeviceInfo | undefined;
-        try {
-          const currentDingzDeviceInfo: DingzDeviceInfo = this.accessory.context
-            .device.dingzDeviceInfo;
-          updatedDingzDeviceInfo =
-            dingzDevices[this.device.mac] ?? currentDingzDeviceInfo;
-
-          if (
-            currentDingzDeviceInfo &&
-            currentDingzDeviceInfo.has_pir !== updatedDingzDeviceInfo.has_pir
-          ) {
-            // Update PIR Service
-            this.log.warn('Update accessory -> PIR config changed.');
-            if (updatedDingzDeviceInfo.has_pir) {
-              // Add PIR service
-              this.addMotionService();
-            } else {
-              // Remove PIR service
-              this.removeMotionService();
-            }
-          }
-          // Update output, blind, input services
-          this.device.dingzInputInfo = inputConfig.inputs;
-          this.device.dimmerConfig = dimmerConfig;
-          this.device.windowCoveringConfig = blindConfig.blinds;
-
-          this.configureOutputs();
-          this.configureBlinds();
-        } finally {
-          if (updatedDingzDeviceInfo) {
-            this.accessory.context.device.dingzDeviceInfo = updatedDingzDeviceInfo;
-          }
-        }
-      })
-      .catch(this.handleRequestErrors.bind(this));
+      this.configureOutputs();
+      this.configureBlinds();
+      this.configureButtons();
+    } finally {
+      if (updatedDingzDeviceInfo) {
+        this.accessory.context.device.dingzDeviceInfo = updatedDingzDeviceInfo;
+      }
+    }
   }
 
   /**
@@ -1123,15 +1141,15 @@ export class DingzAccessory extends DingzDaBaseAccessory {
    */
   private configureOutputs(initHandlers = false): void {
     // Figure out what we have here
-    if (!this.device.dimmerConfig) {
+    if (!this.config || (this.config && !this.config.dimmerConfig)) {
       return;
     }
 
-    const d = this.device.dimmerConfig.dimmers;
-    const i = this.device.dingzInputInfo;
-    switch (this.dingzDeviceInfo.dip_config) {
+    const d = this.config.dimmerConfig.dimmers;
+    const i = this.config.inputConfig.inputs;
+    switch (this.hw.dip_config) {
       case 3:
-        if (i && !i[0].active && d[0].output !== 'not_connected') {
+        if (i[0] && !i[0].active && d[0].output !== 'not_connected') {
           this.reconfigureOutput({
             name: d[0].name ?? 'Output 1',
             id: 'D1',
@@ -1183,7 +1201,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
         });
         break;
       case 1:
-        if (i && !i[0].active && d[0].output !== 'not_connected') {
+        if (i[0] && !i[0].active && d[0].output !== 'not_connected') {
           this.reconfigureOutput({
             name: d[0].name ?? 'Output 1',
             id: 'D1',
@@ -1229,7 +1247,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
   }
 
   private addLEDService() {
-    const systemConfig = this.device.systemConfig;
+    const systemConfig = this.config.systemConfig;
     // get the LightBulb service if it exists, otherwise create a new LightBulb service
     // you can create multiple services for each accessory
     const ledService =
@@ -1339,7 +1357,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
   }
 
   // Get Input & Dimmer Config
-  public static async getConfigs({
+  public static async getConfig({
     address,
     token,
   }: {
@@ -1348,20 +1366,18 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     caller?: string;
   }): Promise<{
     dingzDevices: DingzDevices;
-    systemConfig: DingzDeviceSystemConfig;
-    inputConfig: DingzDeviceInputConfig;
-    dimmerConfig: DingzDeviceDimmerConfig;
-    blindConfig: DingzDeviceWindowCoveringConfig;
+    dingzConfig: DingzDeviceConfig;
   }> {
     const deviceInfoEndpoint = '/api/v1/device';
     const deviceConfigEndpoint = '/api/v1/system_config';
     const inputConfigEndpoint = '/api/v1/input_config';
     const dimmerConfigEndpoint = '/api/v1/dimmer_config';
     const blindConfigEndpoint = '/api/v1/blind_config';
+    const buttonConfigEndpoint = '/api/v1/button_config';
 
     const config: AxiosRequestConfig = {
       baseURL: `http://${address}`,
-      timeout: RETRY_TIMEOUT * 1000, // devices can be a bit slow
+      timeout: RETRY_TIMEOUT * 1500, // devices can be a bit slow, give more time for config
       headers: { Token: token ?? '' },
     };
     const [
@@ -1370,12 +1386,14 @@ export class DingzAccessory extends DingzDaBaseAccessory {
       inputConfigResponse,
       dimmerConfigResponse,
       blindConfigResponse,
+      buttonConfigResponse,
     ] = await Promise.all<AxiosResponse>([
       DingzAccessory.axios.get(deviceInfoEndpoint, config),
       DingzAccessory.axios.get(deviceConfigEndpoint, config),
       DingzAccessory.axios.get(inputConfigEndpoint, config),
       DingzAccessory.axios.get(dimmerConfigEndpoint, config),
       DingzAccessory.axios.get(blindConfigEndpoint, config),
+      DingzAccessory.axios.get(buttonConfigEndpoint, config),
     ]).catch((e: AxiosError) => {
       if (e.code === 'ECONNABORTED') {
         throw new DeviceNotReachableError(
@@ -1389,12 +1407,16 @@ export class DingzAccessory extends DingzDaBaseAccessory {
         throw e;
       }
     });
-    return {
-      dingzDevices: dingzDevicesResponse.data,
+    const deviceConfig: DingzDeviceConfig = {
       systemConfig: systemConfigResponse.data,
       inputConfig: inputConfigResponse.data,
       dimmerConfig: dimmerConfigResponse.data,
-      blindConfig: blindConfigResponse.data,
+      windowCoveringConfig: blindConfigResponse.data,
+      buttonConfig: buttonConfigResponse.data,
+    };
+    return {
+      dingzDevices: dingzDevicesResponse.data,
+      dingzConfig: deviceConfig,
     };
   }
 
@@ -1459,7 +1481,6 @@ export class DingzAccessory extends DingzDaBaseAccessory {
       });
   }
 
-  // TODO: Feedback on API doc
   /**
    * Set the LED on the dingz
    * @param callback: Characteristic callback
@@ -1535,28 +1556,5 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     this.request
       .post(setActionEndpoint)
       .catch(this.handleRequestErrors.bind(this));
-  }
-
-  /**
-   * compare two configs
-   */
-  private outputConfigChanged({
-    oldConfig,
-    newConfig,
-  }: {
-    oldConfig: DingzDeviceDimmerConfig | undefined;
-    newConfig: DingzDeviceDimmerConfig;
-  }): boolean {
-    return JSON.stringify(oldConfig) !== JSON.stringify(newConfig);
-  }
-
-  private blindConfigChanged({
-    oldConfig,
-    newConfig,
-  }: {
-    oldConfig: DingzWindowCoveringConfigItem[] | undefined;
-    newConfig: DingzWindowCoveringConfigItem[];
-  }): boolean {
-    return JSON.stringify(oldConfig) !== JSON.stringify(newConfig);
   }
 }

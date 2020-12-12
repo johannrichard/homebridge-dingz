@@ -7,7 +7,7 @@ import type {
 import { Policy } from 'cockatiel';
 
 import { DingzDaHomebridgePlatform } from './platform';
-import { MyStromDeviceInfo } from './lib/myStromTypes';
+import { MyStromDeviceHWInfo } from './lib/myStromTypes';
 import { ButtonAction } from './lib/commonTypes';
 import { PlatformEvent } from './lib/platformEventBus';
 import { ButtonState } from './lib/dingzTypes';
@@ -26,7 +26,7 @@ const retrySlow = Policy.handleAll()
  */
 export class MyStromButtonAccessory extends DingzDaBaseAccessory {
   // Eventually replaced by:
-  private mystromDeviceInfo: MyStromDeviceInfo;
+  private mystromDeviceInfo: MyStromDeviceHWInfo;
   private buttonState?: ButtonAction;
   private switchButtonState?: ButtonState;
   private batteryLevel: Nullable<number> = 0;
@@ -39,7 +39,7 @@ export class MyStromButtonAccessory extends DingzDaBaseAccessory {
     super(_platform, _accessory);
 
     // Set Base URL
-    this.mystromDeviceInfo = this.device.hwInfo as MyStromDeviceInfo;
+    this.mystromDeviceInfo = this.device.hwInfo as MyStromDeviceHWInfo;
 
     this.log.debug(
       'Setting informationService Characteristics ->',
@@ -167,7 +167,7 @@ export class MyStromButtonAccessory extends DingzDaBaseAccessory {
                 })
                 .then((data) => {
                   if (typeof data !== 'undefined') {
-                    const info = data as MyStromDeviceInfo;
+                    const info = data as MyStromDeviceHWInfo;
                     this.accessory.context.device.hwInfo = info;
                     if (batteryService) {
                       batteryService

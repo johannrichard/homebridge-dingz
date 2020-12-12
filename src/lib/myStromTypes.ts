@@ -1,4 +1,5 @@
 // Common Type since it's used by platform.ts to
+
 // work - around some bugs in different FW versions
 export const MyStromSwitchTypes = {
   WS2: 'CH v2',
@@ -6,7 +7,7 @@ export const MyStromSwitchTypes = {
   WSEU: 'EU',
   '107': 'EU',
 };
-export interface MyStromDeviceInfo {
+export interface MyStromDeviceHWInfo {
   version: string;
   mac: string;
   type: string | number;
@@ -21,7 +22,6 @@ export interface MyStromDeviceInfo {
   connected: boolean;
   signal: boolean;
 }
-
 export interface MyStromSwitchReport {
   power: number;
   relay: boolean;
