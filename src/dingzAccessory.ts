@@ -258,7 +258,6 @@ export class DingzAccessory extends DingzDaBaseAccessory {
   }
 
   // Get updated device info and update the corresponding values
-  // TODO: #103, #116, #120, #123 -- fetch state for all device elements
   protected getDeviceStateUpdate(): Promise<void> {
     return this.getDeviceState()
       .then((state) => {
@@ -270,7 +269,6 @@ export class DingzAccessory extends DingzDaBaseAccessory {
           this.dingzStates.Temperature = state.sensors.room_temperature;
           this.dingzStates.Brightness = state.sensors.brightness;
           // Lamellas
-          // TODO: assign right values
           this.dingzStates.WindowCovers = state.blinds;
 
           if (
@@ -844,7 +842,6 @@ export class DingzAccessory extends DingzDaBaseAccessory {
   }
 
   // Window Covering functions
-  // TODO: Use available information to more accurately set WindowCovering State
   private updateWindowCoveringState(
     index: WindowCoveringIndex,
     service: Service,
@@ -1482,7 +1479,6 @@ export class DingzAccessory extends DingzDaBaseAccessory {
       });
   }
 
-  // TODO: Feedback on API doc
   /**
    * Set the LED on the dingz
    * @param callback: Characteristic callback

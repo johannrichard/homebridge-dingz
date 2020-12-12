@@ -43,7 +43,6 @@ import {
   STATE_UPDATE_INTERVAL,
 } from './settings';
 
-// TODO: Some refactoring for better event handling, cleanup of the code and separation of concerns
 import { PlatformEventBus, PlatformEvent } from './lib/platformEventBus';
 
 // Accessory classes
@@ -146,7 +145,6 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
       accessory.context.device.accessoryClass,
     );
 
-    // TODO: Remove the device if it has vanished for too long (i.e. restore was not possible for a long time)
     const context = accessory.context;
     if (context.device && context.device.accessoryClass) {
       this.log.debug(
