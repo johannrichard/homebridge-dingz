@@ -502,15 +502,13 @@ export class DingzAccessory extends DingzDaBaseAccessory {
           );
           if (button === '5') {
             // PUSH MOTION
-            if (!(this.platform.config.motionPoller ?? true)) {
-              this.log.debug(`Button ${button} Motion -> ${action}`);
-              this.log.debug('Motion Update from CALLBACK');
-              this.motionService
-                ?.getCharacteristic(this.platform.Characteristic.MotionDetected)
-                .setValue(
-                  action === ButtonAction.PIR_MOTION_START ? true : false,
-                );
-            }
+            this.log.info(`Button ${button} Motion -> ${action}`);
+            this.log.debug('Motion Update from CALLBACK');
+            this.motionService
+              ?.getCharacteristic(this.platform.Characteristic.MotionDetected)
+              .setValue(
+                action === ButtonAction.PIR_MOTION_START ? true : false,
+              );
           } else {
             this.dingzStates.Buttons[button].event = action ?? 1;
             this.dingzStates.Buttons[button].state =
@@ -1028,6 +1026,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
    * Motion Service Methods
    */
   private addMotionService() {
+    this.log.info('addMotionService() -> adding motion service');
     this.motionService =
       this.accessory.getService(this.platform.Service.MotionSensor) ??
       this.accessory.addService(this.platform.Service.MotionSensor);
@@ -1082,7 +1081,10 @@ export class DingzAccessory extends DingzDaBaseAccessory {
       this.platform.Service.MotionSensor,
     );
     if (service) {
-      this.log.info('Removing Motion service ->', service.displayName);
+      this.log.info(
+        'removeMotionService(): Removing Motion service ->',
+        service.displayName,
+      );
       this.accessory.removeService(service);
     }
   }
