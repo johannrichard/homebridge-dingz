@@ -163,14 +163,16 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
           // config options, we first retrieve
           // the config and then restor it with the
           // current config
-          retryWithBreaker.execute(() =>
-            this.addDingzDevice({
-              address: context.device.address,
-              name: context.device.name,
-              token: context.device.token ?? this.config.globalToken,
-              existingAccessory: accessory,
-            }),
-          );
+          retryWithBreaker
+            .execute(() =>
+              this.addDingzDevice({
+                address: context.device.address,
+                name: context.device.name,
+                token: context.device.token ?? this.config.globalToken,
+                existingAccessory: accessory,
+              }),
+            )
+            .catch((e) => this.handleError.bind(this, e));
           break;
         case 'MyStromSwitchAccessory':
           this.accessories[accessory.UUID] = new MyStromSwitchAccessory(
@@ -336,20 +338,25 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
             accessory.context.device = deviceInfo;
             accessory.context.config = dingzConfig;
 
-            // create the accessory handler (which will add services as needed)
-            // this is imported from `dingzDaAccessory.ts`
-            const dingzDaAccessory = new DingzAccessory(this, accessory);
-
             // link the accessory to your platform
-            if (!existingAccessory) {
-              this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [
-                accessory,
-              ]);
-            }
+            try {
+              if (!existingAccessory) {
+                this.api.registerPlatformAccessories(
+                  PLUGIN_NAME,
+                  PLATFORM_NAME,
+                  [accessory],
+                );
+              }
 
-            // push into accessory cache
-            this.accessories[uuid] = dingzDaAccessory;
-            return dingzDaAccessory;
+              // create the accessory handler (which will add services as needed)
+              // this is imported from `dingzDaAccessory.ts`
+              // push into accessory cache
+              const dingzDaAccessory = new DingzAccessory(this, accessory);
+              this.accessories[uuid] = dingzDaAccessory;
+              return dingzDaAccessory;
+            } catch (e) {
+              return Promise.reject();
+            }
           } else {
             this.log.warn('Accessory already initialized');
 
@@ -369,6 +376,13 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
             `addDingzDevice() --> Device not reachable -> ${name} (${address})`,
           );
         }
+        if (existingAccessory) {
+          // Here we have a problem: The accessory has been loaded but not initialized
+          const dingzDaAccessory = new DingzAccessory(this, existingAccessory);
+          this.accessories[existingAccessory.UUID] = dingzDaAccessory;
+          return dingzDaAccessory;
+        }
+
         return Promise.reject(e);
       });
   }
@@ -816,7 +830,8 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
               })
               .then(() => {
                 this.discovered.set(mac, remoteInfo);
-              });
+              })
+              .catch((e) => this.handleError.bind(this, e));
             break;
           default:
             this.log.warn(`Unknown device: ${t}`);
