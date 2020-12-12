@@ -883,7 +883,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
     try {
       process.on('exit', () => {
         try {
-          discoverySocket.disconnect();
+          discoverySocket.close();
         } catch (e) {
           if (e.code === 'ERR_SOCKET_DGRAM_NOT_CONNECTED') {
             this.log.info('Socket already destroyed');
@@ -899,7 +899,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
       setTimeout(() => {
         this.log.info('Stopping discovery');
         try {
-          discoverySocket.disconnect();
+          discoverySocket.close();
         } catch (e) {
           if (e.code === 'ERR_SOCKET_DGRAM_NOT_CONNECTED') {
             this.log.info('Socket already destroyed');
