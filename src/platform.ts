@@ -163,14 +163,16 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
           // config options, we first retrieve
           // the config and then restor it with the
           // current config
-          retryWithBreaker.execute(() =>
-            this.addDingzDevice({
-              address: context.device.address,
-              name: context.device.name,
-              token: context.device.token ?? this.config.globalToken,
-              existingAccessory: accessory,
-            }),
-          );
+          retryWithBreaker
+            .execute(() =>
+              this.addDingzDevice({
+                address: context.device.address,
+                name: context.device.name,
+                token: context.device.token ?? this.config.globalToken,
+                existingAccessory: accessory,
+              }),
+            )
+            .catch((e) => this.handleError.bind(this, e));
           break;
         case 'MyStromSwitchAccessory':
           this.accessories[accessory.UUID] = new MyStromSwitchAccessory(
@@ -336,22 +338,31 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
             accessory.context.device = deviceInfo;
             accessory.context.config = dingzConfig;
 
-            // create the accessory handler (which will add services as needed)
-            // this is imported from `dingzDaAccessory.ts`
-            const dingzDaAccessory = new DingzAccessory(this, accessory);
-
             // link the accessory to your platform
-            if (!existingAccessory) {
-              this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [
-                accessory,
-              ]);
-            }
+            try {
+              if (!existingAccessory) {
+                this.api.registerPlatformAccessories(
+                  PLUGIN_NAME,
+                  PLATFORM_NAME,
+                  [accessory],
+                );
+              }
 
-            // push into accessory cache
-            this.accessories[uuid] = dingzDaAccessory;
-            return dingzDaAccessory;
+              // create the accessory handler (which will add services as needed)
+              // this is imported from `dingzDaAccessory.ts`
+              // push into accessory cache
+              const dingzDaAccessory = new DingzAccessory(this, accessory);
+              this.accessories[uuid] = dingzDaAccessory;
+              return dingzDaAccessory;
+            } catch (e) {
+              return Promise.reject();
+            }
           } else {
-            this.log.warn('Accessory already initialized');
+            this.log.warn(
+              'Accessory',
+              chalk.magentaBright(`[${deviceInfo.name}]`),
+              `(${address}) already initialized`,
+            );
 
             // Update Names et al. from new device info
             // Might be needed e.g. when IP address changes
@@ -369,6 +380,13 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
             `addDingzDevice() --> Device not reachable -> ${name} (${address})`,
           );
         }
+        if (existingAccessory) {
+          // Here we have a problem: The accessory has been loaded but not initialized
+          const dingzDaAccessory = new DingzAccessory(this, existingAccessory);
+          this.accessories[existingAccessory.UUID] = dingzDaAccessory;
+          return dingzDaAccessory;
+        }
+
         return Promise.reject(e);
       });
   }
@@ -451,7 +469,11 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
           this.accessories[uuid] = myStromSwitchAccessory;
           return true;
         } else {
-          this.log.warn('Accessory already initialized');
+          this.log.warn(
+            'Accessory',
+            chalk.magentaBright(`[${deviceInfo.name}]`),
+            `(${address}) already initialized`,
+          );
           this.eb.emit(PlatformEvent.UPDATE_DEVICE_INFO, deviceInfo);
           this.accessories[uuid].identify();
           return true;
@@ -535,7 +557,11 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
           this.accessories[uuid] = myStromLightbulbAccessory;
           return true;
         } else {
-          this.log.warn('Accessory already initialized');
+          this.log.warn(
+            'Accessory',
+            chalk.magentaBright(`[${deviceInfo.name}]`),
+            `(${address}) already initialized`,
+          );
           this.eb.emit(PlatformEvent.UPDATE_DEVICE_INFO, deviceInfo);
           this.accessories[uuid].identify();
           return true;
@@ -621,7 +647,11 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
           this.accessories[uuid] = myStromPIRAccessory;
           return true;
         } else {
-          this.log.warn('Accessory already initialized');
+          this.log.warn(
+            'Accessory',
+            chalk.magentaBright(`[${deviceInfo.name}]`),
+            `(${address}) already initialized`,
+          );
           this.eb.emit(PlatformEvent.UPDATE_DEVICE_INFO, deviceInfo);
           this.accessories[uuid].identify();
           return true;
@@ -711,83 +741,15 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
 
       return true;
     } else {
-      this.log.warn('Accessory already initialized');
+      this.log.warn(
+        'Accessory',
+        chalk.magentaBright(`[${deviceInfo.name}]`),
+        `(${address}) already initialized`,
+      );
       this.eb.emit(PlatformEvent.UPDATE_DEVICE_INFO, deviceInfo);
       this.accessories[uuid].identify();
       return true;
     }
-
-    return false;
-    // Won't work ...
-    const success = this.getMyStromDeviceInfo({
-      address,
-      token,
-    }).then((data) => {
-      if (typeof data !== 'undefined') {
-        const info = data as MyStromDeviceHWInfo;
-
-        if (info.type !== 104) {
-          throw new InvalidTypeError(
-            `Device ${name} at ${address} is of the wrong type (${info.type} instead of "myStrom Lightbulb")`,
-          );
-        }
-
-        const deviceInfo: DeviceInfo = {
-          name: info.name ?? name,
-          address: address,
-          mac: info.mac.toUpperCase(),
-          token: token,
-          model: '102',
-          hwInfo: info,
-          accessoryClass: 'MyStromLightbulbAccessory',
-        };
-
-        const uuid = this.api.hap.uuid.generate(deviceInfo.mac);
-
-        // check that the device has not already been registered by checking the
-        // cached devices we stored in the `configureAccessory` method above
-        if (!this.accessories[uuid]) {
-          this.log.info('Registering new accessory:', deviceInfo.name);
-          // create a new accessory
-          const accessory = new this.api.platformAccessory(
-            deviceInfo.name,
-            uuid,
-          );
-
-          // store a copy of the device object in the `accessory.context`
-          // the `context` property can be used to store any data about the accessory you may need
-          accessory.context.device = deviceInfo;
-
-          // create the accessory handler (which will add services as needed)
-          // this is imported from `dingzDaAccessory.ts`
-          const myStromLightbulbAccessory = new MyStromLightbulbAccessory(
-            this,
-            accessory,
-          );
-
-          // link the accessory to your platform
-          this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [
-            accessory,
-          ]);
-
-          // push into accessory cache
-          this.accessories[uuid] = myStromLightbulbAccessory;
-          return true;
-        } else {
-          this.log.warn('Accessory already initialized');
-          this.accessories[uuid].identify();
-          return true;
-        }
-      }
-    });
-
-    // Nothing found, throw error
-    if (!success) {
-      throw new DeviceNotReachableError(
-        `Device not found -> ${name} (${address})`,
-      );
-    }
-    return true;
   }
 
   private datagramMessageHandler(msg: Uint8Array, remoteInfo: RemoteInfo) {
@@ -888,7 +850,8 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
               })
               .then(() => {
                 this.discovered.set(mac, remoteInfo);
-              });
+              })
+              .catch((e) => this.handleError.bind(this, e));
             break;
           default:
             this.log.warn(`Unknown device: ${t}`);
@@ -916,13 +879,37 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
       type: 'udp4',
     });
 
-    discoverySocket.on('message', this.datagramMessageHandler.bind(this));
     this.log.info('Starting discovery');
-    discoverySocket.bind(DINGZ_DISCOVERY_PORT);
-    setTimeout(() => {
-      this.log.info('Stopping discovery');
-      discoverySocket.close();
-    }, 600000); // Discover for 10 min then stop
+    try {
+      process.on('exit', () => {
+        try {
+          discoverySocket.close();
+        } catch (e) {
+          if (e.code === 'ERR_SOCKET_DGRAM_NOT_CONNECTED') {
+            this.log.info('Socket already destroyed');
+          }
+        } finally {
+          this.log.info('Process ended, socket destroyed');
+        }
+      });
+
+      discoverySocket
+        .on('message', this.datagramMessageHandler.bind(this))
+        .bind(DINGZ_DISCOVERY_PORT);
+      setTimeout(() => {
+        this.log.info('Stopping discovery');
+        try {
+          discoverySocket.close();
+        } catch (e) {
+          if (e.code === 'ERR_SOCKET_DGRAM_NOT_CONNECTED') {
+            this.log.info('Socket already destroyed');
+          }
+        }
+      }, 600000); // Discover for 10 min then stop
+      // Make sure we close the socket even if we get killed
+    } catch (e) {
+      this.log.error(e.code + ' Socket error');
+    }
     return true;
   }
 

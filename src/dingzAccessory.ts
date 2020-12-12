@@ -129,12 +129,6 @@ export class DingzAccessory extends DingzDaBaseAccessory {
   protected reconfigureAccessory(init = false): void {
     // Set base info
     // Persist updated info
-
-    this.updateAccessory({
-      deviceHwInfo: this.hw,
-      dingzConfig: this.config,
-    });
-
     // Sanity check for "empty" SerialNumber
     this.log.debug(
       `Attempting to set SerialNumber (which can not be empty) -> front_sn: <${this.hw.front_sn}>`,
@@ -1082,10 +1076,8 @@ export class DingzAccessory extends DingzDaBaseAccessory {
       this.reachabilityState = null;
     }
 
-    this.log.info(
-      'Update accessory',
-      this.device.address,
-      '-> config changed.',
+    this.log.warn(
+      `Config changed -> will update accessory (${this.device.address})`,
     );
     let updatedDingzDeviceInfo: DingzDeviceHWInfo | undefined;
     try {

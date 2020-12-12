@@ -48,8 +48,10 @@ export class DingzDaBaseAccessory {
     this.device = this.accessory.context.device;
     this.baseUrl = `http://${this.device.address}`;
 
-    this.log = platform.log as DingzLogger;
-    this.log.dingzPrefix = this.accessory.context.name;
+    this.log = new DingzLogger(
+      this.accessory.context.device.name,
+      platform.log,
+    );
 
     // Set the update interval in seconds
     const updateInterval: number =
@@ -87,14 +89,14 @@ export class DingzDaBaseAccessory {
             // Update reachability -- obviously, we're online again
             this.reachabilityState = null;
             this.log.info(
-              chalk.green('ALIVE'),
+              chalk.green('[ALIVE]'),
               `Device --> recovered from unreachable state (${this.device.address})`,
             );
           }
         })
         .catch((e) => {
           this.log.warn(
-            chalk.yellow('DEAD'),
+            chalk.red('[DEAD]'),
             `Device --> entered unreachable state (${this.device.address})`,
           );
           this.handleRequestErrors(e);
