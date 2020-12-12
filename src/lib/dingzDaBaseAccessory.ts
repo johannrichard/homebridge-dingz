@@ -48,8 +48,10 @@ export class DingzDaBaseAccessory {
     this.device = this.accessory.context.device;
     this.baseUrl = `http://${this.device.address}`;
 
-    this.log = platform.log as DingzLogger;
-    this.log.dingzPrefix = this.accessory.context.name;
+    this.log = new DingzLogger(
+      this.accessory.context.device.name,
+      platform.log,
+    );
 
     // Set the update interval in seconds
     const updateInterval: number =

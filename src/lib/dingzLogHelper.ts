@@ -4,15 +4,15 @@ import chalk from 'chalk';
 /**
  * Drop-in helper class used to prefix debug messages with a colored dingz name
  */
-export class DingzLogger extends Logger {
-  public dingzPrefix = '[Device]';
+export class DingzLogger {
   /**
    *
    * @param logger the homebridge logger to do the actual logging
    */
-  constructor(private readonly logger: Logger) {
-    super();
-  }
+  constructor(
+    private readonly dingzPrefix: string,
+    private readonly logger: Logger,
+  ) {}
 
   /**
    * Logger.log like method
@@ -32,25 +32,25 @@ export class DingzLogger extends Logger {
     // DEBUG is enabled or not.
     // TODO: Wait for [homebridge/homebridge#2732](https://github.com/homebridge/homebridge/pull/2732)
     if (logLevel === LogLevel.DEBUG) {
-      super.debug(message, ...parameters);
+      this.logger.debug(message, ...parameters);
     } else {
-      super.log(logLevel, message, ...parameters);
+      this.logger.log(logLevel, message, ...parameters);
     }
   }
 
   public info(message: string, ...parameters: unknown[]): void {
-    super.info(LogLevel.INFO, `${message}`, ...parameters);
+    this.log(LogLevel.INFO, `${message}`, ...parameters);
   }
 
   public warn(message: string, ...parameters: unknown[]): void {
-    super.log(LogLevel.WARN, `${message}`, ...parameters);
+    this.log(LogLevel.WARN, `${message}`, ...parameters);
   }
 
   public error(message: string, ...parameters: unknown[]): void {
-    super.log(LogLevel.ERROR, `${message}`, ...parameters);
+    this.log(LogLevel.ERROR, `${message}`, ...parameters);
   }
 
   public debug(message: string, ...parameters: unknown[]): void {
-    super.log(LogLevel.DEBUG, `${message}`, ...parameters);
+    this.log(LogLevel.DEBUG, `${message}`, ...parameters);
   }
 }

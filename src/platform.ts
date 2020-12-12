@@ -358,7 +358,11 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
               return Promise.reject();
             }
           } else {
-            this.log.warn('Accessory already initialized');
+            this.log.warn(
+              'Accessory',
+              chalk.magentaBright(`[${deviceInfo.name}]`),
+              `(${address}) already initialized`,
+            );
 
             // Update Names et al. from new device info
             // Might be needed e.g. when IP address changes
@@ -465,7 +469,11 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
           this.accessories[uuid] = myStromSwitchAccessory;
           return true;
         } else {
-          this.log.warn('Accessory already initialized');
+          this.log.warn(
+            'Accessory',
+            chalk.magentaBright(`[${deviceInfo.name}]`),
+            `(${address}) already initialized`,
+          );
           this.eb.emit(PlatformEvent.UPDATE_DEVICE_INFO, deviceInfo);
           this.accessories[uuid].identify();
           return true;
@@ -549,7 +557,11 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
           this.accessories[uuid] = myStromLightbulbAccessory;
           return true;
         } else {
-          this.log.warn('Accessory already initialized');
+          this.log.warn(
+            'Accessory',
+            chalk.magentaBright(`[${deviceInfo.name}]`),
+            `(${address}) already initialized`,
+          );
           this.eb.emit(PlatformEvent.UPDATE_DEVICE_INFO, deviceInfo);
           this.accessories[uuid].identify();
           return true;
@@ -635,7 +647,11 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
           this.accessories[uuid] = myStromPIRAccessory;
           return true;
         } else {
-          this.log.warn('Accessory already initialized');
+          this.log.warn(
+            'Accessory',
+            chalk.magentaBright(`[${deviceInfo.name}]`),
+            `(${address}) already initialized`,
+          );
           this.eb.emit(PlatformEvent.UPDATE_DEVICE_INFO, deviceInfo);
           this.accessories[uuid].identify();
           return true;
@@ -725,7 +741,11 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
 
       return true;
     } else {
-      this.log.warn('Accessory already initialized');
+      this.log.warn(
+        'Accessory',
+        chalk.magentaBright(`[${deviceInfo.name}]`),
+        `(${address}) already initialized`,
+      );
       this.eb.emit(PlatformEvent.UPDATE_DEVICE_INFO, deviceInfo);
       this.accessories[uuid].identify();
       return true;
