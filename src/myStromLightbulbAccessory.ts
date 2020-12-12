@@ -11,7 +11,10 @@ import simpleColorConverter from 'simple-color-converter';
 import qs from 'qs';
 
 import { DingzDaHomebridgePlatform } from './platform';
-import { MyStromDeviceInfo, MyStromLightbulbReport } from './lib/myStromTypes';
+import {
+  MyStromDeviceHWInfo,
+  MyStromLightbulbReport,
+} from './lib/myStromTypes';
 import { DingzDaBaseAccessory } from './lib/dingzDaBaseAccessory';
 
 /**
@@ -23,7 +26,7 @@ export class MyStromLightbulbAccessory extends DingzDaBaseAccessory {
   private lightbulbService: Service;
 
   // Eventually replaced by:
-  private mystromDeviceInfo: MyStromDeviceInfo;
+  private mystromDeviceInfo: MyStromDeviceHWInfo;
 
   private lightbulbState = {
     on: false,
@@ -41,7 +44,7 @@ export class MyStromLightbulbAccessory extends DingzDaBaseAccessory {
   ) {
     super(_platform, _accessory);
     // Set Base URL
-    this.mystromDeviceInfo = this.device.hwInfo as MyStromDeviceInfo;
+    this.mystromDeviceInfo = this.device.hwInfo as MyStromDeviceHWInfo;
 
     this.platform.log.debug(
       'Setting informationService Characteristics ->',

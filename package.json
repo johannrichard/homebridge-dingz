@@ -23,7 +23,7 @@
     "watch": "yarn run build && yarn link && nodemon",
     "build": "rimraf ./dist && tsc",
     "depcheck": "npx depcheck",
-    "prepublishOnly": "yarn run lint && yarn run build",
+    "prepublishOnly": "yarn",
     "prepare": "yarn run lint && yarn run build && yarn run depcheck",
     "changelog": "changelog --exclude ci,chore",
     "release:nightly": "yarn version --prerelease --preid nightly --no-git-tag-version && yarn publish --tag nightly",
@@ -55,6 +55,7 @@
   "devDependencies": {
     "@commitlint/cli": "^11.0.0",
     "@commitlint/config-conventional": "^11.0.0",
+    "@semantic-release/changelog": "^5.0.1",
     "@types/body-parser": "^1.19.0",
     "@types/express": "^4.17.6",
     "@types/node": "^14.0.13",
@@ -87,11 +88,21 @@
       "git add"
     ]
   },
+  "release": {
+    "plugins": [
+      "@semantic-release/commit-analyzer",
+      "@semantic-release/release-notes-generator",
+      "@semantic-release/changelog",
+      "@semantic-release/npm",
+      "@semantic-release/github"
+    ]
+  },
   "depcheck": {
     "ignores": [
       "@commitlint/*",
       "eslint*",
-      "semantic-release"
+      "semantic-release",
+      "@semantic-release/*"
     ]
   }
 }

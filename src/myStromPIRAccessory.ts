@@ -8,7 +8,7 @@ import { Policy } from 'cockatiel';
 import { Mutex } from 'async-mutex';
 
 import { DingzDaHomebridgePlatform } from './platform';
-import { MyStromDeviceInfo, MyStromPIRReport } from './lib/myStromTypes';
+import { MyStromDeviceHWInfo, MyStromPIRReport } from './lib/myStromTypes';
 import { AccessoryActionUrl, ButtonAction } from './lib/commonTypes';
 import { DeviceNotReachableError } from './lib/errors';
 import { PlatformEvent } from './lib/platformEventBus';
@@ -32,7 +32,7 @@ export class MyStromPIRAccessory extends DingzDaBaseAccessory {
   private lightService: Service;
 
   // Eventually replaced by:
-  private mystromDeviceInfo: MyStromDeviceInfo;
+  private mystromDeviceInfo: MyStromDeviceHWInfo;
 
   private pirState = {
     motion: false,
@@ -46,7 +46,7 @@ export class MyStromPIRAccessory extends DingzDaBaseAccessory {
   ) {
     super(_platform, _accessory);
     // Set Base URL
-    this.mystromDeviceInfo = this.device.hwInfo as MyStromDeviceInfo;
+    this.mystromDeviceInfo = this.device.hwInfo as MyStromDeviceHWInfo;
 
     this.log.debug(
       'Setting informationService Characteristics ->',

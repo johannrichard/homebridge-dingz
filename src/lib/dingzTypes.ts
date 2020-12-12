@@ -25,10 +25,10 @@ export interface DingzInputInfoItem {
 }
 
 export interface DingzDevices {
-  [mac: string]: DingzDeviceInfo;
+  [mac: string]: DingzDeviceHWInfo;
 }
 
-export interface DingzDeviceInfo {
+export interface DingzDeviceHWInfo {
   // Only those values we need
   type: 'dingz';
   fw_version: string;
@@ -43,6 +43,15 @@ export interface DingzDeviceInfo {
   front_sn: string;
 }
 
+export interface DingzDeviceConfig {
+  systemConfig: DingzDeviceSystemConfig;
+  dimmerConfig: DingzDeviceDimmerConfig;
+  windowCoveringConfig: DingzWindowCoveringConfigItem[];
+  buttonConfig: DingzButtonConfig;
+  inputConfig: {
+    inputs: DingzInputInfoItem[];
+  };
+}
 export interface DingzDeviceSystemConfig {
   allow_reset: boolean;
   allow_wps: boolean;
@@ -62,11 +71,20 @@ export interface DingzDeviceSystemConfig {
 export type DimmerId = 'D1' | 'D2' | 'D3' | 'D4';
 export type DimmerIndex = 0 | 1 | 2 | 3;
 export type ButtonId = '1' | '2' | '3' | '4';
+export type ButtonIndex = 0 | 1 | 2 | 3;
 export enum ButtonState {
   OFF = 0,
   ON = 1,
 }
 
+// Representation of button in dingz
+export interface DingzButtonConfig {
+  buttons: ButtonConfigItem[];
+}
+
+export interface ButtonConfigItem {
+  name: string;
+}
 // Representation of dimmer in Dingz
 export interface DimmerState {
   on: boolean;
