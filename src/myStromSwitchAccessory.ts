@@ -8,7 +8,7 @@ import type {
 } from 'homebridge';
 
 import { DingzDaHomebridgePlatform } from './platform';
-import { MyStromDeviceInfo, MyStromSwitchReport } from './lib/myStromTypes';
+import { MyStromDeviceHWInfo, MyStromSwitchReport } from './lib/myStromTypes';
 import { DingzDaBaseAccessory } from './lib/dingzDaBaseAccessory';
 
 /**
@@ -22,7 +22,7 @@ export class MyStromSwitchAccessory extends DingzDaBaseAccessory {
 
   // Eventually replaced by:
   private switchOn = false;
-  private mystromDeviceInfo: MyStromDeviceInfo;
+  private mystromDeviceInfo: MyStromDeviceHWInfo;
 
   private outletState = {
     relay: false,
@@ -36,7 +36,7 @@ export class MyStromSwitchAccessory extends DingzDaBaseAccessory {
   ) {
     super(_platform, _accessory);
     // Set Base URL
-    this.mystromDeviceInfo = this.device.hwInfo as MyStromDeviceInfo;
+    this.mystromDeviceInfo = this.device.hwInfo as MyStromDeviceHWInfo;
 
     this.log.debug(
       'Setting informationService Characteristics ->',

@@ -43,6 +43,13 @@ export interface DingzDeviceHWInfo {
   front_sn: string;
 }
 
+export interface DingzDeviceConfig {
+  systemConfig: DingzDeviceSystemConfig;
+  dimmerConfig: DingzDeviceDimmerConfig;
+  windowCoveringConfig: DingzWindowCoveringConfigItem[];
+  buttonConfig: DingzButtonConfig;
+  inputConfig: DingzInputInfoItem[];
+}
 export interface DingzDeviceSystemConfig {
   allow_reset: boolean;
   allow_wps: boolean;

@@ -1,13 +1,17 @@
 import { PlatformAccessory } from 'homebridge';
 import { DingzDaHomebridgePlatform } from '../platform';
-import { DeviceInfo, AccessoryClass } from './commonTypes';
+import { DeviceInfo } from './commonTypes';
 import { PlatformEvent } from './platformEventBus';
 import { DingzLogger } from './dingzLogHelper';
 
 import axios, { AxiosError, AxiosInstance } from 'axios';
 import axiosRetry from 'axios-retry';
 
-import { REQUEST_RETRIES, RETRY_TIMEOUT } from '../settings';
+import {
+  REQUEST_RETRIES,
+  RETRY_TIMEOUT,
+  STATE_UPDATE_INTERVAL,
+} from '../settings';
 import { DeviceNotReachableError, MethodNotImplementedError } from './errors';
 import { AccessoryEventBus } from './accessoryEventBus';
 import { AxiosDebugHelper } from './axiosDebugHelper';
@@ -18,6 +22,7 @@ import chalk from 'chalk';
  * TODO: #140 [FIX] use interface & class inheritance to make this clearer
  */
 export class DingzDaBaseAccessory {
+  protected device: DeviceInfo;
   protected static axiosRetryConfig = {
     retries: REQUEST_RETRIES,
     retryDelay: axiosRetry.exponentialDelay,
@@ -26,8 +31,6 @@ export class DingzDaBaseAccessory {
 
   protected static axios = axios;
 
-  public readonly eb = new AccessoryEventBus();
-  protected readonly device: DeviceInfo;
   protected readonly log: DingzLogger;
   protected readonly request: AxiosInstance;
   protected readonly debugHelper: AxiosDebugHelper;
@@ -35,21 +38,31 @@ export class DingzDaBaseAccessory {
   protected baseUrl: string;
   protected reachabilityState: null | Error = null;
 
+  public readonly eb = new AccessoryEventBus();
+
   constructor(
     protected readonly platform: DingzDaHomebridgePlatform,
     protected readonly accessory: PlatformAccessory,
   ) {
     // Set-up axios instances
     this.device = this.accessory.context.device;
-    this.device.accessoryClass = this.constructor.name as AccessoryClass;
     this.baseUrl = `http://${this.device.address}`;
 
     this.log = platform.log as DingzLogger;
-    this.log.dingzPrefix = this.device.name;
+    this.log.dingzPrefix = this.accessory.context.name;
+
+    // Set the update interval in seconds
+    const updateInterval: number =
+      !this.platform.config.pollerInterval ||
+      this.platform.config.pollerInterval < STATE_UPDATE_INTERVAL
+        ? STATE_UPDATE_INTERVAL
+        : this.platform.config.pollerInterval;
 
     this.request = axios.create({
       baseURL: this.baseUrl,
-      timeout: RETRY_TIMEOUT * 1000,
+      // We set the retry timeout at 0.7 times the update interval
+      // This is 3.5s minimumtimeout for the minimum interval of 5s
+      timeout: updateInterval * 1000 * 0.7,
       headers: { Token: this.device.token ?? '' },
     });
 
@@ -92,37 +105,39 @@ export class DingzDaBaseAccessory {
     this.platform.eb.on(
       PlatformEvent.UPDATE_DEVICE_INFO,
       (deviceInfo: DeviceInfo) => {
-        if (deviceInfo.mac === this.device.mac) {
+        const device = this.accessory.context.device;
+        if (deviceInfo.mac === device.mac) {
           this.log.debug(
             'Updated device info received -> update accessory address',
           );
 
           // Update core info (mainly address, maybe token too)
           if (
-            this.device.address !== deviceInfo.address ||
-            this.device.token !== deviceInfo.token
+            device.address !== deviceInfo.address ||
+            device.token !== deviceInfo.token
           ) {
             this.log.info(
               'Accessory IP changed for',
               this.accessory.displayName,
               '-> Updating accessory from ->',
-              this.device.address,
+              device.address,
               'to',
               deviceInfo.address,
             );
-            this.accessory.displayName = this.device.name;
-            this.device.address = deviceInfo.address;
-            this.device.token = deviceInfo.token;
+            this.accessory.displayName = device.name;
+            device.address = deviceInfo.address;
+            device.token = deviceInfo.token;
             this.baseUrl = `http://${this.device.address}`;
 
             this.request.defaults = {
               baseURL: this.baseUrl,
               timeout: RETRY_TIMEOUT * 1000,
-              headers: { Token: this.device.token ?? '' },
+              headers: { Token: device.token ?? '' },
             };
 
             // update AccessoryInformation
-            this.setAccessoryInformation();
+            this.accessory.context.device = deviceInfo;
+            this.reconfigureAccessory();
           }
 
           // Set accessory to reachable and
@@ -133,9 +148,9 @@ export class DingzDaBaseAccessory {
   }
 
   // Override these if specific actions needed on updates on restore
-  protected setAccessoryInformation(): void {
+  protected reconfigureAccessory(init = false): void {
     this.log.debug(
-      'setAccessoryInformation() not implemented for',
+      `reconfigureAccessory(${init}) not implemented for`,
       this.device.accessoryClass,
     );
   }

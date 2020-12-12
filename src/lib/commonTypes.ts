@@ -6,18 +6,10 @@ import { MyStromSwitchAccessory } from '../myStromSwitchAccessory';
 import { MyStromLightbulbAccessory } from '../myStromLightbulbAccessory';
 import { MyStromButtonAccessory } from '../myStromButtonAccessory';
 import { MyStromPIRAccessory } from '../myStromPIRAccessory';
+import { DingzDeviceConfig, DingzDeviceHWInfo } from './dingzTypes';
+import { MyStromDeviceHWInfo } from './myStromTypes';
 
 // Types
-import {
-  DingzDeviceHWInfo,
-  DingzInputInfoItem,
-  DingzDeviceSystemConfig,
-  DingzDeviceDimmerConfig,
-  DingzWindowCoveringConfigItem,
-  DingzButtonConfig,
-} from './dingzTypes';
-import { MyStromDeviceInfo as MyStromDeviceHWInfo } from './myStromTypes';
-
 export enum DeviceTypes {
   MYSTROM_SWITCH_CHV1 = 101,
   MYSTROM_BULB = 102,
@@ -38,21 +30,14 @@ export enum ButtonAction {
   PIR_MOTION_STOP = '9',
 }
 
-// FIXME: Create separate inherited interfaces
 export interface DeviceInfo {
+  model?: string;
+  hwInfo?: MyStromDeviceHWInfo | DingzDeviceHWInfo;
   name: string;
   address: string;
-  mac: string;
-  model?: string;
   token?: string;
-  hwInfo?: DingzDeviceHWInfo | MyStromDeviceHWInfo;
-  systemConfig?: DingzDeviceSystemConfig;
-  dimmerConfig?: DingzDeviceDimmerConfig;
-  windowCoveringConfig?: DingzWindowCoveringConfigItem[];
-  buttonConfig?: DingzButtonConfig;
-  dingzInputInfo?: DingzInputInfoItem[];
-  configTimestamp?: number;
-  accessoryClass?: AccessoryClass;
+  mac: string;
+  accessoryClass: AccessoryClass;
 }
 
 export type AccessoryClass =
