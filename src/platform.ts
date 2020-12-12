@@ -898,7 +898,13 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
         .bind(DINGZ_DISCOVERY_PORT);
       setTimeout(() => {
         this.log.info('Stopping discovery');
-        discoverySocket.disconnect();
+        try {
+          discoverySocket.disconnect();
+        } catch (e) {
+          if (e.code === 'ERR_SOCKET_DGRAM_NOT_CONNECTED') {
+            this.log.info('Socket already destroyed');
+          }
+        }
       }, 600000); // Discover for 10 min then stop
       // Make sure we close the socket even if we get killed
     } catch (e) {
