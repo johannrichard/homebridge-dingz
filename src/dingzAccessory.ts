@@ -217,6 +217,8 @@ export class DingzAccessory extends DingzDaBaseAccessory {
           const endpoints = // Only set `pir/single` for older FW
             this.hw.has_pir && semver.lt(this.hw.fw_version, '1.2.0')
               ? ['generic', 'pir/single']
+              : this.hw.has_pir
+              ? ['generic', 'pir/generic', 'pir/rise', 'pir/fall']
               : ['generic'];
           this.platform.setButtonCallbackUrl({
             baseUrl: this.baseUrl,
@@ -226,9 +228,12 @@ export class DingzAccessory extends DingzDaBaseAccessory {
         } else if (!callBackUrl?.url.includes(this.platform.getCallbackUrl())) {
           this.log.warn('Update existing callback URL ->', callBackUrl);
           // Set the callback URL (Override!)
-          const endpoints = this.hw.has_pir
-            ? ['generic', 'pir/single']
-            : ['generic'];
+          const endpoints =
+            this.hw.has_pir && semver.lt(this.hw.fw_version, '1.2.0')
+              ? ['generic', 'pir/single']
+              : this.hw.has_pir
+              ? ['generic', 'pir/generic', 'pir/rise', 'pir/fall']
+              : ['generic'];
           this.platform.setButtonCallbackUrl({
             baseUrl: this.baseUrl,
             token: this.device.token,

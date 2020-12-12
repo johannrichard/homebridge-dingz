@@ -966,7 +966,11 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
     if (request.url) {
       response.writeHead(204); // 204 No content
       response.end(() => {
-        this.log.debug('Incoming request ->', request.body);
+        this.log.debug(
+          chalk.blueBright('[ACTION]'),
+          'Incoming request ->',
+          request.body,
+        );
         const b = request.body;
         const mac: string = b.mac ?? '';
         const button = b.index;
@@ -975,7 +979,10 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
 
         // Various types of callbacks
         if (button) {
-          this.log.info(chalk.blueBright('[ACTION] dingz'), request.ip);
+          this.log.info(
+            chalk.blueBright('[ACTION]'),
+            `Button ${request.ip} (${button}/${action})`,
+          );
           // attempt-auto add of either a dingz
           if (
             request.connection.remoteAddress &&
@@ -994,7 +1001,10 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
           );
         } else {
           if (action) {
-            this.log.info(chalk.blueBright('[ACTION] Simple'), request.ip);
+            this.log.info(
+              chalk.blueBright('[ACTION] Simple'),
+              `Button ${request.ip} (${action})`,
+            );
             this.eb.emit(
               PlatformEvent.ACTION,
               mac,
