@@ -844,13 +844,31 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
       type: 'udp4',
     });
 
-    discoverySocket.on('message', this.datagramMessageHandler.bind(this));
     this.log.info('Starting discovery');
-    discoverySocket.bind(DINGZ_DISCOVERY_PORT);
-    setTimeout(() => {
-      this.log.info('Stopping discovery');
-      discoverySocket.close();
-    }, 600000); // Discover for 10 min then stop
+    try {
+      process.on('exit', () => {
+        try {
+          discoverySocket.disconnect();
+        } catch (e) {
+          if (e.code === 'ERR_SOCKET_DGRAM_NOT_CONNECTED') {
+            this.log.info('Socket already destroyed');
+          }
+        } finally {
+          this.log.info('Process ended, socket destroyed');
+        }
+      });
+
+      discoverySocket
+        .on('message', this.datagramMessageHandler.bind(this))
+        .bind(DINGZ_DISCOVERY_PORT);
+      setTimeout(() => {
+        this.log.info('Stopping discovery');
+        discoverySocket.disconnect();
+      }, 600000); // Discover for 10 min then stop
+      // Make sure we close the socket even if we get killed
+    } catch (e) {
+      this.log.error(e.code + ' Socket error');
+    }
     return true;
   }
 
