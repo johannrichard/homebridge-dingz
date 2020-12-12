@@ -23,7 +23,7 @@
     "watch": "yarn run build && yarn link && nodemon",
     "build": "rimraf ./dist && tsc",
     "depcheck": "npx depcheck",
-    "prepublishOnly": "yarn run lint && yarn run build",
+    "prepublishOnly": "yarn",
     "prepare": "yarn run lint && yarn run build && yarn run depcheck",
     "changelog": "changelog --exclude ci,chore",
     "release:nightly": "yarn version --prerelease --preid nightly --no-git-tag-version && yarn publish --tag nightly",
