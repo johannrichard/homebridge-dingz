@@ -4,7 +4,6 @@ import type {
   PlatformAccessory,
   CharacteristicGetCallback,
 } from 'homebridge';
-import { Policy } from 'cockatiel';
 import { Mutex } from 'async-mutex';
 
 import { DingzDaHomebridgePlatform } from './platform';
@@ -13,12 +12,7 @@ import { AccessoryActionUrl, ButtonAction } from './lib/commonTypes';
 import { DeviceNotReachableError } from './lib/errors';
 import { PlatformEvent } from './lib/platformEventBus';
 import { DingzDaBaseAccessory } from './lib/dingzDaBaseAccessory';
-
-// Policy for long running tasks, retry every hour
-const retrySlow = Policy.handleAll()
-  .orWhenResult((retry) => retry === true)
-  .retry()
-  .exponential({ initialDelay: 10000, maxDelay: 60 * 60 * 1000 });
+import chalk from 'chalk';
 
 /**
  * Platform Accessory
@@ -147,36 +141,33 @@ export class MyStromPIRAccessory extends DingzDaBaseAccessory {
         }
       });
     }
+  }
 
-    // Set the callback URL (Override!)
-    retrySlow.execute(() => {
-      this.getButtonCallbackUrl()
-        .then((callBackUrl) => {
-          if (this.platform.config.callbackOverride) {
-            this.log.warn('Override callback URL ->', callBackUrl);
-            // Set the callback URL (Override!)
-            this.platform.setButtonCallbackUrl({
-              baseUrl: this.baseUrl,
-              token: this.device.token,
-              endpoints: ['pir/generic'],
-            });
-          } else if (
-            !callBackUrl?.url.includes(this.platform.getCallbackUrl())
-          ) {
-            this.log.warn('Update existing callback URL ->', callBackUrl);
-            // Set the callback URL (Override!)
-            this.platform.setButtonCallbackUrl({
-              baseUrl: this.baseUrl,
-              token: this.device.token,
-              oldUrl: callBackUrl.url,
-              endpoints: ['pir/generic'],
-            });
-          } else {
-            this.log.debug('Callback URL already set ->', callBackUrl?.url);
-          }
-        })
-        .catch(this.handleRequestErrors.bind(this));
-    });
+  private setCallbackUrl() {
+    this.getButtonCallbackUrl()
+      .then((callBackUrl) => {
+        if (this.platform.config.callbackOverride) {
+          this.log.warn('Override callback URL ->', callBackUrl);
+          // Set the callback URL (Override!)
+          this.platform.setButtonCallbackUrl({
+            baseUrl: this.baseUrl,
+            token: this.device.token,
+            endpoints: ['pir/generic'],
+          });
+        } else if (!callBackUrl?.url.includes(this.platform.getCallbackUrl())) {
+          this.log.warn('Update existing callback URL ->', callBackUrl);
+          // Set the callback URL (Override!)
+          this.platform.setButtonCallbackUrl({
+            baseUrl: this.baseUrl,
+            token: this.device.token,
+            oldUrl: callBackUrl.url,
+            endpoints: ['pir/generic'],
+          });
+        } else {
+          this.log.debug('Callback URL already set ->', callBackUrl?.url);
+        }
+      })
+      .catch(this.handleRequestErrors.bind(this));
   }
 
   /**
@@ -195,6 +186,16 @@ export class MyStromPIRAccessory extends DingzDaBaseAccessory {
     return this.getDeviceReport()
       .then((report) => {
         if (report) {
+          if (this.reachabilityState !== null) {
+            // Update reachability -- obviously, we're online again
+            this.reachabilityState = null;
+            this.log.info(
+              chalk.green('[ALIVE]'),
+              `Device --> recovered from unreachable state (${this.device.address})`,
+            );
+            this.setCallbackUrl();
+          }
+
           // If we are in motion polling mode, update motion from poller
           // TODO: remove this -- doesn't make sense at all
           if (this.platform.config.motionPoller ?? true) {
