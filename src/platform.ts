@@ -1041,11 +1041,13 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
 
   private handleError = (e: AxiosError) => {
     if (e.response) {
-      this.log.error('HTTP Response Error ->' + e.code);
-      this.log.error(e.message);
-      this.log.error(e.response.data);
-      this.log.error(e.response.status.toString());
-      this.log.error(e.response.headers);
+      this.log.error(
+        `HTTP ${e.code} ${e.message} ${e.response?.statusText ?? ' '}--> ${
+          e.response.config.url ?? 'NO URL'
+        }`,
+      );
+    } else if (e.request) {
+      this.log.error(`HTTP ${e.code} ${e.message}}--> ` + e.request.url);
     } else {
       this.log.error('HTTP Response Error ->' + e.config.url);
       this.log.error(e.message);
