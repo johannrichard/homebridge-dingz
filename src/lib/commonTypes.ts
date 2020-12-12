@@ -6,7 +6,7 @@ import { MyStromSwitchAccessory } from '../myStromSwitchAccessory';
 import { MyStromLightbulbAccessory } from '../myStromLightbulbAccessory';
 import { MyStromButtonAccessory } from '../myStromButtonAccessory';
 import { MyStromPIRAccessory } from '../myStromPIRAccessory';
-import { DingzDeviceConfig, DingzDeviceHWInfo } from './dingzTypes';
+import { DingzDeviceHWInfo } from './dingzTypes';
 import { MyStromDeviceHWInfo } from './myStromTypes';
 
 // Types
