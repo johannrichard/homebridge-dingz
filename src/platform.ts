@@ -93,18 +93,16 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
   ) {
     axiosRetry(axios, { retries: 5, retryDelay: axiosRetry.exponentialDelay });
 
-    this.log.debug(
-      chalk.redBright('[Platform]'),
-      'Finished initializing platform:',
-      this.config.name,
-    );
-
     // When this event is fired it means Homebridge has restored all cached accessories from disk.
     // Dynamic Platform plugins should only register new accessories after this event was fired,
     // in order to ensure they weren't added to homebridge already. This event can also be used
     // to start discovery of new accessories.
     this.api.on(APIEvent.DID_FINISH_LAUNCHING, () => {
-      this.log.debug('Executed didFinishLaunching callback');
+      this.log.debug(
+        chalk.redBright('[Platform]'),
+        'Finished initializing platform:',
+        this.config.name,
+      );
       // Adds decvices from Config
       if (this.config.devices) {
         this.addDevices();
@@ -141,6 +139,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
    */
   configureAccessory(accessory: PlatformAccessory): void {
     this.log.info(
+      chalk.redBright('[Platform]'),
       'Restoring accessory from cache:',
       accessory.displayName,
       '->',
@@ -159,20 +158,10 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
         case 'DingzDaAccessory':
         case 'DingzAccessory':
           // Add the restored accessory
-          // In the case of dingz, given the many
-          // config options, we first retrieve
-          // the config and then restor it with the
-          // current config
-          retryWithBreaker
-            .execute(() =>
-              this.addDingzDevice({
-                address: context.device.address,
-                name: context.device.name,
-                token: context.device.token ?? this.config.globalToken,
-                existingAccessory: accessory,
-              }),
-            )
-            .catch((e) => this.handleError.bind(this, e));
+          this.accessories[accessory.UUID] = new DingzAccessory(
+            this,
+            accessory,
+          );
           break;
         case 'MyStromSwitchAccessory':
           this.accessories[accessory.UUID] = new MyStromSwitchAccessory(

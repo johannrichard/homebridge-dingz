@@ -45,6 +45,7 @@ import { AccessoryEvent } from './lib/accessoryEventBus';
  * Each accessory may expose multiple services of different service types.
  */
 export class DingzAccessory extends DingzDaBaseAccessory {
+  private mustInit = false;
   private motionService?: Service;
   // Todo: Make proper internal representation
   private dingzStates = {
@@ -91,7 +92,16 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     // regardless of wheter it is a new or a restored accessory
     this.config = this.accessory.context.config;
     this.hw = this.device.hwInfo as DingzDeviceHWInfo;
-    this.reconfigureAccessory(true);
+
+    if (this.config) {
+      // only run 'reconfigureAccessory()' is we have a config
+      this.log.info('Config available, initialization started');
+      this.mustInit = false;
+      this.reconfigureAccessory(true);
+    } else {
+      this.log.warn('Config not available, initialization deferred');
+      this.mustInit = true;
+    }
 
     // Remove Reachability service if still present
     const bridgingService: Service | undefined = this.accessory.getService(
@@ -268,7 +278,6 @@ export class DingzAccessory extends DingzDaBaseAccessory {
             this.configTimestamp !== state.config.timestamp
           ) {
             // Push config change
-            this.configTimestamp = state.config.timestamp;
             this.log.debug('Config changes, update accessories');
             DingzAccessory.getConfig({
               address: this.device.address,
@@ -276,10 +285,23 @@ export class DingzAccessory extends DingzDaBaseAccessory {
             })
               .then(({ dingzDevices, dingzConfig }) => {
                 const newHw = dingzDevices[this.device.mac];
-                this.updateAccessory({
-                  deviceHwInfo: newHw,
-                  dingzConfig: dingzConfig,
-                });
+
+                this.configTimestamp = state.config.timestamp;
+                if (this.mustInit) {
+                  this.log.warn('Deferred initialization started');
+                  this.mustInit = false;
+                  this.device.hwInfo = newHw;
+                  this.hw = newHw;
+                  this.config = dingzConfig;
+                  this.accessory.context.device = this.device;
+                  this.accessory.context.config = this.config;
+                  this.reconfigureAccessory(true);
+                } else {
+                  this.updateAccessory({
+                    deviceHwInfo: newHw,
+                    dingzConfig: dingzConfig,
+                  });
+                }
               })
               .catch(this.handleRequestErrors.bind(this));
           }
@@ -1099,10 +1121,11 @@ export class DingzAccessory extends DingzDaBaseAccessory {
         }
       }
       // Update output, blind, input services
-
       this.device.hwInfo = deviceHwInfo;
       this.hw = deviceHwInfo;
       this.config = dingzConfig;
+      this.accessory.context.device = this.device;
+      this.accessory.context.config = this.config;
 
       this.configureOutputs();
       this.configureBlinds();
@@ -1119,7 +1142,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
    */
   private configureOutputs(initHandlers = false): void {
     // Figure out what we have here
-    if (!this.config.dimmerConfig) {
+    if (!this.config || (this.config && !this.config.dimmerConfig)) {
       return;
     }
 
