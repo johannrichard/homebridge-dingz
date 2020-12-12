@@ -48,7 +48,9 @@ export interface DingzDeviceConfig {
   dimmerConfig: DingzDeviceDimmerConfig;
   windowCoveringConfig: DingzWindowCoveringConfigItem[];
   buttonConfig: DingzButtonConfig;
-  inputConfig: DingzInputInfoItem[];
+  inputConfig: {
+    inputs: DingzInputInfoItem[];
+  };
 }
 export interface DingzDeviceSystemConfig {
   allow_reset: boolean;

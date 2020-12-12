@@ -1123,7 +1123,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     }
 
     const d = this.config.dimmerConfig.dimmers;
-    const i = this.config.inputConfig;
+    const i = this.config.inputConfig.inputs;
     switch (this.hw.dip_config) {
       case 3:
         if (i[0] && !i[0].active && d[0].output !== 'not_connected') {
