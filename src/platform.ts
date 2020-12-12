@@ -43,7 +43,6 @@ import {
   STATE_UPDATE_INTERVAL,
 } from './settings';
 
-// TODO: Some refactoring for better event handling, cleanup of the code and separation of concerns
 import { PlatformEventBus, PlatformEvent } from './lib/platformEventBus';
 
 // Accessory classes
@@ -93,18 +92,16 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
   ) {
     axiosRetry(axios, { retries: 5, retryDelay: axiosRetry.exponentialDelay });
 
-    this.log.debug(
-      chalk.redBright('[Platform]'),
-      'Finished initializing platform:',
-      this.config.name,
-    );
-
     // When this event is fired it means Homebridge has restored all cached accessories from disk.
     // Dynamic Platform plugins should only register new accessories after this event was fired,
     // in order to ensure they weren't added to homebridge already. This event can also be used
     // to start discovery of new accessories.
     this.api.on(APIEvent.DID_FINISH_LAUNCHING, () => {
-      this.log.debug('Executed didFinishLaunching callback');
+      this.log.debug(
+        chalk.redBright('[Platform]'),
+        'Finished initializing platform:',
+        this.config.name,
+      );
       // Adds decvices from Config
       if (this.config.devices) {
         this.addDevices();
@@ -141,13 +138,13 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
    */
   configureAccessory(accessory: PlatformAccessory): void {
     this.log.info(
+      chalk.redBright('[Platform]'),
       'Restoring accessory from cache:',
       accessory.displayName,
       '->',
       accessory.context.device.accessoryClass,
     );
 
-    // TODO: Remove the device if it has vanished for too long (i.e. restore was not possible for a long time)
     const context = accessory.context;
     if (context.device && context.device.accessoryClass) {
       this.log.debug(
@@ -159,20 +156,10 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
         case 'DingzDaAccessory':
         case 'DingzAccessory':
           // Add the restored accessory
-          // In the case of dingz, given the many
-          // config options, we first retrieve
-          // the config and then restor it with the
-          // current config
-          retryWithBreaker
-            .execute(() =>
-              this.addDingzDevice({
-                address: context.device.address,
-                name: context.device.name,
-                token: context.device.token ?? this.config.globalToken,
-                existingAccessory: accessory,
-              }),
-            )
-            .catch((e) => this.handleError.bind(this, e));
+          this.accessories[accessory.UUID] = new DingzAccessory(
+            this,
+            accessory,
+          );
           break;
         case 'MyStromSwitchAccessory':
           this.accessories[accessory.UUID] = new MyStromSwitchAccessory(
@@ -966,7 +953,11 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
     if (request.url) {
       response.writeHead(204); // 204 No content
       response.end(() => {
-        this.log.debug('Incoming request ->', request.body);
+        this.log.debug(
+          chalk.blueBright('[ACTION]'),
+          'Incoming request ->',
+          request.body,
+        );
         const b = request.body;
         const mac: string = b.mac ?? '';
         const button = b.index;
@@ -975,7 +966,10 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
 
         // Various types of callbacks
         if (button) {
-          this.log.info(chalk.blueBright('[ACTION] dingz'), request.ip);
+          this.log.info(
+            chalk.blueBright('[ACTION]'),
+            `Button ${request.ip} (${button}/${action})`,
+          );
           // attempt-auto add of either a dingz
           if (
             request.connection.remoteAddress &&
@@ -994,7 +988,10 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
           );
         } else {
           if (action) {
-            this.log.info(chalk.blueBright('[ACTION] Simple'), request.ip);
+            this.log.info(
+              chalk.blueBright('[ACTION] Simple'),
+              `Button ${request.ip} (${action})`,
+            );
             this.eb.emit(
               PlatformEvent.ACTION,
               mac,

@@ -188,7 +188,6 @@ export type WindowCoveringProps = Record<
   WindowCoveringState
 >;
 
-// FIXME: #103 Replace dispersed data gathering with `api/v1/state` endpoint
 export interface DingzState {
   dimmers: DimmerState[];
   blinds: WindowCoveringStates[];

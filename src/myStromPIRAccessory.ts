@@ -197,7 +197,6 @@ export class MyStromPIRAccessory extends DingzDaBaseAccessory {
           }
 
           // If we are in motion polling mode, update motion from poller
-          // TODO: remove this -- doesn't make sense at all
           if (this.platform.config.motionPoller ?? true) {
             this.log.info('Motion POLLING of', this.device.name, 'enabled');
             const isMotion: boolean = report.motion;
