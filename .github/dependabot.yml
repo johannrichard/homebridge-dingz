@@ -1,7 +1,7 @@
 version: 2
 updates:
 - package-ecosystem: npm
-  target_branch: "alpha"
+  target-branch: "alpha"
   directory: "/"
   schedule:
     interval: daily
