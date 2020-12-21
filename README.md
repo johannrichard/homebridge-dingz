@@ -5,7 +5,7 @@
 
 This plugin implements some (but not all) functions of [dingz](https://dingz.ch) Smart Home Devices. The plugin also supports (some) myStrom Devices as they share much of the same API definitions and concepts with dingz.
 
-Please have a look at the [Wiki](https://github.com/johannrichard/homebridge-dingz/wiki) for more details on the configuration options and the plugin's behavior _vis-à-vis_ the dingz' settings for outputs and more, as well as on the supported devices.
+Please have a look at the [Wiki](https://github.com/johannrichard/homebridge-dingz/wiki) and also at the [Release Notes](https://github.com/johannrichard/homebridge-dingz/releases/latest) for more details on the configuration options and the plugin's behavior _vis-à-vis_ the dingz' settings for outputs and more, as well as on the supported devices, new features and fixes. 
 
 <!-- TOC -->
 
