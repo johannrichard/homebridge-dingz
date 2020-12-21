@@ -1315,9 +1315,9 @@ cmd-shim@^3.0.0, cmd-shim@^3.0.3:
     mkdirp "~0.5.0"
 
 cockatiel@^2.0.0:
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/cockatiel/-/cockatiel-2.0.0.tgz#8eb1479ad0c76e6f15ff0e12d6f60192a1c8aa7a"
-  integrity sha512-zEobgx9f8RGBpPAuR8/z0nXJCuz7lrk3KcbUNEo0QxE/5/EM3fvk9LoL+Egm2CmMwFONlQyOKYbXMDwY+sXKXw==
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/cockatiel/-/cockatiel-2.0.1.tgz#2b59587d54d53d33ed49b601cfaab97cad9cc6e7"
+  integrity sha512-fAw5ToPGZSnoYl5NpW2zKnY/d4gAUeP4GuGnxm7W23ayTtZipwPrIv7h3z8pq0NMDISuCEkKGsXCk3bKkzb13A==
 
 code-point-at@^1.0.0:
   version "1.1.0"
