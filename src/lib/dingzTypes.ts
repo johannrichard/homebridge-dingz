@@ -46,7 +46,7 @@ export interface DingzDeviceHWInfo {
 export interface DingzDeviceConfig {
   systemConfig: DingzDeviceSystemConfig;
   dimmerConfig: DingzDeviceDimmerConfig;
-  windowCoveringConfig: DingzWindowCoveringConfigItem[];
+  windowCoveringConfig: DingzDeviceWindowCoveringConfig;
   buttonConfig: DingzButtonConfig;
   inputConfig: {
     inputs: DingzInputInfoItem[];

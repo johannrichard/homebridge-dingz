@@ -385,7 +385,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     }
 
     const w: DingzWindowCoveringConfigItem[] | undefined = this.config
-      .windowCoveringConfig;
+      .windowCoveringConfig.blinds;
 
     /** DIP Switch
      * 0			M1& M2		(2 blinds)
