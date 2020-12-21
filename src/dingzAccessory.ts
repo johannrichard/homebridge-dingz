@@ -385,7 +385,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     }
 
     const w: DingzWindowCoveringConfigItem[] | undefined = this.config
-      .windowCoveringConfig;
+      .windowCoveringConfig.blinds;
 
     /** DIP Switch
      * 0			M1& M2		(2 blinds)
@@ -867,11 +867,11 @@ export class DingzAccessory extends DingzDaBaseAccessory {
 
       let positionState: number;
       switch (state.moving) {
-        case 'up':
-          positionState = this.platform.Characteristic.PositionState.INCREASING;
-          break;
         case 'down':
           positionState = this.platform.Characteristic.PositionState.DECREASING;
+          break;
+        case 'up':
+          positionState = this.platform.Characteristic.PositionState.INCREASING;
           break;
         case 'stop':
           positionState = this.platform.Characteristic.PositionState.STOPPED;
