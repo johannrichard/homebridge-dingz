@@ -1,6 +1,7 @@
 version: 2
 updates:
-- package-ecosystem: npm
+- package-ecosystem: yarn
+  target_branch: "alpha"
   directory: "/"
   schedule:
     interval: daily
