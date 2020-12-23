@@ -3324,10 +3324,10 @@ is-typedarray@^1.0.0, is-typedarray@~1.0.0:
   resolved "https://registry.yarnpkg.com/is-typedarray/-/is-typedarray-1.0.0.tgz#e479c80858df0c1b11ddda6940f96011fcda4a9a"
   integrity sha1-5HnICFjfDBsR3dppQPlgEfzaSpo=
 
-is-valid-host@^0.0.1:
-  version "0.0.1"
-  resolved "https://registry.yarnpkg.com/is-valid-host/-/is-valid-host-0.0.1.tgz#4900b7996a2de9c719629d2e21f85b631d04e723"
-  integrity sha512-WOvwzVh4sm9vcWCTFbb3HeUPjSll1RiXSvlBrLJ/dFbdLzcGNerDZhhZ8DMC2A6AxFGWLEisQwNZpvtDDUltqw==
+is-valid-host@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/is-valid-host/-/is-valid-host-1.0.0.tgz#4655ddf0122fbf6fa5c1e51501ea276d21517fe5"
+  integrity sha512-0CRFoOBKiyp4+uWY7v0u4R/IkR+MNSjz7PmRbhL32QGEpoLNAJ0b5klT2V1CdrUWrbU0FREdr6ZLilsPPAce5g==
 
 is-weakmap@^2.0.1:
   version "2.0.1"
