@@ -5730,9 +5730,9 @@ signale@^1.2.1:
     pkg-conf "^2.1.0"
 
 simple-color-converter@^2.1.5:
-  version "2.1.11"
-  resolved "https://registry.yarnpkg.com/simple-color-converter/-/simple-color-converter-2.1.11.tgz#80778bfb6575fad508ecd11f092c90aa415e2fd3"
-  integrity sha512-C+JoFb8jrQHhDAHLSMRiFX7moaNurvsh8B9TyJdx3OgOXY+vyR/+FI9ADJt04PkaH9igSNasnaHo/WpoH0xO3Q==
+  version "2.1.13"
+  resolved "https://registry.yarnpkg.com/simple-color-converter/-/simple-color-converter-2.1.13.tgz#9311e92fbe033708d3ae74558a7eeaefd162c7ab"
+  integrity sha512-li2tcrdBH+0eFwSkELUNH8a7YUpuDT3m+PlF2gSMH2vEVfgzkp1aea+HWNWohgJ1no0m2Sxmt4AWnX3kqk9AZw==
   dependencies:
     color_library "0.0.2"
 
