@@ -22,10 +22,11 @@ A clear and concise description of what you expected to happen.
 
 **Plugin environment (please complete the following information):**
  - dingz/myStrom Device Firmware Version [e.g. 1.49.0]
+ - Homebridge Version [e.g. 1.1.0]
+ - Homebridge UI X Version [e.g.4.37.0]
  - Homebridge Server: [e.g. Homebridge Docker]
  - Plugin Version [e.g. 1.5.0]
  - Node.js Version [e.g. 14.1.0]
- - Homebridge Version [e.g. 1.1.0]
  - Special settings [e.g. with/without auto-discovery]
 
 **Screenshots and Logs**
