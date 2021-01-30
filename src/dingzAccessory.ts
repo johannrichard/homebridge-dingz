@@ -682,15 +682,23 @@ export class DingzAccessory extends DingzDaBaseAccessory {
       service.removeCharacteristic(
         service.getCharacteristic(this.platform.Characteristic.Brightness),
       );
-    } else if (
-      output !== 'non_dimmable' &&
-      !service.testCharacteristic(this.platform.Characteristic.Brightness)
-    ) {
-      // Only add listeners if needed, i.e. if Characteristic is not yet defined
-      service.addCharacteristic(this.platform.Characteristic.Brightness);
-      service
-        .getCharacteristic(this.platform.Characteristic.Brightness)
-        .on(CharacteristicEventTypes.SET, this.setBrightness.bind(this, index)); // SET - bind to the 'setBrightness` method below
+    } else if (output !== 'non_dimmable') {
+      try {
+        // Add listener in any case, but first destroy existing ones (should fix #256)
+        service.removeCharacteristic(
+          service.getCharacteristic(this.platform.Characteristic.Brightness),
+        );
+      } catch (e) {
+        this.log.warn('Attempt to remove "Brightness" characteristic failed');
+      } finally {
+        service.addCharacteristic(this.platform.Characteristic.Brightness);
+        service
+          .getCharacteristic(this.platform.Characteristic.Brightness)
+          .on(
+            CharacteristicEventTypes.SET,
+            this.setBrightness.bind(this, index),
+          ); // SET - bind to the 'setBrightness` method below
+      }
     }
     if (initHandlers || !existing) {
       this.setOutputHandlers(service, index);
