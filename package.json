@@ -40,14 +40,14 @@
   ],
   "dependencies": {
     "async-mutex": "^0.2.2",
-    "axios": "^0.21.0",
+    "axios": "^0.21.1",
     "axios-retry": "^3.1.8",
     "body-parser": "^1.19.0",
     "chalk": "^4.1.0",
     "cockatiel": "^2.0.0",
     "express": "^4.17.1",
     "intervals-for-humans": "^1.0.4",
-    "is-valid-host": "^0.0.1",
+    "is-valid-host": "^1.0.0",
     "qs": "^6.9.4",
     "semver": "^7.3.2",
     "simple-color-converter": "^2.1.5"
