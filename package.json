@@ -47,7 +47,7 @@
     "cockatiel": "^2.0.0",
     "express": "^4.17.1",
     "intervals-for-humans": "^1.0.4",
-    "is-valid-host": "^0.0.1",
+    "is-valid-host": "^1.0.0",
     "qs": "^6.9.4",
     "semver": "^7.3.2",
     "simple-color-converter": "^2.1.5"
