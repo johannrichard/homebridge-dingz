@@ -11,6 +11,7 @@ import { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
 import simpleColorConverter from 'simple-color-converter';
 import qs from 'qs';
 import semver from 'semver';
+import limit from 'limit-number';
 
 // Internal types
 import { RETRY_TIMEOUT } from './settings';
@@ -374,7 +375,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     const intensity: number = this.dingzStates.Brightness;
     lightService
       .getCharacteristic(this.platform.Characteristic.CurrentAmbientLightLevel)
-      .updateValue(intensity);
+      .updateValue(limit(0.0001, intensity, 100000)); // implements #300
   }
 
   private configureBlinds(initHandlers = false): void {
