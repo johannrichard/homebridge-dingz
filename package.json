@@ -18,12 +18,15 @@
     "homebridge": ">0.4.53"
   },
   "main": "dist/index.js",
+  "private": false,
   "scripts": {
     "lint": "eslint src/**.ts",
+    "postinstall": "husky install",
+    "postpublish": "pinst --enable",
     "watch": "yarn run build && yarn link && nodemon",
     "build": "rimraf ./dist && tsc",
     "depcheck": "npx depcheck",
-    "prepublishOnly": "yarn",
+    "prepublishOnly": "pinst --disable",
     "prepare": "yarn run lint && yarn run build && yarn run depcheck",
     "changelog": "changelog --exclude ci,chore",
     "release:nightly": "yarn version --prerelease --preid nightly --no-git-tag-version && yarn publish --tag nightly",
@@ -72,10 +75,11 @@
     "husky": "^5.0.9",
     "lint-staged": "^10.5.2",
     "nodemon": "^2.0.3",
+    "pinst": "^2.1.6",
     "prettier": "2.2.1",
     "rimraf": "^3.0.2",
     "semantic-release": "^17.3.0",
-    "typescript": "^4.1.2"
+    "typescript": "4.1.2"
   },
   "lint-staged": {
     "**/*.+(js|jsx|css|less|scss|ts|tsx|md)": [
