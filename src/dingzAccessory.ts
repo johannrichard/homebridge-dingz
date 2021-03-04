@@ -937,7 +937,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
       JSON.stringify(this.dingzStates.WindowCovers),
     );
     const id = this.getWindowCoveringId(index);
-    const blind: number = this.dingzStates.WindowCovers[id]?.position;
+    const blind: number = this.dingzStates.WindowCovers[id]?.position ?? 0; // Implement fix for #300 - down by default
 
     this.log.debug(
       'Get Characteristic for WindowCovering',
@@ -983,7 +983,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
       JSON.stringify(this.dingzStates.WindowCovers),
     );
     const id = this.getWindowCoveringId(index);
-    const tiltAngle: number = this.dingzStates.WindowCovers[id]?.lamella;
+    const tiltAngle: number = this.dingzStates.WindowCovers[id]?.lamella ?? 0; // Implement fix for #300s
 
     this.log.debug(
       'Get Characteristic for WindowCovering',

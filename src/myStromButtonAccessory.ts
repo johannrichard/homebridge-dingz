@@ -27,8 +27,8 @@ const retrySlow = Policy.handleAll()
 export class MyStromButtonAccessory extends DingzDaBaseAccessory {
   // Eventually replaced by:
   private mystromDeviceInfo: MyStromDeviceHWInfo;
-  private buttonState?: ButtonAction;
-  private switchButtonState?: ButtonState;
+  private buttonState: ButtonAction = ButtonAction.SINGLE_PRESS;
+  private switchButtonState: ButtonState = ButtonState.OFF;
   private batteryLevel: Nullable<number> = 0;
   private chargingState = false;
 

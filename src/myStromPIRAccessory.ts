@@ -13,6 +13,7 @@ import { DeviceNotReachableError } from './lib/errors';
 import { PlatformEvent } from './lib/platformEventBus';
 import { DingzDaBaseAccessory } from './lib/dingzDaBaseAccessory';
 import chalk from 'chalk';
+import limit from 'limit-number';
 
 /**
  * Platform Accessory
@@ -221,7 +222,7 @@ export class MyStromPIRAccessory extends DingzDaBaseAccessory {
             .getCharacteristic(
               this.platform.Characteristic.CurrentAmbientLightLevel,
             )
-            .updateValue(this.pirState.light);
+            .updateValue(limit(0.0001, this.pirState.light, 100000)); // Implements #300
 
           return Promise.resolve();
         } else {
