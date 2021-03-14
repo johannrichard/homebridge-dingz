@@ -13,6 +13,7 @@ import { DeviceNotReachableError } from './lib/errors';
 import { PlatformEvent } from './lib/platformEventBus';
 import { DingzDaBaseAccessory } from './lib/dingzDaBaseAccessory';
 import chalk from 'chalk';
+import limit from 'limit-number';
 
 /**
  * Platform Accessory
@@ -211,17 +212,25 @@ export class MyStromPIRAccessory extends DingzDaBaseAccessory {
           }
 
           // Update temperature and light in any case
-          this.pirState.temperature = report.temperature;
+          this.pirState.temperature = limit(
+            -273.5,
+            report.temperature ?? 0,
+            100,
+          ) as number;
           this.temperatureService
             .getCharacteristic(this.platform.Characteristic.CurrentTemperature)
             .updateValue(this.pirState.temperature);
 
-          this.pirState.light = report.light ?? 0;
+          this.pirState.light = limit(
+            0.0001,
+            report.light ?? 0,
+            100000,
+          ) as number;
           this.lightService
             .getCharacteristic(
               this.platform.Characteristic.CurrentAmbientLightLevel,
             )
-            .updateValue(this.pirState.light);
+            .updateValue(this.pirState.light); // Implements #300
 
           return Promise.resolve();
         } else {
@@ -238,7 +247,7 @@ export class MyStromPIRAccessory extends DingzDaBaseAccessory {
    * to get the current value of the "Ambient Light Level" characteristic
    */
   private getLightLevel(callback: CharacteristicGetCallback) {
-    const light: number = this.pirState?.light ?? 42;
+    const light: number = limit(0.0001, this.pirState?.light ?? 0, 100000);
     this.log.debug('Get Characteristic Ambient Light Level ->', light, ' lux');
 
     callback(this.reachabilityState, light);
@@ -249,7 +258,11 @@ export class MyStromPIRAccessory extends DingzDaBaseAccessory {
    * to get the current value of the "Temperature" characteristic
    */
   private getTemperature(callback: CharacteristicGetCallback) {
-    const temperature: number = this.pirState?.temperature;
+    const temperature: number = limit(
+      -273.5,
+      this.pirState?.temperature ?? 0,
+      100,
+    );
     this.log.debug('Get Characteristic Temperature ->', temperature, '° C');
 
     callback(this.reachabilityState, temperature);
