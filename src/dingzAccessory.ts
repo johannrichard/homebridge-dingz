@@ -375,7 +375,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     const intensity: number = this.dingzStates.Brightness;
     lightService
       .getCharacteristic(this.platform.Characteristic.CurrentAmbientLightLevel)
-      .updateValue(limit(0.0001, intensity, 100000)); // implements #300
+      .updateValue(limit(0.0001, 100000, intensity)); // implements #300
   }
 
   private configureBlinds(initHandlers = false): void {
