@@ -637,7 +637,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/qs@npm:*, @types/qs@npm:^6.9.2":
+"@types/qs@npm:*, @types/qs@npm:^6.9.6":
   version: 6.9.6
   resolution: "@types/qs@npm:6.9.6"
   checksum: a5f3c4f6ad6de2692e710302f5f82fe8db3ec0de1a75ada02a432f75f64025a6e38d28fcc4ed146d3145017e1312cc5cb3d81a0f41a798ec0463b5f47f017963
@@ -3668,7 +3668,7 @@ fsevents@~2.3.1:
     "@types/body-parser": ^1.19.0
     "@types/express": ^4.17.6
     "@types/node": ^14.0.13
-    "@types/qs": ^6.9.2
+    "@types/qs": ^6.9.6
     "@types/semver": ^7.3.4
     "@typescript-eslint/eslint-plugin": ^4.8.2
     "@typescript-eslint/parser": ^4.8.2
