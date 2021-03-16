@@ -214,23 +214,23 @@ export class MyStromPIRAccessory extends DingzDaBaseAccessory {
           // Update temperature and light in any case
           this.pirState.temperature = limit(
             -273.5,
-            report.temperature ?? 0,
             100,
-          ) as number;
+            report.temperature ?? 0,
+          ) as number; // fixes #300
           this.temperatureService
             .getCharacteristic(this.platform.Characteristic.CurrentTemperature)
             .updateValue(this.pirState.temperature);
 
           this.pirState.light = limit(
             0.0001,
-            report.light ?? 0,
             100000,
-          ) as number;
+            report.light ?? 0,
+          ) as number; // fixes #300
           this.lightService
             .getCharacteristic(
               this.platform.Characteristic.CurrentAmbientLightLevel,
             )
-            .updateValue(this.pirState.light); // Implements #300
+            .updateValue(this.pirState.light);
 
           return Promise.resolve();
         } else {
@@ -247,7 +247,7 @@ export class MyStromPIRAccessory extends DingzDaBaseAccessory {
    * to get the current value of the "Ambient Light Level" characteristic
    */
   private getLightLevel(callback: CharacteristicGetCallback) {
-    const light: number = limit(0.0001, 100000, this.pirState?.light ?? 0);
+    const light: number = limit(0.0001, 100000, this.pirState?.light ?? 0); // fixes #300
     this.log.debug('Get Characteristic Ambient Light Level ->', light, ' lux');
 
     callback(this.reachabilityState, light);
@@ -262,7 +262,7 @@ export class MyStromPIRAccessory extends DingzDaBaseAccessory {
       -273.5,
       100,
       this.pirState?.temperature ?? 0,
-    );
+    ); // fixes #300
     this.log.debug('Get Characteristic Temperature ->', temperature, '° C');
 
     callback(this.reachabilityState, temperature);

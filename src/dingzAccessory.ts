@@ -375,7 +375,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     const intensity: number = this.dingzStates.Brightness;
     lightService
       .getCharacteristic(this.platform.Characteristic.CurrentAmbientLightLevel)
-      .updateValue(limit(0.0001, 100000, intensity)); // implements #300
+      .updateValue(limit(0.0001, 100000, intensity)); // fixes #300
   }
 
   private configureBlinds(initHandlers = false): void {
@@ -937,7 +937,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
       JSON.stringify(this.dingzStates.WindowCovers),
     );
     const id = this.getWindowCoveringId(index);
-    const blind: number = this.dingzStates.WindowCovers[id]?.position ?? 0; // Implement fix for #300 - down by default
+    const blind: number = this.dingzStates.WindowCovers[id]?.position ?? 0; // fixes #300 - down by default
 
     this.log.debug(
       'Get Characteristic for WindowCovering',
