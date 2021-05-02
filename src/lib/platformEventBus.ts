@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events';
 import { DeviceInfo, ButtonAction } from './commonTypes';
-import { ButtonId, DingzDeviceConfig } from './dingzTypes';
+import { ModuleId, DingzDeviceConfig } from './dingzTypes';
 
 // Platform elements
 // EVENT TYPES
@@ -17,11 +17,7 @@ export declare interface PlatformEventBus {
   ): this;
   on(
     event: PlatformEvent.ACTION,
-    listener: (
-      mac: string,
-      action: ButtonAction,
-      button: ButtonId | '5' | '6', // FIXME: replace with specific type
-    ) => void,
+    listener: (mac: string, action: ButtonAction, module: ModuleId) => void,
   ): this;
   on(
     event: PlatformEvent.UPDATE_DEVICE_INFO,
@@ -43,7 +39,7 @@ export declare interface PlatformEventBus {
     event: PlatformEvent.ACTION,
     mac: string,
     action: ButtonAction,
-    button: ButtonId | '5' | '6', // FIXME: replace with generic type
+    module: ModuleId,
   ): boolean;
   emit(
     event: PlatformEvent.UPDATE_DEVICE_INFO,
