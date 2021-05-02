@@ -1,6 +1,7 @@
 name: semantic-release
 
 on:
+  workflow_dispatch:
   push:
     branches: [master, next, beta, alpha, next-major]
 jobs:
