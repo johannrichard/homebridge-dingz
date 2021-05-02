@@ -3,6 +3,7 @@
     "dbaeumer.vscode-eslint",
     "esbenp.prettier-vscode",
     "axetroy.vscode-changelog-generator",
-    "github.vscode-pull-request-github"
+    "github.vscode-pull-request-github",
+    "arcanis.vscode-zipfs"
   ]
 }
