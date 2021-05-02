@@ -18,22 +18,17 @@
     "homebridge": ">0.4.53"
   },
   "main": "dist/index.js",
-  "private": false,
   "scripts": {
     "lint": "eslint src/**.ts",
     "postinstall": "husky install",
     "postpublish": "pinst --enable",
-    "watch": "yarn run build && yarn link && nodemon",
+    "watch": "yarn run build && nodemon",
     "build": "rimraf ./dist && tsc",
     "depcheck": "npx depcheck",
     "prepublishOnly": "pinst --disable",
     "prepare": "yarn run lint && yarn run build && yarn run depcheck",
     "changelog": "changelog --exclude ci,chore",
-    "release:nightly": "yarn version --prerelease --preid nightly --no-git-tag-version && yarn publish --tag nightly",
-    "release:candidate": "yarn version --prerelease --preid rc --no-git-tag-version && yarn publish --tag next",
-    "release:major": "yarn run prepare && yarn run changelog -M && git add CHANGELOG.md && yarn version --major && git push origin && git push origin --tags",
-    "release:minor": "yarn run prepare && yarn run changelog -m && git add CHANGELOG.md && yarn version --minor && git push origin && git push origin --tags",
-    "release:patch": "yarn run prepare && yarn run changelog -p && git add CHANGELOG.md && yarn version --patch && git push origin && git push origin --tags"
+    "debug": "yarn dlx homebridge -I"
   },
   "keywords": [
     "homebridge-plugin",
@@ -62,11 +57,12 @@
     "@semantic-release/changelog": "^5.0.1",
     "@types/body-parser": "^1.19.0",
     "@types/express": "^4.17.6",
-    "@types/node": "^14.0.13",
-    "@types/qs": "^6.9.2",
+    "@types/node": "^15.0.1",
+    "@types/qs": "^6.9.6",
     "@types/semver": "^7.3.4",
     "@typescript-eslint/eslint-plugin": "^4.8.2",
     "@typescript-eslint/parser": "^4.8.2",
+    "depcheck": "^1.4.0",
     "eslint": "^7.15.0",
     "eslint-config-prettier": "^8.0.0",
     "eslint-plugin-prettier": "^3.2.0",
@@ -79,7 +75,7 @@
     "prettier": "2.2.1",
     "rimraf": "^3.0.2",
     "semantic-release": "^17.3.0",
-    "typescript": "4.1.2"
+    "typescript": "4.0"
   },
   "lint-staged": {
     "**/*.+(js|jsx|css|less|scss|ts|tsx|md)": [

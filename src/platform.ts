@@ -18,7 +18,7 @@ import * as os from 'os';
 import e = require('express');
 
 // Internal Types
-import { ButtonId, DingzDeviceHWInfo } from './lib/dingzTypes';
+import { DingzDeviceHWInfo, ModuleId } from './lib/dingzTypes';
 import { MyStromDeviceHWInfo, MyStromSwitchTypes } from './lib/myStromTypes';
 
 import {
@@ -960,15 +960,15 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
         );
         const b = request.body;
         const mac: string = b.mac ?? '';
-        const button = b.index;
+        const module = b.index;
         const action = b.action;
         const battery = b.battery;
 
         // Various types of callbacks
-        if (button) {
+        if (module) {
           this.log.info(
             chalk.blueBright('[ACTION]'),
-            `Button ${request.ip} (${button}/${action})`,
+            `Module ${request.ip} (${module}/${action})`,
           );
           // attempt-auto add of either a dingz
           if (
@@ -984,7 +984,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
             PlatformEvent.ACTION,
             mac,
             action as ButtonAction,
-            button as ButtonId,
+            module as ModuleId,
           );
         } else {
           if (action) {

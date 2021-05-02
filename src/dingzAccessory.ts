@@ -31,6 +31,7 @@ import {
   WindowCoveringIndex,
   WindowCoveringStates,
   DingzWindowCoveringConfigItem,
+  ModuleId,
 } from './lib/dingzTypes';
 import { ButtonAction, AccessoryActionUrl } from './lib/commonTypes';
 
@@ -375,7 +376,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     const intensity: number = this.dingzStates.Brightness;
     lightService
       .getCharacteristic(this.platform.Characteristic.CurrentAmbientLightLevel)
-      .updateValue(limit(0.0001, intensity, 100000)); // implements #300
+      .updateValue(limit(0.0001, 100000, intensity)); // fixes #300
   }
 
   private configureBlinds(initHandlers = false): void {
@@ -496,14 +497,18 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     // Add Event Listeners
     this.platform.eb.on(
       PlatformEvent.ACTION,
-      (mac, action: ButtonAction, button: ButtonId | '5') => {
-        if (mac === this.device.mac && button) {
+      (mac, action: ButtonAction, module: ModuleId) => {
+        if (mac === this.device.mac && module) {
           this.log.debug(
-            `Button ${button} pressed -> ${action}, MAC: ${mac} (This: ${this.device.mac})`,
+            `Module ${module} triggered -> ${action}, MAC: ${mac} (This: ${this.device.mac})`,
           );
-          if (button === '5') {
+          if (module === '6') {
+            // Fix for v1.2.x firmware (#318)
+            // INPUT (Unassigned)
+            this.log.info(`Button ${module} Input -> ${action} (no action)`);
+          } else if (module === '5') {
             // PUSH MOTION
-            this.log.info(`Button ${button} Motion -> ${action}`);
+            this.log.info(`Module ${module} Motion -> ${action}`);
             this.log.debug('Motion Update from CALLBACK');
             this.motionService
               ?.getCharacteristic(this.platform.Characteristic.MotionDetected)
@@ -511,14 +516,14 @@ export class DingzAccessory extends DingzDaBaseAccessory {
                 action === ButtonAction.PIR_MOTION_START ? true : false,
               );
           } else {
-            this.dingzStates.Buttons[button].event = action ?? 1;
-            this.dingzStates.Buttons[button].state =
-              this.dingzStates.Buttons[button].state === ButtonState.OFF
+            this.dingzStates.Buttons[module].event = action ?? 1;
+            this.dingzStates.Buttons[module].state =
+              this.dingzStates.Buttons[module].state === ButtonState.OFF
                 ? ButtonState.ON
                 : ButtonState.OFF;
             const service = this.accessory.getServiceById(
               this.platform.Service.StatelessProgrammableSwitch,
-              button,
+              module,
             );
             const ProgrammableSwitchEvent = this.platform.Characteristic
               .ProgrammableSwitchEvent;
@@ -526,9 +531,9 @@ export class DingzAccessory extends DingzDaBaseAccessory {
               ?.getCharacteristic(
                 this.platform.Characteristic.ProgrammableSwitchOutputState,
               )
-              .updateValue(this.dingzStates.Buttons[button].state);
+              .updateValue(this.dingzStates.Buttons[module].state);
             this.log.info(
-              `Button ${button} (${service?.displayName}) pressed -> ${action}`,
+              `Button ${module} (${service?.displayName}) pressed -> ${action}`,
             );
 
             switch (action) {
@@ -937,7 +942,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
       JSON.stringify(this.dingzStates.WindowCovers),
     );
     const id = this.getWindowCoveringId(index);
-    const blind: number = this.dingzStates.WindowCovers[id]?.position ?? 0; // Implement fix for #300 - down by default
+    const blind: number = this.dingzStates.WindowCovers[id]?.position ?? 0; // fixes #300 - down by default
 
     this.log.debug(
       'Get Characteristic for WindowCovering',
