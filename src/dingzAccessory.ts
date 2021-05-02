@@ -522,46 +522,48 @@ export class DingzAccessory extends DingzDaBaseAccessory {
             case Module.BTN2:
             case Module.BTN3:
             case Module.BTN4:
-              this.dingzStates.Buttons[module].event = action ?? 1;
-              this.dingzStates.Buttons[module].state =
-                this.dingzStates.Buttons[module].state === ButtonState.OFF
-                  ? ButtonState.ON
-                  : ButtonState.OFF;
-              const service = this.accessory.getServiceById(
-                this.platform.Service.StatelessProgrammableSwitch,
-                module,
-              );
-              const ProgrammableSwitchEvent = this.platform.Characteristic
-                .ProgrammableSwitchEvent;
-              service
-                ?.getCharacteristic(
-                  this.platform.Characteristic.ProgrammableSwitchOutputState,
-                )
-                .updateValue(this.dingzStates.Buttons[module].state);
-              this.log.info(
-                `Button ${module} (${service?.displayName}) pressed -> ${action}`,
-              );
+              {
+                this.dingzStates.Buttons[module].event = action ?? 1;
+                this.dingzStates.Buttons[module].state =
+                  this.dingzStates.Buttons[module].state === ButtonState.OFF
+                    ? ButtonState.ON
+                    : ButtonState.OFF;
+                const service = this.accessory.getServiceById(
+                  this.platform.Service.StatelessProgrammableSwitch,
+                  module,
+                );
+                const ProgrammableSwitchEvent = this.platform.Characteristic
+                  .ProgrammableSwitchEvent;
+                service
+                  ?.getCharacteristic(
+                    this.platform.Characteristic.ProgrammableSwitchOutputState,
+                  )
+                  .updateValue(this.dingzStates.Buttons[module].state);
+                this.log.info(
+                  `Button ${module} (${service?.displayName}) pressed -> ${action}`,
+                );
 
-              switch (action) {
-                case ButtonAction.SINGLE_PRESS:
-                  service
-                    ?.getCharacteristic(ProgrammableSwitchEvent)
-                    .setValue(ProgrammableSwitchEvent.SINGLE_PRESS);
-                  break;
-                case ButtonAction.DOUBLE_PRESS:
-                  service
-                    ?.getCharacteristic(ProgrammableSwitchEvent)
-                    .setValue(ProgrammableSwitchEvent.DOUBLE_PRESS);
-                  break;
-                case ButtonAction.LONG_PRESS:
-                  service
-                    ?.getCharacteristic(ProgrammableSwitchEvent)
-                    .setValue(ProgrammableSwitchEvent.LONG_PRESS);
-                  break;
+                switch (action) {
+                  case ButtonAction.SINGLE_PRESS:
+                    service
+                      ?.getCharacteristic(ProgrammableSwitchEvent)
+                      .setValue(ProgrammableSwitchEvent.SINGLE_PRESS);
+                    break;
+                  case ButtonAction.DOUBLE_PRESS:
+                    service
+                      ?.getCharacteristic(ProgrammableSwitchEvent)
+                      .setValue(ProgrammableSwitchEvent.DOUBLE_PRESS);
+                    break;
+                  case ButtonAction.LONG_PRESS:
+                    service
+                      ?.getCharacteristic(ProgrammableSwitchEvent)
+                      .setValue(ProgrammableSwitchEvent.LONG_PRESS);
+                    break;
+                }
+
+                // Immediately update states after button pressed
+                this.getDeviceStateUpdate();
               }
-
-              // Immediately update states after button pressed
-              this.getDeviceStateUpdate();
               break;
             default:
               this.log.error(
