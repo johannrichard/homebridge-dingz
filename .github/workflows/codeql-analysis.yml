@@ -2,7 +2,7 @@ name: "CodeQL"
 
 on:
   push:
-    branches: [master, ]
+    branches: [master]
   pull_request:
     # The branches below must be a subset of the branches above
     branches: [master]
@@ -52,3 +52,8 @@ jobs:
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v1
+    - name: Run Snyk to check for vulnerabilities
+      uses: snyk/actions/node@master
+      continue-on-error: true
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
