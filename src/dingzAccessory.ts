@@ -496,12 +496,16 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     // Add Event Listeners
     this.platform.eb.on(
       PlatformEvent.ACTION,
-      (mac, action: ButtonAction, button: ButtonId | '5') => {
+      (mac, action: ButtonAction, button: ButtonId | '5' | '6') => {
         if (mac === this.device.mac && button) {
           this.log.debug(
             `Button ${button} pressed -> ${action}, MAC: ${mac} (This: ${this.device.mac})`,
           );
-          if (button === '5') {
+          if (button === '6') {
+            // Fix for v1.2.x firmware (#318)
+            // INPUT (Unassigned)
+            this.log.info(`Button ${button} Input -> ${action} (no action)`);
+          } else if (button === '5') {
             // PUSH MOTION
             this.log.info(`Button ${button} Motion -> ${action}`);
             this.log.debug('Motion Update from CALLBACK');
