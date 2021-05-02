@@ -17,7 +17,11 @@ export declare interface PlatformEventBus {
   ): this;
   on(
     event: PlatformEvent.ACTION,
-    listener: (mac: string, action: ButtonAction, button: ButtonId) => void,
+    listener: (
+      mac: string,
+      action: ButtonAction,
+      button: ButtonId | '5' | '6', // FIXME: replace with specific type
+    ) => void,
   ): this;
   on(
     event: PlatformEvent.UPDATE_DEVICE_INFO,
@@ -39,7 +43,7 @@ export declare interface PlatformEventBus {
     event: PlatformEvent.ACTION,
     mac: string,
     action: ButtonAction,
-    button: ButtonId,
+    button: ButtonId | '5' | '6', // FIXME: replace with generic type
   ): boolean;
   emit(
     event: PlatformEvent.UPDATE_DEVICE_INFO,

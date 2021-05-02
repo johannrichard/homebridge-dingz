@@ -984,7 +984,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
             PlatformEvent.ACTION,
             mac,
             action as ButtonAction,
-            button as ButtonId,
+            button as ButtonId | '5' | '6', // FIXME: introduce specific type
           );
         } else {
           if (action) {
