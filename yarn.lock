@@ -1079,10 +1079,6 @@ buffer-from@^1.0.0:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/buffer-from/-/buffer-from-1.1.1.tgz#32713bc028f75c02fdb710d7c7bcec1f2c6070ef"
 
-builtin-modules@^3.1.0:
-  version "3.2.0"
-  resolved "https://registry.yarnpkg.com/builtin-modules/-/builtin-modules-3.2.0.tgz#45d5db99e7ee5e6bc4f362e008bf917ab5049887"
-
 builtins@^1.0.3:
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/builtins/-/builtins-1.0.3.tgz#cb94faeb61c8696451db36534e1422f94f0aee88"
@@ -1609,13 +1605,12 @@ delegates@^1.0.0:
   resolved "https://registry.yarnpkg.com/delegates/-/delegates-1.0.0.tgz#84c6e159b81904fdca59a0ef44cd870d31250f9a"
 
 depcheck@^1.4.0:
-  version "1.4.0"
-  resolved "https://registry.yarnpkg.com/depcheck/-/depcheck-1.4.0.tgz#1b49e0da4ce32f2e372da9be7ba25b139b7b9a00"
+  version "1.4.1"
+  resolved "https://registry.yarnpkg.com/depcheck/-/depcheck-1.4.1.tgz#1dfbac61ad6411ae407050a383e7411eb8933ad2"
   dependencies:
     "@babel/parser" "^7.12.5"
     "@babel/traverse" "^7.12.5"
     "@vue/compiler-sfc" "^3.0.5"
-    builtin-modules "^3.1.0"
     camelcase "^6.2.0"
     cosmiconfig "^7.0.0"
     debug "^4.2.0"
