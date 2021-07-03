@@ -1646,8 +1646,8 @@ delegates@^1.0.0:
   resolved "https://registry.yarnpkg.com/delegates/-/delegates-1.0.0.tgz#84c6e159b81904fdca59a0ef44cd870d31250f9a"
 
 depcheck@^1.4.0:
-  version "1.4.1"
-  resolved "https://registry.yarnpkg.com/depcheck/-/depcheck-1.4.1.tgz#1dfbac61ad6411ae407050a383e7411eb8933ad2"
+  version "1.4.2"
+  resolved "https://registry.yarnpkg.com/depcheck/-/depcheck-1.4.2.tgz#dedeb8729b8fdf990e2bc45a869d99cfb4460097"
   dependencies:
     "@babel/parser" "^7.12.5"
     "@babel/traverse" "^7.12.5"
@@ -1657,6 +1657,7 @@ depcheck@^1.4.0:
     debug "^4.2.0"
     deps-regex "^0.1.4"
     ignore "^5.1.8"
+    is-core-module "^2.4.0"
     js-yaml "^3.14.0"
     json5 "^2.1.3"
     lodash "^4.17.20"
@@ -2751,9 +2752,9 @@ is-cidr@^4.0.2:
   dependencies:
     cidr-regex "^3.1.1"
 
-is-core-module@^2.2.0:
-  version "2.3.0"
-  resolved "https://registry.yarnpkg.com/is-core-module/-/is-core-module-2.3.0.tgz#d341652e3408bca69c4671b79a0954a3d349f887"
+is-core-module@^2.2.0, is-core-module@^2.4.0:
+  version "2.4.0"
+  resolved "https://registry.yarnpkg.com/is-core-module/-/is-core-module-2.4.0.tgz#8e9fc8e15027b011418026e98f0e6f4d86305cc1"
   dependencies:
     has "^1.0.3"
 
