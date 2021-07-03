@@ -30,6 +30,14 @@ export enum ButtonAction {
   PIR_MOTION_STOP = '9',
 }
 
+export enum Module {
+  BTN1 = '1',
+  BTN2 = '2',
+  BTN3 = '3',
+  BTN4 = '4',
+  PIR = '5',
+  INPUT = '6',
+}
 export interface DeviceInfo {
   model?: string;
   hwInfo?: MyStromDeviceHWInfo | DingzDeviceHWInfo;

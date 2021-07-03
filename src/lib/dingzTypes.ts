@@ -1,3 +1,5 @@
+import { Module } from './commonTypes';
+
 export interface DingzTemperatureData {
   success: boolean;
   temperature: number;
@@ -70,8 +72,8 @@ export interface DingzDeviceSystemConfig {
 // Internal representation of Dimmer in Plugin
 export type DimmerId = 'D1' | 'D2' | 'D3' | 'D4';
 export type DimmerIndex = 0 | 1 | 2 | 3;
-export type ButtonId = '1' | '2' | '3' | '4';
-export type ModuleId = ButtonId | '5' | '6';
+export type ModuleId = Module;
+export type ButtonId = Exclude<Module, Module.PIR | Module.INPUT>;
 export type ButtonIndex = 0 | 1 | 2 | 3;
 export enum ButtonState {
   OFF = 0,
