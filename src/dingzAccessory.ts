@@ -386,8 +386,8 @@ export class DingzAccessory extends DingzDaBaseAccessory {
       return;
     }
 
-    const w: DingzWindowCoveringConfigItem[] | undefined = this.config
-      .windowCoveringConfig.blinds;
+    const w: DingzWindowCoveringConfigItem[] | undefined =
+      this.config.windowCoveringConfig.blinds;
 
     /** DIP Switch
      * 0			M1& M2		(2 blinds)
@@ -532,8 +532,8 @@ export class DingzAccessory extends DingzDaBaseAccessory {
                   this.platform.Service.StatelessProgrammableSwitch,
                   module,
                 );
-                const ProgrammableSwitchEvent = this.platform.Characteristic
-                  .ProgrammableSwitchEvent;
+                const ProgrammableSwitchEvent =
+                  this.platform.Characteristic.ProgrammableSwitchEvent;
                 service
                   ?.getCharacteristic(
                     this.platform.Characteristic.ProgrammableSwitchOutputState,
