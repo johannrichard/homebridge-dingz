@@ -10,8 +10,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+
+      - name: Upgrade yarn
+        run: yarn set version latest
+
       - name: Install dependencies
         run: yarn
+        
       - name: Semantic Release
         uses: cycjimmy/semantic-release-action@v2
         env:
