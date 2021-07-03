@@ -3640,8 +3640,8 @@ node-persist@^0.0.11:
     q "~1.1.1"
 
 nodemon@^2.0.3:
-  version "2.0.7"
-  resolved "https://registry.yarnpkg.com/nodemon/-/nodemon-2.0.7.tgz#6f030a0a0ebe3ea1ba2a38f71bf9bab4841ced32"
+  version "2.0.9"
+  resolved "https://registry.yarnpkg.com/nodemon/-/nodemon-2.0.9.tgz#f5cd550ba215da3c1081459ae2c1c8da2c353165"
   dependencies:
     chokidar "^3.2.2"
     debug "^3.2.6"
@@ -4580,8 +4580,8 @@ scss-parser@^1.0.4:
     lodash "^4.17.4"
 
 semantic-release@^17.3.0:
-  version "17.4.3"
-  resolved "https://registry.yarnpkg.com/semantic-release/-/semantic-release-17.4.3.tgz#e01b2d0c0adaf5a6cc427359f1df755d1e908927"
+  version "17.4.4"
+  resolved "https://registry.yarnpkg.com/semantic-release/-/semantic-release-17.4.4.tgz#650dd50ecb520a5a2bc6811305bc9d4d5c3128b1"
   dependencies:
     "@semantic-release/commit-analyzer" "^8.0.0"
     "@semantic-release/error" "^2.2.0"
