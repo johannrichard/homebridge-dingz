@@ -1310,8 +1310,8 @@ cmd-shim@^4.0.1:
     mkdirp-infer-owner "^2.0.0"
 
 cockatiel@^2.0.0:
-  version "2.0.1"
-  resolved "https://registry.yarnpkg.com/cockatiel/-/cockatiel-2.0.1.tgz#2b59587d54d53d33ed49b601cfaab97cad9cc6e7"
+  version "2.0.2"
+  resolved "https://registry.yarnpkg.com/cockatiel/-/cockatiel-2.0.2.tgz#b8bc06df324dd1c769833c4d91478eb1d5519b4f"
 
 code-point-at@^1.0.0:
   version "1.1.0"
