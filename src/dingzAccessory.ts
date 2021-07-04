@@ -33,7 +33,7 @@ import {
   DingzWindowCoveringConfigItem,
   ModuleId,
 } from './lib/dingzTypes';
-import { ButtonAction, AccessoryActionUrl } from './lib/commonTypes';
+import { ButtonAction, AccessoryActionUrl, Module } from './lib/commonTypes';
 
 import { DeviceNotReachableError } from './lib/errors';
 import { DingzDaHomebridgePlatform } from './platform';
@@ -95,8 +95,8 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     this.config = this.accessory.context.config;
     this.hw = this.device.hwInfo as DingzDeviceHWInfo;
 
-    if (this.config) {
-      // only run 'reconfigureAccessory()' is we have a config
+    if (this.config && this.hw) {
+      // only run 'reconfigureAccessory()' if we have a config
       this.log.info('Config available, initialization started');
       this.mustInit = false;
       this.reconfigureAccessory(true);
@@ -386,8 +386,8 @@ export class DingzAccessory extends DingzDaBaseAccessory {
       return;
     }
 
-    const w: DingzWindowCoveringConfigItem[] | undefined = this.config
-      .windowCoveringConfig.blinds;
+    const w: DingzWindowCoveringConfigItem[] | undefined =
+      this.config.windowCoveringConfig.blinds;
 
     /** DIP Switch
      * 0			M1& M2		(2 blinds)
@@ -475,22 +475,22 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     const b = this.config.buttonConfig.buttons;
     this.reconfigureButtonService({
       name: b[0].name && b[0].name !== '' ? b[0].name : 'Button 1',
-      button: '1',
+      button: Module.BTN1,
       initHandler,
     });
     this.reconfigureButtonService({
       name: b[1].name && b[1].name !== '' ? b[1].name : 'Button 2',
-      button: '2',
+      button: Module.BTN2,
       initHandler,
     });
     this.reconfigureButtonService({
       name: b[2].name && b[2].name !== '' ? b[2].name : 'Button 3',
-      button: '3',
+      button: Module.BTN3,
       initHandler,
     });
     this.reconfigureButtonService({
       name: b[3].name && b[3].name !== '' ? b[3].name : 'Button 4',
-      button: '4',
+      button: Module.BTN4,
       initHandler,
     });
 
@@ -502,60 +502,74 @@ export class DingzAccessory extends DingzDaBaseAccessory {
           this.log.debug(
             `Module ${module} triggered -> ${action}, MAC: ${mac} (This: ${this.device.mac})`,
           );
-          if (module === '6') {
-            // Fix for v1.2.x firmware (#318)
-            // INPUT (Unassigned)
-            this.log.info(`Button ${module} Input -> ${action} (no action)`);
-          } else if (module === '5') {
-            // PUSH MOTION
-            this.log.info(`Module ${module} Motion -> ${action}`);
-            this.log.debug('Motion Update from CALLBACK');
-            this.motionService
-              ?.getCharacteristic(this.platform.Characteristic.MotionDetected)
-              .setValue(
-                action === ButtonAction.PIR_MOTION_START ? true : false,
+          switch (module) {
+            case Module.INPUT:
+              // Fix for v1.2.x firmware (#318)
+              // INPUT (Unassigned)
+              this.log.info(`Button ${module} Input -> ${action} (no action)`);
+              break;
+            case Module.PIR:
+              // PUSH MOTION
+              this.log.info(`Module ${module} Motion -> ${action}`);
+              this.log.debug('Motion Update from CALLBACK');
+              this.motionService
+                ?.getCharacteristic(this.platform.Characteristic.MotionDetected)
+                .setValue(
+                  action === ButtonAction.PIR_MOTION_START ? true : false,
+                );
+              break;
+            case Module.BTN1:
+            case Module.BTN2:
+            case Module.BTN3:
+            case Module.BTN4:
+              {
+                this.dingzStates.Buttons[module].event = action ?? 1;
+                this.dingzStates.Buttons[module].state =
+                  this.dingzStates.Buttons[module].state === ButtonState.OFF
+                    ? ButtonState.ON
+                    : ButtonState.OFF;
+                const service = this.accessory.getServiceById(
+                  this.platform.Service.StatelessProgrammableSwitch,
+                  module,
+                );
+                const ProgrammableSwitchEvent =
+                  this.platform.Characteristic.ProgrammableSwitchEvent;
+                service
+                  ?.getCharacteristic(
+                    this.platform.Characteristic.ProgrammableSwitchOutputState,
+                  )
+                  .updateValue(this.dingzStates.Buttons[module].state);
+                this.log.info(
+                  `Button ${module} (${service?.displayName}) pressed -> ${action}`,
+                );
+
+                switch (action) {
+                  case ButtonAction.SINGLE_PRESS:
+                    service
+                      ?.getCharacteristic(ProgrammableSwitchEvent)
+                      .setValue(ProgrammableSwitchEvent.SINGLE_PRESS);
+                    break;
+                  case ButtonAction.DOUBLE_PRESS:
+                    service
+                      ?.getCharacteristic(ProgrammableSwitchEvent)
+                      .setValue(ProgrammableSwitchEvent.DOUBLE_PRESS);
+                    break;
+                  case ButtonAction.LONG_PRESS:
+                    service
+                      ?.getCharacteristic(ProgrammableSwitchEvent)
+                      .setValue(ProgrammableSwitchEvent.LONG_PRESS);
+                    break;
+                }
+
+                // Immediately update states after button pressed
+                this.getDeviceStateUpdate();
+              }
+              break;
+            default:
+              this.log.error(
+                `Unknown Module ${module} triggered -> MAC: ${mac} (This: ${this.device.mac})`,
               );
-          } else {
-            this.dingzStates.Buttons[module].event = action ?? 1;
-            this.dingzStates.Buttons[module].state =
-              this.dingzStates.Buttons[module].state === ButtonState.OFF
-                ? ButtonState.ON
-                : ButtonState.OFF;
-            const service = this.accessory.getServiceById(
-              this.platform.Service.StatelessProgrammableSwitch,
-              module,
-            );
-            const ProgrammableSwitchEvent = this.platform.Characteristic
-              .ProgrammableSwitchEvent;
-            service
-              ?.getCharacteristic(
-                this.platform.Characteristic.ProgrammableSwitchOutputState,
-              )
-              .updateValue(this.dingzStates.Buttons[module].state);
-            this.log.info(
-              `Button ${module} (${service?.displayName}) pressed -> ${action}`,
-            );
-
-            switch (action) {
-              case ButtonAction.SINGLE_PRESS:
-                service
-                  ?.getCharacteristic(ProgrammableSwitchEvent)
-                  .setValue(ProgrammableSwitchEvent.SINGLE_PRESS);
-                break;
-              case ButtonAction.DOUBLE_PRESS:
-                service
-                  ?.getCharacteristic(ProgrammableSwitchEvent)
-                  .setValue(ProgrammableSwitchEvent.DOUBLE_PRESS);
-                break;
-              case ButtonAction.LONG_PRESS:
-                service
-                  ?.getCharacteristic(ProgrammableSwitchEvent)
-                  .setValue(ProgrammableSwitchEvent.LONG_PRESS);
-                break;
-            }
-
-            // Immediately update states after button pressed
-            this.getDeviceStateUpdate();
+              break;
           }
         }
       },
