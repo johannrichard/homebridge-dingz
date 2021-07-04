@@ -972,11 +972,11 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
           );
           // attempt-auto add of either a dingz
           if (
-            request.connection.remoteAddress &&
-            isValidHost(request.connection.remoteAddress)
+            request.socket.remoteAddress &&
+            isValidHost(request.socket.remoteAddress)
           ) {
             this.addDingzDevice({
-              address: request.connection.remoteAddress,
+              address: request.socket.remoteAddress,
               name: `DINGZ ${mac.substr(6, 6)}`,
             });
           }
