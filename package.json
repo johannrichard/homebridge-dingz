@@ -22,13 +22,13 @@
     "lint": "eslint src/**.ts",
     "postinstall": "husky install",
     "postpublish": "npx pinst --enable",
-    "watch": "yarn run build && npx nodemon",
+    "watch": "yarn dlx nodemon",
     "build": "npx rimraf ./dist && tsc",
     "depcheck": "npx depcheck",
     "prepublishOnly": "npx pinst --disable",
     "prepare": "npm run lint && npm run build && npm run depcheck",
     "changelog": "changelog --exclude ci,chore",
-    "debug": "yarn node /usr/local/bin/homebridge -I"
+    "debug": "yarn dlx homebridge -I"
   },
   "keywords": [
     "homebridge-plugin",
