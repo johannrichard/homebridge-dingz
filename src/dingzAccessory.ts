@@ -96,6 +96,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     this.hw = this.device.hwInfo as DingzDeviceHWInfo;
 
     if (this.config && this.hw) {
+      // only run 'reconfigureAccessory()' if we have a config
       this.log.info('Config available, initialization started');
       this.mustInit = false;
       this.reconfigureAccessory(true);
