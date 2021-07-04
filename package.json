@@ -28,7 +28,7 @@
     "prepublishOnly": "pinst --disable",
     "prepare": "yarn run lint && yarn run build && yarn run depcheck",
     "changelog": "changelog --exclude ci,chore",
-    "debug": "yarn dlx homebridge -I"
+    "debug": "yarn node /usr/local/bin/homebridge -I"
   },
   "keywords": [
     "homebridge-plugin",
