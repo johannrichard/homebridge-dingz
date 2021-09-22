@@ -1001,6 +1001,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
       'WindowCoverings: ',
       JSON.stringify(this.dingzStates.WindowCovers),
     );
+
     const id = this.getWindowCoveringId(index);
     const tiltAngle: number = this.dingzStates.WindowCovers[id]?.lamella ?? 0; // Implement fix for #300s
 
@@ -1011,7 +1012,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
       tiltAngle,
     );
 
-    callback(this.reachabilityState, tiltAngle);
+    callback(this.reachabilityState, (tiltAngle / 100) * 90); // FIXES #371: internally, it's %, HomeKit expects °
   }
 
   private getPositionState(
