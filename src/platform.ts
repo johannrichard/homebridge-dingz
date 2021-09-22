@@ -341,7 +341,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
               const dingzDaAccessory = new DingzAccessory(this, accessory);
               this.accessories[uuid] = dingzDaAccessory;
               return dingzDaAccessory;
-            } catch (e) {
+            } catch (e: unknown) {
               return Promise.reject();
             }
           } else {
@@ -871,7 +871,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
       process.on('exit', () => {
         try {
           discoverySocket.close();
-        } catch (e) {
+        } catch (e: any) {
           if (e.code === 'ERR_SOCKET_DGRAM_NOT_CONNECTED') {
             this.log.info('Socket already destroyed');
           }
@@ -887,14 +887,14 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
         this.log.info('Stopping discovery');
         try {
           discoverySocket.close();
-        } catch (e) {
+        } catch (e: any) {
           if (e.code === 'ERR_SOCKET_DGRAM_NOT_CONNECTED') {
             this.log.info('Socket already destroyed');
           }
         }
       }, 600000); // Discover for 10 min then stop
       // Make sure we close the socket even if we get killed
-    } catch (e) {
+    } catch (e: any) {
       this.log.error(e.code + ' Socket error');
     }
     return true;
