@@ -24,7 +24,7 @@
     "postpublish": "yarn pinst --enable",
     "watch": "yarn dlx nodemon",
     "build": "yarn rimraf ./dist && tsc",
-    "depcheck": "yarn depcheck",
+    "depcheck": "depcheck",
     "prepublishOnly": "yarn pinst --disable",
     "prepare": "yarn run lint && yarn run build && yarn run depcheck",
     "changelog": "changelog --exclude ci,chore",
