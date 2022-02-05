@@ -88,14 +88,6 @@
     ]
   },
   "release": {
-    "branches": [
-      {
-        "name": "main",
-        "channel": "latest"
-      },
-      "beta",
-      "alpha"
-    ],
     "plugins": [
       "@semantic-release/commit-analyzer",
       "@semantic-release/release-notes-generator",

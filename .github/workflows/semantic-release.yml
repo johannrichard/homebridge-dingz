@@ -3,7 +3,7 @@ name: Semantic release
 on:
   workflow_dispatch:
   push:
-    branches: [main, beta, alpha]
+    branches: [master, beta, alpha]
 jobs:
   semantic-release:
     runs-on: ubuntu-latest
