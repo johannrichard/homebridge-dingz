@@ -21,12 +21,12 @@
   "scripts": {
     "lint": "eslint src/**.ts",
     "postinstall": "husky install",
-    "postpublish": "npx pinst --enable",
+    "postpublish": "yarn pinst --enable",
     "watch": "yarn dlx nodemon",
-    "build": "npx rimraf ./dist && tsc",
-    "depcheck": "npx depcheck",
-    "prepublishOnly": "npx pinst --disable",
-    "prepare": "npm run lint && npm run build && npm run depcheck",
+    "build": "yarn rimraf ./dist && tsc",
+    "depcheck": "depcheck",
+    "prepublishOnly": "yarn pinst --disable",
+    "prepare": "yarn run lint && yarn run build && yarn run depcheck",
     "changelog": "changelog --exclude ci,chore",
     "debug": "yarn dlx homebridge -I"
   },
