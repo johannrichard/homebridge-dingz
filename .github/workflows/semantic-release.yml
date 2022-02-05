@@ -20,7 +20,7 @@ jobs:
       - run: yarn
 
       - name: Semantic Release
-      - run: yarn semantic-release
+        run: yarn semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
