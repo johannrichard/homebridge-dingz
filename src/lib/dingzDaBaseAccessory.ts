@@ -131,10 +131,11 @@ export class DingzDaBaseAccessory {
             device.token = deviceInfo.token;
             this.baseUrl = `http://${this.device.address}`;
 
-            this.request.defaults = {
-              baseURL: this.baseUrl,
-              timeout: RETRY_TIMEOUT * 1000,
-              headers: { Token: device.token ?? '' },
+            // Set specific default headers
+            this.request.defaults.baseURL = this.baseUrl;
+            this.request.defaults.timeout = RETRY_TIMEOUT * 1000;
+            this.request.defaults.headers.common = {
+              Token: device.token ?? '',
             };
 
             // update AccessoryInformation
