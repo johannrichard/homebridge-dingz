@@ -2,6 +2,7 @@
 
 ![Build and Lint](https://github.com/johannrichard/homebridge-dingz/workflows/Build%20and%20Lint/badge.svg)
 ![Node.js Package](https://github.com/johannrichard/homebridge-dingz/workflows/Node.js%20Package/badge.svg)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fjohannrichard%2Fhomebridge-dingz.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fjohannrichard%2Fhomebridge-dingz?ref=badge_shield)
 
 This plugin implements some (but not all) functions of [dingz](https://dingz.ch) Smart Home Devices. The plugin also supports (some) myStrom Devices as they share much of the same API definitions and concepts with dingz.
 
@@ -62,3 +63,6 @@ Harder: See [the Wiki](https://github.com/johannrichard/homebridge-dingz/wiki) f
 **Disclaimer**: No warranties whatsoever, use this plugin entirely at your own risk. dingz may only be installed by qualified professionals.
 
 **Full disclosure**: The author of this plugin is not affiliated in any way with Iolo AG or MyStrom AG. [Iolo AG](https://iolo.ch), the producer of dingz', was so kind to provide me with one test device. I'm very grateful for this and hope this little plugin can contribute a little bit to help dingz spread its wings. Thanks also to [myStrom AG](mystrom.ch) who provided me with some gear to implement additional myStrom Devices.
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fjohannrichard%2Fhomebridge-dingz.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fjohannrichard%2Fhomebridge-dingz?ref=badge_large)
