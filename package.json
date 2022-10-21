@@ -41,7 +41,7 @@
     "axios": "^0.25.0",
     "axios-retry": "^3.2.4",
     "body-parser": "^1.19.1",
-    "chalk": "^4.1.2",
+    "chalk": "^5.1.2",
     "cockatiel": "^2.0.2",
     "express": "^4.17.2",
     "intervals-for-humans": "^1.0.4",
