@@ -75,7 +75,7 @@
     "husky": "^7.0.4",
     "lint-staged": "^13.0.3",
     "nodemon": "^2.0.15",
-    "pinst": "^2.1.6",
+    "pinst": "^3.0.0",
     "prettier": "^2.5.1",
     "rimraf": "^3.0.2",
     "semantic-release": "^19.0.2",
