@@ -1,7 +1,9 @@
 name: Build and Lint
-
-on: [push, pull_request, workflow_dispatch]
-
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches: [main, beta, alpha]
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -12,15 +14,15 @@ jobs:
         node-version: [16.x, 17.x]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@main
 
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@main
         with:
           node-version: ${{ matrix.node-version }}
 
-#      - name: Upgrade yarn
-#        run: yarn set version berry
+      #      - name: Upgrade yarn
+      #        run: yarn set version berry
 
       - name: Install dependencies
         run: yarn
