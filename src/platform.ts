@@ -751,7 +751,14 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
       const mac: string = this.byteToHexString(msg.subarray(0, 6));
       const deviceSuffix: string = mac.substr(6, 6);
 
-      if (!this.discovered.has(mac)) {
+      // Check if already discovered, and if not ignored
+      // Implements #497
+      if (
+        !this.discovered.has(mac) &&
+        this.config.ignore &&
+        this.config.ignore.findIndex((i: { mac: string }) => i.mac === mac) ===
+          -1
+      ) {
         switch (t) {
           case DeviceTypes.MYSTROM_BUTTON_PLUS:
             throw new DeviceNotImplementedError(

@@ -104,6 +104,18 @@
             }
           }
         }
+      },
+      "ignore": {
+        "title": "Ignored Devices",
+        "description": "Devices in this list will be excluded when found via auto-discovery.",
+        "type": "array",
+        "items": {
+          "mac": {
+            "title": "MAC-Address",
+            "type": "string",
+            "pattern": "^([A-Fa-f0-9]{2}:){5}[A-Fa-f0-9]{2}$"
+          }
+        }
       }
     }
   }
