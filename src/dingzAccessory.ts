@@ -835,12 +835,11 @@ export class DingzAccessory extends DingzDaBaseAccessory {
 
     // Set min/max Values
     // FIXME: Implement different lamella/blind modes #24
-    const maxTiltValue = semver.lt(this.hw.fw_version, '1.2.0') ? 90 : 100;
     service
       .getCharacteristic(this.platform.Characteristic.TargetHorizontalTiltAngle)
       .setProps({
         minValue: 0,
-        maxValue: maxTiltValue,
+        maxValue: 90,
         minStep: this.platform.config.minStepTiltAngle,
       }) // dingz Maximum values
       .on(CharacteristicEventTypes.SET, this.setTiltAngle.bind(this, index));
@@ -881,9 +880,6 @@ export class DingzAccessory extends DingzDaBaseAccessory {
        * - We're moving by setting new positions in the UI [x]
        * - We're moving by pressing the "up/down" buttons in the UI or Hardware [x]
        */
-
-      const maxTiltValue = semver.lt(this.hw.fw_version, '1.2.0') ? 90 : 100;
-
       service
         .getCharacteristic(this.platform.Characteristic.TargetPosition)
         .updateValue(state.position);
@@ -891,7 +887,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
         .getCharacteristic(
           this.platform.Characteristic.TargetHorizontalTiltAngle,
         )
-        .updateValue((state.lamella / 100) * maxTiltValue); // Old FW: Set in °, Get in % (...)
+        .updateValue((state.lamella / 100) * 90); // Lamella position set in ° in HomeKit
 
       let positionState: number;
       switch (state.moving) {
@@ -910,7 +906,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
             .getCharacteristic(
               this.platform.Characteristic.CurrentHorizontalTiltAngle,
             )
-            .updateValue((state.lamella / 100) * maxTiltValue); // Set in °, Get in % (...)
+            .updateValue((state.lamella / 100) * 90); // Lamella position set in ° in HomeKit
           break;
       }
       service
@@ -1012,7 +1008,9 @@ export class DingzAccessory extends DingzDaBaseAccessory {
       tiltAngle,
     );
 
-    callback(this.reachabilityState, (tiltAngle / 100) * 90); // FIXES #371: internally, it's %, HomeKit expects °
+    // FIXES #371, #419: internally, it's % (but only in newer firmware, v1.2.0 and lower has ° as well), HomeKit expects °
+    const maxTiltValue = semver.lt(this.hw.fw_version, '1.2.0') ? 90 : 100;
+    callback(this.reachabilityState, (tiltAngle / maxTiltValue) * 90);
   }
 
   private getPositionState(
