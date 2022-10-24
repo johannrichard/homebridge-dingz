@@ -65,6 +65,8 @@ export interface AccessoryTypes {
   [key: string]: AccessoryType;
 }
 
+// FIXME: Needed because of #511
 export interface AccessoryActionUrl {
-  url: string;
+  url?: string;
+  generic?: string;
 }
