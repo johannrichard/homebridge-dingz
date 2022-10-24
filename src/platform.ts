@@ -99,7 +99,10 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
         // Only add to map if mac is set
         if (device.mac) {
           const mac = device.mac.toUpperCase();
-          this.ignored.set(mac, device?.comment || '');
+          this.ignored.set(mac, {
+            comment: device?.comment || '',
+            isignored: false,
+          });
           this.log.info(
             chalk.redBright('[Platform]'),
             `Will be ignoring device ${
@@ -166,7 +169,9 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
       if (this.ignored.has(context.device.mac.toUpperCase())) {
         this.log.warn(
           chalk.redBright('[Platform]'),
-          'Cached accessory is in list of ignored devices, but will continue loading it. Consider manually removing it from Homebridge.',
+          'This cached accessory is also in the list of ignored devices.',
+          'The plugin will continue loading it.',
+          'Consider manually removing it from Homebridge.',
         );
       }
 
@@ -791,12 +796,15 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
       // Check if already discovered, and if not ignored
       // Implements #497
       if (this.ignored.has(mac.toUpperCase())) {
-        this.log.info(
-          'Ignoring discovered device',
-          this.ignored.get(mac.toUpperCase()) || '',
-          'at',
-          mac,
-        );
+        if (!this.ignored.get(mac.toUpperCase()).isignored) {
+          this.log.info(
+            'Ignoring discovered device',
+            this.ignored.get(mac.toUpperCase()).comment || '',
+            'at',
+            mac,
+          );
+          this.ignored.get(mac.toUpperCase()).isignored = true;
+        }
       } else {
         if (!this.discovered.has(mac)) {
           switch (t) {
