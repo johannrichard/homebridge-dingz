@@ -225,6 +225,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
       .then((callBackUrl) => {
         // Set the callback URL
         const endpoints = ['generic'];
+        const platformCallbackUrl = this.platform.getCallbackUrl();
 
         // Add PIR callbacks, depending on dingz Firmware version
         if (this.hw.has_pir) {
@@ -246,9 +247,9 @@ export class DingzAccessory extends DingzDaBaseAccessory {
         } else if (
           // FIXME: because of #511
           (semver.lt(this.hw.fw_version, '1.4.0') &&
-            !callBackUrl?.url?.includes(this.platform.getCallbackUrl())) ||
+            !callBackUrl?.url?.includes(platformCallbackUrl)) ||
           (semver.gte(this.hw.fw_version, '1.4.0') &&
-            !callBackUrl?.generic?.includes(this.platform.getCallbackUrl()))
+            !callBackUrl?.generic?.includes(platformCallbackUrl))
         ) {
           this.log.warn('Update existing callback URL ->', callBackUrl);
 
@@ -943,7 +944,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
       await this.setWindowCovering({
         id: id,
         blind: position as number,
-        lamella: windowCovering.lamella,
+        lamella: (windowCovering.lamella / 90) * 100, // FIXES #419, we must convert ° to %
         callback: callback,
       });
     }
@@ -979,14 +980,14 @@ export class DingzAccessory extends DingzDaBaseAccessory {
       'Set Characteristic TargetHorizontalTiltAngle on ',
       index,
       '->',
-      angle,
+      `${angle}°`,
     );
     const id = this.getWindowCoveringId(index);
     if (this.dingzStates.WindowCovers[id]) {
       await this.setWindowCovering({
         id: id,
         blind: this.dingzStates.WindowCovers[id].position,
-        lamella: angle as number,
+        lamella: ((angle as number) / 90) * 100, // FIXES #419, we must convert ° to %
         callback: callback,
       });
     }
@@ -1494,6 +1495,9 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     lamella: number;
     callback: CharacteristicSetCallback;
   }) {
+    this.log.debug(
+      `Setting WindowCovering ${id} to position ${blind} and angle ${lamella}°`,
+    );
     // The API says the parameters can be omitted. This is not true
     // {{ip}}/api/v1/shade/0?blind=<value>&lamella=<value>
     const setWindowCoveringEndpoint = `${this.baseUrl}/api/v1/shade/${id}`;
