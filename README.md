@@ -6,7 +6,7 @@
 
 This plugin implements some (but not all) functions of [dingz](https://dingz.ch) Smart Home Devices. The plugin also supports (some) myStrom Devices as they share much of the same API definitions and concepts with dingz.
 
-Please have a look at the [Wiki](https://github.com/johannrichard/homebridge-dingz/wiki) and also at the [Release Notes](https://github.com/johannrichard/homebridge-dingz/releases/latest) for more details on the configuration options and the plugin's behavior _vis-à-vis_ the dingz' settings for outputs and more, as well as on the supported devices, new features and fixes. 
+Please have a look at the [Wiki](https://github.com/johannrichard/homebridge-dingz/wiki) and also at the [Release Notes](https://github.com/johannrichard/homebridge-dingz/releases/latest) for more details on the configuration options and the plugin's behavior _vis-à-vis_ the dingz' settings for outputs and more, as well as on the supported devices, new features and fixes.
 
 <!-- TOC -->
 
@@ -24,7 +24,7 @@ The plugin attempts to
 - auto-discover dingz and mystrom devices, and to
 - auto-identify dingz settings and thus accessories by using device type, dip switch settings and input configuration
 
-Older myStrom WiFi Switches don't support auto-discovery and must be added manually. Depending on your setup, you might want or have to add all your devices manually. Configuration settings will be read-out automatically in either case.
+Older myStrom WiFi Switches don't support auto-discovery and must be added manually. Depending on your setup, you might want or have to add all your devices manually. Configuration settings will be read-out automatically in either case. The [Wiki](https://github.com/johannrichard/homebridge-dingz/wiki#auto-discovery--auto-configuration) contains further information, including on the new "ignore" feature.
 
 ## Configuration changes (dingz only)
 
@@ -65,4 +65,5 @@ Harder: See [the Wiki](https://github.com/johannrichard/homebridge-dingz/wiki) f
 **Full disclosure**: The author of this plugin is not affiliated in any way with Iolo AG or MyStrom AG. [Iolo AG](https://iolo.ch), the producer of dingz', was so kind to provide me with one test device. I'm very grateful for this and hope this little plugin can contribute a little bit to help dingz spread its wings. Thanks also to [myStrom AG](mystrom.ch) who provided me with some gear to implement additional myStrom Devices.
 
 ## License
+
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fjohannrichard%2Fhomebridge-dingz.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fjohannrichard%2Fhomebridge-dingz?ref=badge_large)
