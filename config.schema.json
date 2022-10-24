@@ -46,6 +46,27 @@
         "type": "string",
         "description": "Set a global authentication token. This will be used for auto-discovery on the local network and as default token for manually specified devices."
       },
+      "ignore": {
+        "title": "Ignored Devices",
+        "description": "Devices in this list will be excluded when found via auto-discovery. Add an entry (MAC-Address without the colon) for each devices that shall be ignored. The MAC-Address of your myStrom and Dingz devices can be found in the respective app, or via the device's own webpage.",
+        "type": "array",
+        "items": {
+          "title": "Device",
+          "type": "object",
+          "properties": {
+            "mac": {
+              "title": "MAC-Address",
+              "type": "string",
+              "pattern": "^([A-Fa-f0-9]{2}){5}[A-Fa-f0-9]{2}$",
+              "required": true
+            },
+            "comment": {
+              "title": "Comment",
+              "type": "string"
+            }
+          }
+        }
+      },
       "callbackHostname": {
         "title": "Hostname / IP to use for button callbacks ",
         "type": "string",

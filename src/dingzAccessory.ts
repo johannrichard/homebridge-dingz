@@ -223,15 +223,21 @@ export class DingzAccessory extends DingzDaBaseAccessory {
 
     this.getButtonCallbackUrl()
       .then((callBackUrl) => {
+        // Set the callback URL
+        const endpoints = ['generic'];
+
+        // Add PIR callbacks, depending on dingz Firmware version
+        if (this.hw.has_pir) {
+          if (semver.lt(this.hw.fw_version, '1.2.0')) {
+            endpoints.push('pir/single');
+          } else {
+            endpoints.push('pir/generic', 'pir/rise', 'pir/fall');
+          }
+        }
+
         if (this.platform.config.callbackOverride) {
           this.log.warn('Override callback URL ->', callBackUrl);
-          // Set the callback URL (Override!)
-          const endpoints = // Only set `pir/single` for older FW
-            this.hw.has_pir && semver.lt(this.hw.fw_version, '1.2.0')
-              ? ['generic', 'pir/single']
-              : this.hw.has_pir
-              ? ['generic', 'pir/generic', 'pir/rise', 'pir/fall']
-              : ['generic'];
+
           this.platform.setButtonCallbackUrl({
             baseUrl: this.baseUrl,
             token: this.device.token,
@@ -239,13 +245,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
           });
         } else if (!callBackUrl?.url.includes(this.platform.getCallbackUrl())) {
           this.log.warn('Update existing callback URL ->', callBackUrl);
-          // Set the callback URL (Override!)
-          const endpoints =
-            this.hw.has_pir && semver.lt(this.hw.fw_version, '1.2.0')
-              ? ['generic', 'pir/single']
-              : this.hw.has_pir
-              ? ['generic', 'pir/generic', 'pir/rise', 'pir/fall']
-              : ['generic'];
+
           this.platform.setButtonCallbackUrl({
             baseUrl: this.baseUrl,
             token: this.device.token,
@@ -835,12 +835,11 @@ export class DingzAccessory extends DingzDaBaseAccessory {
 
     // Set min/max Values
     // FIXME: Implement different lamella/blind modes #24
-    const maxTiltValue = semver.lt(this.hw.fw_version, '1.2.0') ? 90 : 100;
     service
       .getCharacteristic(this.platform.Characteristic.TargetHorizontalTiltAngle)
       .setProps({
         minValue: 0,
-        maxValue: maxTiltValue,
+        maxValue: 90,
         minStep: this.platform.config.minStepTiltAngle,
       }) // dingz Maximum values
       .on(CharacteristicEventTypes.SET, this.setTiltAngle.bind(this, index));
@@ -881,9 +880,6 @@ export class DingzAccessory extends DingzDaBaseAccessory {
        * - We're moving by setting new positions in the UI [x]
        * - We're moving by pressing the "up/down" buttons in the UI or Hardware [x]
        */
-
-      const maxTiltValue = semver.lt(this.hw.fw_version, '1.2.0') ? 90 : 100;
-
       service
         .getCharacteristic(this.platform.Characteristic.TargetPosition)
         .updateValue(state.position);
@@ -891,7 +887,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
         .getCharacteristic(
           this.platform.Characteristic.TargetHorizontalTiltAngle,
         )
-        .updateValue((state.lamella / 100) * maxTiltValue); // Old FW: Set in °, Get in % (...)
+        .updateValue((state.lamella / 100) * 90); // Lamella position set in ° in HomeKit
 
       let positionState: number;
       switch (state.moving) {
@@ -910,7 +906,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
             .getCharacteristic(
               this.platform.Characteristic.CurrentHorizontalTiltAngle,
             )
-            .updateValue((state.lamella / 100) * maxTiltValue); // Set in °, Get in % (...)
+            .updateValue((state.lamella / 100) * 90); // Lamella position set in ° in HomeKit
           break;
       }
       service
@@ -1012,7 +1008,9 @@ export class DingzAccessory extends DingzDaBaseAccessory {
       tiltAngle,
     );
 
-    callback(this.reachabilityState, (tiltAngle / 100) * 90); // FIXES #371: internally, it's %, HomeKit expects °
+    // FIXES #371, #419: internally, it's % (but only in newer firmware, v1.2.0 and lower has ° as well), HomeKit expects °
+    const maxTiltValue = semver.lt(this.hw.fw_version, '1.2.0') ? 90 : 100;
+    callback(this.reachabilityState, (tiltAngle / maxTiltValue) * 90);
   }
 
   private getPositionState(
@@ -1329,9 +1327,9 @@ export class DingzAccessory extends DingzDaBaseAccessory {
         color: `hex #${state.rgb}`,
         to: 'hsv',
       });
-      this.dingzStates.LED.hue = hsv.c;
-      this.dingzStates.LED.saturation = hsv.s;
-      this.dingzStates.LED.value = hsv.i;
+      this.dingzStates.LED.hue = hsv.color.h;
+      this.dingzStates.LED.saturation = hsv.color.s;
+      this.dingzStates.LED.value = hsv.color.v;
     }
 
     ledService
@@ -1552,7 +1550,10 @@ export class DingzAccessory extends DingzDaBaseAccessory {
    * Returns the callback URL for the device
    */
   public async getButtonCallbackUrl(): Promise<AccessoryActionUrl> {
-    const getCallbackEndpoint = '/api/v1/action/generic/generic';
+    // FIXES #511: different endpoint URLs for Callback from FW v1.4.x forward
+    const getCallbackEndpoint = semver.gte(this.hw.fw_version, '1.4.0')
+      ? '/api/v1/action/generic'
+      : '/api/v1/action/generic/generic';
     this.log.debug('Getting the callback URL -> ', getCallbackEndpoint);
     return await this.request.get(getCallbackEndpoint).then((response) => {
       return response.data;
