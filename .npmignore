@@ -131,6 +131,8 @@ web_modules/
 .yarn/plugins
 .yarn/sdks
 .yarn/unplugged
+.yarn/releases
+.yarnrc.yml
 .pnp.*
 
 # Github templates and actions, own stuff
