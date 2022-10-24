@@ -48,7 +48,7 @@
     "is-valid-host": "^1.0.1",
     "limit-number": "^3.0.0",
     "qs": "^6.10.3",
-    "semver": "^7.3.5",
+    "semver": "^7.3.8",
     "simple-color-converter": "^2.1.13"
   },
   "devDependencies": {
