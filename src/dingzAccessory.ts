@@ -243,7 +243,13 @@ export class DingzAccessory extends DingzDaBaseAccessory {
             token: this.device.token,
             endpoints: endpoints,
           });
-        } else if (!callBackUrl?.url.includes(this.platform.getCallbackUrl())) {
+        } else if (
+          // FIXME: because of #511
+          (semver.lt(this.hw.fw_version, '1.4.0') &&
+            !callBackUrl?.url?.includes(this.platform.getCallbackUrl())) ||
+          (semver.gte(this.hw.fw_version, '1.4.0') &&
+            !callBackUrl?.generic?.includes(this.platform.getCallbackUrl()))
+        ) {
           this.log.warn('Update existing callback URL ->', callBackUrl);
 
           this.platform.setButtonCallbackUrl({
