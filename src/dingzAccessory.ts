@@ -1329,9 +1329,9 @@ export class DingzAccessory extends DingzDaBaseAccessory {
         color: `hex #${state.rgb}`,
         to: 'hsv',
       });
-      this.dingzStates.LED.hue = hsv.c;
-      this.dingzStates.LED.saturation = hsv.s;
-      this.dingzStates.LED.value = hsv.i;
+      this.dingzStates.LED.hue = hsv.color.h;
+      this.dingzStates.LED.saturation = hsv.color.s;
+      this.dingzStates.LED.value = hsv.color.v;
     }
 
     ledService
