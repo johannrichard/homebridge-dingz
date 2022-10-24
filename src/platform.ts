@@ -792,9 +792,9 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
       // Implements #497
       if (this.ignored.has(mac.toUpperCase())) {
         this.log.info(
-          'Ignoring discovered device ',
-          this.ignored.get(mac.toUpperCase()).comment || '',
-          ' at',
+          'Ignoring discovered device',
+          this.ignored.get(mac.toUpperCase()) || '',
+          'at',
           mac,
         );
       } else {
