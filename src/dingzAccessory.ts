@@ -231,8 +231,11 @@ export class DingzAccessory extends DingzDaBaseAccessory {
         if (this.hw.has_pir) {
           if (semver.lt(this.hw.fw_version, '1.2.0')) {
             endpoints.push('pir/single');
-          } else {
+          } else if (semver.lt(this.hw.fw_version, '1.4.0')) {
             endpoints.push('pir/generic', 'pir/rise', 'pir/fall');
+          } else {
+            // FIXES #511: Newer FW have (yet!) other endpoint for PIR callbacks
+            endpoints.push('pir1/rise', 'pir1/fall');
           }
         }
 
@@ -260,7 +263,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
             endpoints: endpoints,
           });
         } else {
-          this.log.debug('Callback URL already set ->', callBackUrl?.url);
+          this.log.debug('Callback URL already set ->', callBackUrl);
         }
       })
       .catch(this.handleRequestErrors.bind(this));
@@ -1495,6 +1498,12 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     lamella: number;
     callback: CharacteristicSetCallback;
   }) {
+    // The API only accepts integer numbers.
+    // As we juggle with ° vs %, we must round
+    // the values for blind and lamella to the nearest integer
+    blind = Math.round(blind);
+    lamella = Math.round(lamella);
+
     this.log.debug(
       `Setting WindowCovering ${id} to position ${blind} and angle ${lamella}°`,
     );
