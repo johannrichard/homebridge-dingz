@@ -269,7 +269,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
     token?: string;
     existingAccessory?: PlatformAccessory;
   }): Promise<DingzAccessory> {
-    // Run a diacovery of changed things every 10 seconds
+    // Run a discovery of changed things every 10 seconds
     this.log.debug(
       `addDingzDevice() --> Add configured device -> ${name} (${address})`,
     );
