@@ -83,6 +83,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
   // this is used to track restored cached accessories
   public accessories: AccessoryTypes = {};
   private discovered = new Map();
+  private ignored = new Map();
   private readonly app: e.Application = e();
 
   constructor(
@@ -91,6 +92,26 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
     public readonly api: API,
   ) {
     axiosRetry(axios, { retries: 5, retryDelay: axiosRetry.exponentialDelay });
+
+    // Adds ignored devices from Config
+    if (this.config.ignore) {
+      for (const device of this.config.ignore) {
+        // Only add to map if mac is set
+        if (device.mac) {
+          const mac = device.mac.toUpperCase();
+          this.ignored.set(mac, {
+            comment: device?.comment || '',
+            isignored: false,
+          });
+          this.log.info(
+            chalk.redBright('[Platform]'),
+            `Will be ignoring device ${
+              device?.comment || ''
+            } with MAC Address ${mac}`,
+          );
+        }
+      }
+    }
 
     // When this event is fired it means Homebridge has restored all cached accessories from disk.
     // Dynamic Platform plugins should only register new accessories after this event was fired,
@@ -107,9 +128,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
         this.addDevices();
       }
       // Discovers devices from UDP
-      if (this.config.autoDiscover) {
-        this.setupDeviceDiscovery();
-      }
+      this.setupDeviceDiscovery();
 
       // set-up the callback server ...
       this.callbackServer();
@@ -147,6 +166,15 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
 
     const context = accessory.context;
     if (context.device && context.device.accessoryClass) {
+      if (this.ignored.has(context.device.mac.toUpperCase())) {
+        this.log.warn(
+          chalk.redBright('[Platform]'),
+          'This cached accessory is also in the list of ignored devices.',
+          'The plugin will continue loading it.',
+          'Consider manually removing it from Homebridge.',
+        );
+      }
+
       this.log.debug(
         'Restoring accessory of class ->',
         context.device.accessoryClass,
@@ -269,7 +297,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
     token?: string;
     existingAccessory?: PlatformAccessory;
   }): Promise<DingzAccessory> {
-    // Run a diacovery of changed things every 10 seconds
+    // Run a discovery of changed things every 10 seconds
     this.log.debug(
       `addDingzDevice() --> Add configured device -> ${name} (${address})`,
     );
@@ -739,7 +767,12 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
     }
   }
 
-  private datagramMessageHandler(msg: Uint8Array, remoteInfo: RemoteInfo) {
+  /**
+   * Parses and interprets auto-discovery messages
+   * @param msg
+   * @param remoteInfo
+   */
+  private autoDiscoveryMessageHandler(msg: Uint8Array, remoteInfo: RemoteInfo) {
     // const mac: string = dataBuffer.toString('hex', 0, 6);
 
     try {
@@ -751,101 +784,124 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
       const mac: string = this.byteToHexString(msg.subarray(0, 6));
       const deviceSuffix: string = mac.substr(6, 6);
 
-      if (!this.discovered.has(mac)) {
-        switch (t) {
-          case DeviceTypes.MYSTROM_BUTTON_PLUS:
-            throw new DeviceNotImplementedError(
-              `Device discovered at ${remoteInfo.address} of unsupported type ${DeviceTypes[t]}`,
-            );
-            break;
-          case DeviceTypes.MYSTROM_BUTTON:
-            retryWithBreaker
-              .execute(() => {
-                this.addMyStromButtonDevice({
-                  address: remoteInfo.address,
-                  name: `Button ${deviceSuffix}`,
-                  token: this.config.globalToken,
-                  mac: mac,
-                });
-              })
-              .then(() => {
-                this.discovered.set(mac, remoteInfo);
-              });
-            break;
-          case DeviceTypes.MYSTROM_LEDSTRIP:
-            retryWithBreaker
-              .execute(() => {
-                this.addMyStromLightbulbDevice({
-                  address: remoteInfo.address,
-                  name: `LED Strip ${deviceSuffix}`,
-                  token: this.config.globalToken,
-                });
-              })
-              .then(() => {
-                this.discovered.set(mac, remoteInfo);
-              });
-            break;
-          case DeviceTypes.MYSTROM_BULB:
-            retryWithBreaker
-              .execute(() => {
-                this.addMyStromLightbulbDevice({
-                  address: remoteInfo.address,
-                  name: `Lightbulb ${deviceSuffix}`,
-                  token: this.config.globalToken,
-                });
-              })
-              .then(() => {
-                this.discovered.set(mac, remoteInfo);
-              });
-            break;
-          case DeviceTypes.MYSTROM_SWITCH_CHV1:
-          case DeviceTypes.MYSTROM_SWITCH_CHV2:
-          case DeviceTypes.MYSTROM_SWITCH_EU:
-            retryWithBreaker
-              .execute(() => {
-                this.addMyStromSwitchDevice({
-                  address: remoteInfo.address,
-                  name: `Switch ${deviceSuffix}`,
-                  token: this.config.globalToken,
-                });
-              })
-              .then(() => {
-                this.discovered.set(mac, remoteInfo);
-              });
-            break;
-          case DeviceTypes.MYSTROM_PIR:
-            retryWithBreaker
-              .execute(() => {
-                this.addMyStromPIRDevice({
-                  address: remoteInfo.address,
-                  name: `PIR ${deviceSuffix}`,
-                  token: this.config.globalToken,
-                });
-              })
-              .then(() => {
-                this.discovered.set(mac, remoteInfo);
-              });
-            break;
-          case DeviceTypes.DINGZ:
-            retryWithBreaker
-              .execute(() => {
-                this.addDingzDevice({
-                  address: remoteInfo.address,
-                  name: `DINGZ ${deviceSuffix}`,
-                  token: this.config.globalToken,
-                });
-              })
-              .then(() => {
-                this.discovered.set(mac, remoteInfo);
-              })
-              .catch((e) => this.handleError.bind(this, e));
-            break;
-          default:
-            this.log.warn(`Unknown device: ${t}`);
-            break;
+      // If auto-discovery is disabled, we will return, however
+      // the MAC of the discovered device will be printed
+      if (!this.config.autoDiscover) {
+        this.log.info(
+          `Auto-discovery disabled: ignoring discovered device ${mac} at ${remoteInfo.address}`,
+        );
+        return;
+      }
+
+      // Check if already discovered, and if not ignored
+      // Implements #497
+      if (this.ignored.has(mac.toUpperCase())) {
+        if (!this.ignored.get(mac.toUpperCase()).isignored) {
+          this.log.info(
+            'Ignoring discovered device',
+            this.ignored.get(mac.toUpperCase()).comment || '',
+            'at',
+            mac,
+          );
+          this.ignored.get(mac.toUpperCase()).isignored = true;
         }
       } else {
-        this.log.debug('Stopping discovery of already known device:', mac);
+        if (!this.discovered.has(mac)) {
+          switch (t) {
+            case DeviceTypes.MYSTROM_BUTTON_PLUS:
+              throw new DeviceNotImplementedError(
+                `Device discovered at ${remoteInfo.address} of unsupported type ${DeviceTypes[t]}`,
+              );
+              break;
+            case DeviceTypes.MYSTROM_BUTTON:
+              retryWithBreaker
+                .execute(() => {
+                  this.addMyStromButtonDevice({
+                    address: remoteInfo.address,
+                    name: `Button ${deviceSuffix}`,
+                    token: this.config.globalToken,
+                    mac: mac,
+                  });
+                })
+                .then(() => {
+                  this.discovered.set(mac, remoteInfo);
+                });
+              break;
+            case DeviceTypes.MYSTROM_LEDSTRIP:
+              retryWithBreaker
+                .execute(() => {
+                  this.addMyStromLightbulbDevice({
+                    address: remoteInfo.address,
+                    name: `LED Strip ${deviceSuffix}`,
+                    token: this.config.globalToken,
+                  });
+                })
+                .then(() => {
+                  this.discovered.set(mac, remoteInfo);
+                });
+              break;
+            case DeviceTypes.MYSTROM_BULB:
+              retryWithBreaker
+                .execute(() => {
+                  this.addMyStromLightbulbDevice({
+                    address: remoteInfo.address,
+                    name: `Lightbulb ${deviceSuffix}`,
+                    token: this.config.globalToken,
+                  });
+                })
+                .then(() => {
+                  this.discovered.set(mac, remoteInfo);
+                });
+              break;
+            case DeviceTypes.MYSTROM_SWITCH_CHV1:
+            case DeviceTypes.MYSTROM_SWITCH_CHV2:
+            case DeviceTypes.MYSTROM_SWITCH_EU:
+              retryWithBreaker
+                .execute(() => {
+                  this.addMyStromSwitchDevice({
+                    address: remoteInfo.address,
+                    name: `Switch ${deviceSuffix}`,
+                    token: this.config.globalToken,
+                  });
+                })
+                .then(() => {
+                  this.discovered.set(mac, remoteInfo);
+                });
+              break;
+            case DeviceTypes.MYSTROM_PIR:
+              retryWithBreaker
+                .execute(() => {
+                  this.addMyStromPIRDevice({
+                    address: remoteInfo.address,
+                    name: `PIR ${deviceSuffix}`,
+                    token: this.config.globalToken,
+                  });
+                })
+                .then(() => {
+                  this.discovered.set(mac, remoteInfo);
+                });
+              break;
+            case DeviceTypes.DINGZ:
+              retryWithBreaker
+                .execute(() => {
+                  this.addDingzDevice({
+                    address: remoteInfo.address,
+                    name: `DINGZ ${deviceSuffix}`,
+                    token: this.config.globalToken,
+                  });
+                })
+                .then(() => {
+                  this.discovered.set(mac, remoteInfo);
+                })
+                .catch((e) => this.handleError.bind(this, e));
+              break;
+            default:
+              this.log.warn(`Unknown device: ${t}`);
+              break;
+          }
+        } else {
+          this.log.debug('Stopping discovery of already known device:', mac);
+        }
       }
     } catch (e) {
       if (e instanceof DeviceNotImplementedError) {
@@ -881,7 +937,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
       });
 
       discoverySocket
-        .on('message', this.datagramMessageHandler.bind(this))
+        .on('message', this.autoDiscoveryMessageHandler.bind(this))
         .bind(DINGZ_DISCOVERY_PORT);
       setTimeout(() => {
         this.log.info('Stopping discovery');

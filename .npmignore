@@ -125,13 +125,19 @@ web_modules/
 
 # yarn v2
 
-.yarn/cache
-.yarn/unplugged
 .yarn/build-state.yml
+.yarn/cache
+.yarn/install-state.gz
+.yarn/plugins
+.yarn/sdks
+.yarn/unplugged
+.yarn/releases
+.yarnrc.yml
 .pnp.*
 
 # Github templates and actions, own stuff
 .github
 api
 .prettierrc
+.prettierignore
 commitlint.config.js 

@@ -155,7 +155,10 @@ export class MyStromPIRAccessory extends DingzDaBaseAccessory {
             token: this.device.token,
             endpoints: ['pir/generic'],
           });
-        } else if (!callBackUrl?.url.includes(this.platform.getCallbackUrl())) {
+        } else if (
+          // FIXME: Needed because of #511
+          !callBackUrl?.url?.includes(this.platform.getCallbackUrl())
+        ) {
           this.log.warn('Update existing callback URL ->', callBackUrl);
           // Set the callback URL (Override!)
           this.platform.setButtonCallbackUrl({
