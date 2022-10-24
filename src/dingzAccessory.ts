@@ -1498,6 +1498,12 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     lamella: number;
     callback: CharacteristicSetCallback;
   }) {
+    // The API only accepts integer numbers.
+    // As we juggle with ° vs %, we must round
+    // the values for blind and lamella to the nearest integer
+    blind = Math.round(blind);
+    lamella = Math.round(lamella);
+
     this.log.debug(
       `Setting WindowCovering ${id} to position ${blind} and angle ${lamella}°`,
     );
