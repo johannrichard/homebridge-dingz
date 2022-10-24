@@ -980,14 +980,14 @@ export class DingzAccessory extends DingzDaBaseAccessory {
       'Set Characteristic TargetHorizontalTiltAngle on ',
       index,
       '->',
-      angle,
+      `${angle}°`,
     );
     const id = this.getWindowCoveringId(index);
     if (this.dingzStates.WindowCovers[id]) {
       await this.setWindowCovering({
         id: id,
         blind: this.dingzStates.WindowCovers[id].position,
-        lamella: angle as number,
+        lamella: ((angle as number) / 90) * 100, // FIXES #419, we must convert ° to %
         callback: callback,
       });
     }
