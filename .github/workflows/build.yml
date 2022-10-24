@@ -20,6 +20,7 @@ jobs:
         uses: actions/setup-node@main
         with:
           node-version: ${{ matrix.node-version }}
+          cache: 'yarn'
 
       #      - name: Upgrade yarn
       #        run: yarn set version berry
