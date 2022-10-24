@@ -46,6 +46,27 @@
         "type": "string",
         "description": "Set a global authentication token. This will be used for auto-discovery on the local network and as default token for manually specified devices."
       },
+      "ignore": {
+        "title": "Ignored Devices",
+        "description": "Devices in this list will be excluded when found via auto-discovery.",
+        "type": "array",
+        "items": {
+          "title": "Device",
+          "type": "object",
+          "properties": {
+            "mac": {
+              "title": "MAC-Address (without `:`)",
+              "type": "string",
+              "pattern": "^([A-Fa-f0-9]{2}){5}[A-Fa-f0-9]{2}$",
+              "required": true
+            },
+            "comment": {
+              "title": "Comment",
+              "type": "string"
+            }
+          }
+        }
+      },
       "callbackHostname": {
         "title": "Hostname / IP to use for button callbacks ",
         "type": "string",
@@ -102,18 +123,6 @@
               "type": "string",
               "description": "If you have set a Token to protect the REST API, enter it here. Highly recommended."
             }
-          }
-        }
-      },
-      "ignore": {
-        "title": "Ignored Devices",
-        "description": "Devices in this list will be excluded when found via auto-discovery.",
-        "type": "array",
-        "items": {
-          "mac": {
-            "title": "MAC-Address",
-            "type": "string",
-            "pattern": "^([A-Fa-f0-9]{2}:){5}[A-Fa-f0-9]{2}$"
           }
         }
       }
