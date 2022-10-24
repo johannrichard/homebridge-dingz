@@ -1550,7 +1550,10 @@ export class DingzAccessory extends DingzDaBaseAccessory {
    * Returns the callback URL for the device
    */
   public async getButtonCallbackUrl(): Promise<AccessoryActionUrl> {
-    const getCallbackEndpoint = '/api/v1/action/generic/generic';
+    // FIXES #511: different endpoint URLs for Callback from FW v1.4.x forward
+    const getCallbackEndpoint = semver.gte(this.hw.fw_version, '1.4.0')
+      ? '/api/v1/action/generic'
+      : '/api/v1/action/generic/generic';
     this.log.debug('Getting the callback URL -> ', getCallbackEndpoint);
     return await this.request.get(getCallbackEndpoint).then((response) => {
       return response.data;
