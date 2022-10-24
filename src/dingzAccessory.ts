@@ -225,6 +225,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
       .then((callBackUrl) => {
         // Set the callback URL
         const endpoints = ['generic'];
+        const platformCallbackUrl = this.platform.getCallbackUrl();
 
         // Add PIR callbacks, depending on dingz Firmware version
         if (this.hw.has_pir) {
@@ -246,9 +247,9 @@ export class DingzAccessory extends DingzDaBaseAccessory {
         } else if (
           // FIXME: because of #511
           (semver.lt(this.hw.fw_version, '1.4.0') &&
-            !callBackUrl?.url?.includes(this.platform.getCallbackUrl())) ||
+            !callBackUrl?.url?.includes(platformCallbackUrl)) ||
           (semver.gte(this.hw.fw_version, '1.4.0') &&
-            !callBackUrl?.generic?.includes(this.platform.getCallbackUrl()))
+            !callBackUrl?.generic?.includes(platformCallbackUrl))
         ) {
           this.log.warn('Update existing callback URL ->', callBackUrl);
 
