@@ -785,10 +785,10 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
       const deviceSuffix: string = mac.substr(6, 6);
 
       // If auto-discovery is disabled, we will return, however
-      // the MAC of the discovered device will be printed
+      // the MAC of the discovered device will be printed in debug
       if (!this.config.autoDiscover) {
-        this.log.info(
-          `Auto-discovery disabled: ignoring discovered device ${mac} at ${remoteInfo.address}`,
+        this.log.debug(
+          `auto-discovery disabled: ignoring discovered device ${mac} at ${remoteInfo.address}`,
         );
         return;
       }
