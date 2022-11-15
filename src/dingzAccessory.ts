@@ -423,7 +423,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
         // DIP = 1: M1, D2, D3;
         if (w && w[0]) {
           this.reconfigureWindowCovering({
-            name: w[0].name,
+            name: w[0].name && w[0].name !== '' ? w[0].name : 'Blind 1',
             id: 'M1',
             index: 0,
             connected: true,
@@ -448,7 +448,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
         if (w && w[1]) {
           // in this configuration, the second motor has the name we need
           this.reconfigureWindowCovering({
-            name: w[1].name,
+            name: w[1].name && w[1].name !== '' ? w[1].name : 'Blind 2',
             id: 'M2',
             index: 1,
             connected: true,
@@ -460,14 +460,14 @@ export class DingzAccessory extends DingzDaBaseAccessory {
         // DIP = 3: M1, M2;
         if (w && w[0] && w[1]) {
           this.reconfigureWindowCovering({
-            name: w[0].name,
+            name: w[0].name && w[0].name !== '' ? w[0].name : 'Blind 1',
             id: 'M1',
             index: 0,
             connected: true,
             initHandlers: initHandlers,
           });
           this.reconfigureWindowCovering({
-            name: w[1].name,
+            name: w[1].name && w[1].name !== '' ? w[1].name : 'Blind 2',
             id: 'M2',
             index: 1,
             connected: true,
@@ -808,7 +808,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
 
     if (connected && name && index !== undefined) {
       this.log.info(
-        `configureWindowCoveringService() -> add Blind ${name} (${id}/${index})`,
+        `configureWindowCoveringService() -> add Blind '${name}' (${id}/${index})`,
       );
       const service: Service =
         existing ??
