@@ -69,7 +69,8 @@ export class MyStromButtonAccessory extends DingzDaBaseAccessory {
         this.device.mac,
       );
 
-    // get the LightBulb service if it exists, otherwise create a new LightBulb service
+    // get the StatelessProgrammableSwitch service if it exists,
+    // otherwise create a new StatelessProgrammableSwitch service
     // you can create multiple services for each accessory
     this.log.info('Create Stateless Programmable Switch');
     const buttonService: Service =
@@ -101,8 +102,8 @@ export class MyStromButtonAccessory extends DingzDaBaseAccessory {
       .on(CharacteristicEventTypes.GET, this.getButtonState.bind(this));
 
     const batteryService: Service =
-      this.accessory.getService(this.platform.Service.BatteryService) ??
-      this.accessory.addService(this.platform.Service.BatteryService);
+      this.accessory.getService(this.platform.Service.Battery) ??
+      this.accessory.addService(this.platform.Service.Battery);
 
     batteryService
       .getCharacteristic(this.platform.Characteristic.BatteryLevel)
@@ -122,7 +123,7 @@ export class MyStromButtonAccessory extends DingzDaBaseAccessory {
         this.batteryLevel = battery;
 
         const batteryService = this.accessory.getService(
-          this.platform.Service.BatteryService,
+          this.platform.Service.Battery,
         );
 
         if (batteryService) {
