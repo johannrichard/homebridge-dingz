@@ -700,7 +700,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
     token?: string;
     mac: string;
   }): boolean {
-    // Run a diacovery of changed things every 10 seconds
+    // Run a discovery of changed things every 10 seconds
     this.log.debug(
       `Add configured/discovered myStrom Button device -> ${name} (${address})`,
     );
