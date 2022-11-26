@@ -433,9 +433,9 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
           // Newer Firmwares seem to have string-based types whereas
           // older ones use the numbers from the API documentation
           info.type !== 'WS2' &&
-          info.type !== 106 &&
+          info.type !== DeviceTypes.MYSTROM_SWITCH_CHV2 &&
           info.type !== 'WSEU' &&
-          info.type !== 107 &&
+          info.type !== DeviceTypes.MYSTROM_SWITCH_EU &&
           info.type !== undefined // Switch V1 does not have a type
         ) {
           throw new InvalidTypeError(
@@ -525,7 +525,11 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
       if (typeof data !== 'undefined') {
         const info = data as MyStromDeviceHWInfo;
 
-        if (info.type !== 102 && info.type !== 105 && info.type !== 'WRS') {
+        if (
+          info.type !== DeviceTypes.MYSTROM_BULB &&
+          info.type !== DeviceTypes.MYSTROM_LEDSTRIP &&
+          info.type !== 'WRS'
+        ) {
           throw new InvalidTypeError(
             `Device ${name} at ${address} is of the wrong type (${info.type} instead of "myStrom Lightbulb")`,
           );
@@ -536,7 +540,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
           address: address,
           mac: info.mac.toUpperCase(),
           token: token,
-          model: '102',
+          model: DeviceTypes.MYSTROM_BULB.toString(),
           hwInfo: info,
           accessoryClass: 'MyStromLightbulbAccessory',
         };
@@ -616,7 +620,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
         const info = data as MyStromDeviceHWInfo;
 
         // Need this to identify the right type
-        if (info.type !== 110) {
+        if (info.type !== DeviceTypes.MYSTROM_PIR) {
           throw new InvalidTypeError(
             `Device ${name} at ${address} is of the wrong type (${info.type} instead of "myStrom Lightbulb")`,
           );
@@ -629,7 +633,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
           address: address,
           mac: info.mac.toUpperCase(),
           token: token,
-          model: '110',
+          model: DeviceTypes.MYSTROM_PIR.toString(),
           hwInfo: info as MyStromDeviceHWInfo,
           accessoryClass: 'MyStromPIRAccessory',
         };
@@ -706,7 +710,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
       address: address,
       mac: mac?.toUpperCase(),
       token: token,
-      model: '104',
+      model: DeviceTypes.MYSTROM_BUTTON.toString(),
       accessoryClass: 'MyStromButtonAccessory',
     };
 
@@ -746,7 +750,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
         if (typeof data !== 'undefined') {
           const info = data as MyStromDeviceHWInfo;
 
-          if (info.type !== 104) {
+          if (info.type !== DeviceTypes.MYSTROM_BUTTON) {
             throw new InvalidTypeError(
               `Device ${name} at ${address} is of the wrong type (${info.type} instead of "myStrom Button")`,
             );
