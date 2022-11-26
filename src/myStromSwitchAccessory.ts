@@ -21,7 +21,6 @@ export class MyStromSwitchAccessory extends DingzDaBaseAccessory {
   private temperatureService: Service | undefined = undefined;
 
   // Eventually replaced by:
-  private switchOn = false;
   private mystromDeviceInfo: MyStromDeviceHWInfo;
 
   private outletState = {
