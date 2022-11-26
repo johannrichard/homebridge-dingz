@@ -1031,7 +1031,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
             chalk.blueBright('[ACTION]'),
             `Module ${request.ip} (${module}/${action})`,
           );
-          // attempt-auto add of either a dingz
+          // attempt auto-add of a dingz
           if (
             request.socket.remoteAddress &&
             isValidHost(request.socket.remoteAddress)
