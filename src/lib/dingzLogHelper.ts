@@ -26,8 +26,6 @@ export class DingzLogger {
     ...parameters: unknown[]
   ): void {
     message = chalk.magentaBright(`[${this.dingzPrefix}] `) + message;
-
-    // #142 is now fixed
     this.logger.log(logLevel, message, ...parameters);
   }
 
