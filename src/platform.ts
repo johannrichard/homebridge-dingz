@@ -18,7 +18,7 @@ import * as os from 'os';
 import e = require('express');
 
 // Internal Types
-import { DingzDeviceHWInfo, ModuleId } from './lib/dingzTypes';
+import { DingzDeviceHWInfo } from './lib/dingzTypes';
 import { MyStromDeviceHWInfo, MyStromSwitchTypes } from './lib/myStromTypes';
 
 import {
@@ -27,6 +27,7 @@ import {
   AccessoryType,
   ButtonAction,
   DeviceInfo,
+  Module,
 } from './lib/commonTypes';
 
 import {
@@ -1040,7 +1041,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
             PlatformEvent.ACTION,
             mac,
             action as ButtonAction,
-            module as ModuleId,
+            module as Module,
           );
         } else {
           if (action) {

@@ -31,7 +31,6 @@ import {
   WindowCoveringIndex,
   WindowCoveringStates,
   DingzWindowCoveringConfigItem,
-  ModuleId,
 } from './lib/dingzTypes';
 import { ButtonAction, AccessoryActionUrl, Module } from './lib/commonTypes';
 
@@ -507,7 +506,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     // Add Event Listeners
     this.platform.eb.on(
       PlatformEvent.ACTION,
-      (mac, action: ButtonAction, module: ModuleId) => {
+      (mac, action: ButtonAction, module: Module) => {
         if (mac === this.device.mac && module) {
           this.log.debug(
             `Module ${module} triggered -> ${action}, MAC: ${mac} (This: ${this.device.mac})`,
