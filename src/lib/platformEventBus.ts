@@ -20,6 +20,17 @@ export declare interface PlatformEventBus {
     listener: (mac: string, action: ButtonAction, index: Module) => void,
   ): this;
   on(
+    event: PlatformEvent.ACTION,
+    listener: (
+      mac: string,
+      action: ButtonAction,
+      index: Module,
+      battery: number,
+      temperature: number,
+      humidity: number,
+    ) => void,
+  ): this;
+  on(
     event: PlatformEvent.UPDATE_DEVICE_INFO,
     listener: (deviceInfo: DeviceInfo) => void,
   ): this;
@@ -40,6 +51,15 @@ export declare interface PlatformEventBus {
     mac: string,
     action: ButtonAction,
     module: Module,
+  ): boolean;
+  emit(
+    event: PlatformEvent.ACTION,
+    mac: string,
+    action: ButtonAction,
+    module: Module,
+    battery: number,
+    temperature: number,
+    humidity: number,
   ): boolean;
   emit(
     event: PlatformEvent.UPDATE_DEVICE_INFO,

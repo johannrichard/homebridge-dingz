@@ -26,21 +26,18 @@ const retrySlow = Policy.handleAll()
  */
 export class MyStromButtonAccessory extends DingzDaBaseAccessory {
   // Eventually replaced by:
-  private mystromDeviceInfo: MyStromDeviceHWInfo;
   private buttonState: ButtonAction = ButtonAction.SINGLE_PRESS;
   private switchButtonState: ButtonState = ButtonState.OFF;
-  private batteryLevel: Nullable<number> = 0;
-  private chargingState = false;
+  protected batteryLevel: Nullable<number> = 0;
+  protected chargingState = false;
 
   constructor(
-    private readonly _platform: DingzDaHomebridgePlatform,
-    private readonly _accessory: PlatformAccessory,
+    protected readonly _platform: DingzDaHomebridgePlatform,
+    protected readonly _accessory: PlatformAccessory,
   ) {
     super(_platform, _accessory);
 
     // Set Base URL
-    this.mystromDeviceInfo = this.device.hwInfo as MyStromDeviceHWInfo;
-
     this.log.debug(
       'Setting informationService Characteristics ->',
       this.device.model,
@@ -200,18 +197,18 @@ export class MyStromButtonAccessory extends DingzDaBaseAccessory {
     callback(this.reachabilityState, currentState);
   }
 
-  private getSwitchButtonState(callback: CharacteristicGetCallback) {
+  protected getSwitchButtonState(callback: CharacteristicGetCallback) {
     const currentState = this.switchButtonState;
     this.log.info('Get Switch State ->', currentState);
     callback(this.reachabilityState, currentState);
   }
 
-  private getBatteryLevel(callback: CharacteristicGetCallback) {
+  protected getBatteryLevel(callback: CharacteristicGetCallback) {
     const currentLevel = this.batteryLevel;
     callback(this.reachabilityState, currentLevel);
   }
 
-  private getStatusBatteryLow(callback: CharacteristicGetCallback) {
+  protected getStatusBatteryLow(callback: CharacteristicGetCallback) {
     const currentLevel: number = this.batteryLevel ?? 0;
     callback(
       null,
@@ -221,7 +218,7 @@ export class MyStromButtonAccessory extends DingzDaBaseAccessory {
     );
   }
 
-  private getChargingState(callback: CharacteristicGetCallback) {
+  protected getChargingState(callback: CharacteristicGetCallback) {
     const currentState = this.chargingState;
     callback(this.reachabilityState, currentState);
   }

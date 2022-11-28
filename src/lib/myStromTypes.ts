@@ -44,3 +44,21 @@ export interface MyStromPIRReport {
   light?: number;
   temperature: number;
 }
+
+export interface MyStromButtonPlusReport {
+  temperature: number;
+  humidity: number;
+  battery: {
+    voltage: number;
+    charging: boolean;
+  };
+  charger: {
+    voltage: number;
+    connected: boolean;
+  };
+}
+
+export enum MyStromButtonPlusBattery {
+  BATTERY_MAX = 4500,
+  BATTERY_MIN = 3000,
+}
