@@ -28,7 +28,7 @@
     "prepublishOnly": "yarn pinst --disable",
     "prepare": "yarn run lint && yarn run build && yarn run depcheck",
     "changelog": "changelog --exclude ci,chore",
-    "debug": "yarn run lint && yarn run build && yarn dlx homebridge -I"
+    "debug": "yarn run lint && yarn run build && yarn dlx homebridge -I -D"
   },
   "keywords": [
     "homebridge-plugin",
