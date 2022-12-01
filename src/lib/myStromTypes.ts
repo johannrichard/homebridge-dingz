@@ -59,6 +59,6 @@ export interface MyStromButtonPlusReport {
 }
 
 export enum MyStromButtonPlusBattery {
-  BATTERY_MAX = 4500,
-  BATTERY_MIN = 3000,
+  BATTERY_MAX = 4.5,
+  BATTERY_MIN = 3.0,
 }

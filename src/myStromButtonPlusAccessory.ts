@@ -100,24 +100,7 @@ export class MyStromButtonPlusAccessory extends MyStromButtonAccessory {
     // otherwise create a new StatelessProgrammableSwitch service
     // you can create multiple services for each accessory
     this.log.debug('Create Stateless Programmable Switch');
-
-    this.configureButtons();
-
-    this.batteryService =
-      this.accessory.getService(this.platform.Service.Battery) ??
-      this.accessory.addService(this.platform.Service.Battery);
-
-    this.batteryService
-      .getCharacteristic(this.platform.Characteristic.BatteryLevel)
-      .on(CharacteristicEventTypes.GET, this.getBatteryLevel.bind(this));
-
-    this.batteryService
-      .getCharacteristic(this.platform.Characteristic.StatusLowBattery)
-      .on(CharacteristicEventTypes.GET, this.getStatusBatteryLow.bind(this));
-
-    this.batteryService
-      .getCharacteristic(this.platform.Characteristic.ChargingState)
-      .on(CharacteristicEventTypes.GET, this.getChargingState.bind(this));
+    this.buttonServiceSetup();
 
     // Button Plus 2nd Gen has a temperature sensor, make it available here
     // create a new Temperature Sensor service
@@ -154,7 +137,7 @@ export class MyStromButtonPlusAccessory extends MyStromButtonAccessory {
       this.platform.setButtonCallbackUrl({
         baseUrl: this.baseUrl,
         token: this.device.token,
-        endpoints: ['generic'], // Buttons need the 'generic' endpoint specifically set
+        endpoints: ['generic/generic'], // Buttons need the 'generic' endpoint specifically set
       });
     });
   }
@@ -176,7 +159,7 @@ export class MyStromButtonPlusAccessory extends MyStromButtonAccessory {
   }
 
   // FIXME: initHandler is probably not needed
-  private configureButtons(initHandler = false) {
+  protected buttonServiceSetup(initHandler = false) {
     // Create Buttons
     this.reconfigureButtonService({
       name: 'Button 1',
@@ -217,8 +200,6 @@ export class MyStromButtonPlusAccessory extends MyStromButtonAccessory {
 
           // battery, temperature and humidity are reported in any case
           if (this.batteryService && battery) {
-            this.buttonPlusState.battery.voltage = battery;
-
             // TODO: Check if true
             // MyStrom Button+ (2nd Gen) reportedly returns voltages when updating via button actions
             // see https://github.com/myStrom/mystrom-button/blob/master/user/peri.c (IQS)
@@ -227,12 +208,11 @@ export class MyStromButtonPlusAccessory extends MyStromButtonAccessory {
             const range =
               MyStromButtonPlusBattery.BATTERY_MAX -
               MyStromButtonPlusBattery.BATTERY_MIN;
+            this.batteryLevel =
+              ((battery - MyStromButtonPlusBattery.BATTERY_MIN) * 100) / range;
             this.batteryService
               .getCharacteristic(this.platform.Characteristic.BatteryLevel)
-              .updateValue(
-                ((battery - MyStromButtonPlusBattery.BATTERY_MIN) * 100) /
-                  range,
-              );
+              .updateValue(this.batteryLevel);
           }
 
           if (this.temperatureService && temperature) {
@@ -298,7 +278,7 @@ export class MyStromButtonPlusAccessory extends MyStromButtonAccessory {
                 }
 
                 // Immediately update states after button pressed
-                this.getDeviceStateUpdate();
+                // this.getDeviceStateUpdate();
               }
               break;
             default:
@@ -379,36 +359,6 @@ export class MyStromButtonPlusAccessory extends MyStromButtonAccessory {
   // Button Plus can be queried (experimental API)
   // Get updated device info and update the corresponding values
   protected getDeviceStateUpdate(): Promise<void> {
-    return this.getDeviceReport()
-      .then((report) => {
-        // push the new value to HomeKit
-        this.buttonPlusState = report;
-
-        // Only temperature and humidity are reported by the real-time API
-        // See https://api.mystrom.ch/#2b99d1f4-46e3-4bab-b7e7-48faa03dec64
-        if (this.temperatureService) {
-          this.temperatureService
-            .getCharacteristic(this.platform.Characteristic.CurrentTemperature)
-            .updateValue(this.buttonPlusState.temperature);
-        }
-        if (this.humidityService) {
-          this.humidityService
-            .getCharacteristic(
-              this.platform.Characteristic.CurrentRelativeHumidity,
-            )
-            .updateValue(this.buttonPlusState.humidity);
-        }
-        return Promise.resolve();
-      })
-      .catch((e) => {
-        return Promise.reject(e);
-      });
-  }
-
-  private async getDeviceReport(): Promise<MyStromButtonPlusReport> {
-    const reportUrl = `${this.baseUrl}/reports`;
-    return await this.request.get(reportUrl).then((response) => {
-      return response.data;
-    });
+    return Promise.resolve();
   }
 }

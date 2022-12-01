@@ -930,6 +930,20 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
                   this.discovered.set(mac, remoteInfo);
                 });
               break;
+            case DeviceTypes.MYSTROM_BUTTON_PLUS_2G:
+              retryWithBreaker
+                .execute(() => {
+                  this.addMyStromButtonPlusDevice({
+                    address: remoteInfo.address,
+                    name: `Button+ ${deviceSuffix}`,
+                    token: this.config.globalToken,
+                    mac: mac,
+                  });
+                })
+                .then(() => {
+                  this.discovered.set(mac, remoteInfo);
+                });
+              break;
             case DeviceTypes.MYSTROM_LEDSTRIP:
               retryWithBreaker
                 .execute(() => {
