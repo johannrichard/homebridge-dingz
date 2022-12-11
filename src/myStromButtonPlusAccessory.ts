@@ -44,10 +44,6 @@ export class MyStromButtonPlusAccessory extends MyStromButtonAccessory {
     ButtonState.OFF,
   ];
 
-  private batteryService: Service | undefined = undefined;
-  private temperatureService: Service | undefined = undefined;
-  private humidityService: Service | undefined = undefined;
-
   private buttonPlusState = {
     temperature: 0,
     humidity: 0,
@@ -104,31 +100,31 @@ export class MyStromButtonPlusAccessory extends MyStromButtonAccessory {
 
     // Button Plus 2nd Gen has a temperature sensor, make it available here
     // create a new Temperature Sensor service
-    this.temperatureService =
+    const temperatureService =
       this.accessory.getService(this.platform.Service.TemperatureSensor) ??
       this.accessory.addService(this.platform.Service.TemperatureSensor);
-    this.temperatureService.setCharacteristic(
+    temperatureService.setCharacteristic(
       this.platform.Characteristic.Name,
       'Temperature',
     );
 
     // create handlers for required characteristics
-    this.temperatureService
+    temperatureService
       .getCharacteristic(this.platform.Characteristic.CurrentTemperature)
       .on(CharacteristicEventTypes.GET, this.getTemperature.bind(this));
 
     // Button Plus 2nd Gen has a humidity sensor, make it available here
     // create a new Humidity Sensor service
-    this.humidityService =
+    const humidityService =
       this.accessory.getService(this.platform.Service.HumiditySensor) ??
       this.accessory.addService(this.platform.Service.HumiditySensor);
-    this.humidityService.setCharacteristic(
+    humidityService.setCharacteristic(
       this.platform.Characteristic.Name,
       'Humidity',
     );
 
     // create handlers for required characteristics
-    this.humidityService
+    humidityService
       .getCharacteristic(this.platform.Characteristic.CurrentRelativeHumidity)
       .on(CharacteristicEventTypes.GET, this.getHumidity.bind(this));
 
@@ -196,10 +192,14 @@ export class MyStromButtonPlusAccessory extends MyStromButtonAccessory {
         if (mac === this.device.mac && module) {
           this.log.debug(
             `Module ${module} triggered -> ${action}, MAC: ${mac} (This: ${this.device.mac})`,
+            `\nBatt [V]: ${battery}, °C: ${temperature}, RH: ${humidity})`,
           );
 
           // battery, temperature and humidity are reported in any case
-          if (this.batteryService && battery) {
+          const batteryService = this.accessory.getService(
+            this.platform.Service.Battery,
+          );
+          if (batteryService && battery) {
             // TODO: Check if true
             // MyStrom Button+ (2nd Gen) reportedly returns voltages when updating via button actions
             // see https://github.com/myStrom/mystrom-button/blob/master/user/peri.c (IQS)
@@ -210,34 +210,38 @@ export class MyStromButtonPlusAccessory extends MyStromButtonAccessory {
               MyStromButtonPlusBattery.BATTERY_MIN;
             this.batteryLevel =
               ((battery - MyStromButtonPlusBattery.BATTERY_MIN) * 100) / range;
-            this.batteryService
+
+            batteryService
               .getCharacteristic(this.platform.Characteristic.BatteryLevel)
               .updateValue(this.batteryLevel);
-            this.log.debug(
-              `Setting new battery level to ${this.batteryLevel}%`,
-            );
+            this.log.debug(`Setting battery level to ${this.batteryLevel}%`);
           }
 
-          if (this.temperatureService && temperature) {
+          const temperatureService = this.accessory.getService(
+            this.platform.Service.TemperatureSensor,
+          );
+
+          if (temperatureService && temperature) {
             this.buttonPlusState.temperature = temperature;
-            this.temperatureService
+            temperatureService
               .getCharacteristic(
                 this.platform.Characteristic.CurrentTemperature,
               )
               .updateValue(temperature);
-            this.log.debug(
-              `Setting new battery temperature to ${temperature}%`,
-            );
+            this.log.debug(`Setting temperature to ${temperature}°`);
           }
 
-          if (this.humidityService && humidity) {
+          const humidityService = this.accessory.getService(
+            this.platform.Service.HumiditySensor,
+          );
+          if (humidityService && humidity) {
             this.buttonPlusState.humidity = humidity;
-            this.humidityService
+            humidityService
               .getCharacteristic(
                 this.platform.Characteristic.CurrentRelativeHumidity,
               )
               .updateValue(humidity);
-            this.log.debug(`Setting new humidty level to ${humidity}%`);
+            this.log.debug(`Setting humidty level to ${humidity}%`);
           }
 
           switch (module) {
