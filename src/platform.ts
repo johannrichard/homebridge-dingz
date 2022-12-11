@@ -18,7 +18,7 @@ import * as os from 'os';
 import e = require('express');
 
 // Internal Types
-import { DingzDeviceHWInfo, ModuleId } from './lib/dingzTypes';
+import { DingzDeviceHWInfo } from './lib/dingzTypes';
 import { MyStromDeviceHWInfo, MyStromSwitchTypes } from './lib/myStromTypes';
 
 import {
@@ -27,6 +27,7 @@ import {
   AccessoryType,
   ButtonAction,
   DeviceInfo,
+  Module,
 } from './lib/commonTypes';
 
 import {
@@ -51,6 +52,7 @@ import { MyStromSwitchAccessory } from './myStromSwitchAccessory';
 import { MyStromLightbulbAccessory } from './myStromLightbulbAccessory';
 import { MyStromButtonAccessory } from './myStromButtonAccessory';
 import { MyStromPIRAccessory } from './myStromPIRAccessory';
+import { MyStromButtonPlusAccessory } from './myStromButtonPlusAccessory';
 
 // Define a policy that will retry 20 times at most
 const retry = Policy.handleAll()
@@ -207,6 +209,12 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
             accessory,
           );
           break;
+        case 'MyStromButtonPlusAccessory':
+          this.accessories[accessory.UUID] = new MyStromButtonPlusAccessory(
+            this,
+            accessory,
+          );
+          break;
         case 'MyStromPIRAccessory':
           // add the restored accessory to the accessories cache so we can track if it has already been registered
           this.accessories[accessory.UUID] = new MyStromPIRAccessory(
@@ -274,11 +282,18 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
             }),
           );
           break;
+        case 'myStromButtonPlus':
+          this.log.info(
+            'Device type',
+            device.deviceType,
+            'is currently unsupported for manual addition. Will skip.',
+          );
+          break;
         default:
           this.log.info(
             'Device type',
             device.deviceType,
-            'is currently unsupported. Will skip',
+            'is currently unsupported. Will skip.',
           );
           break;
       }
@@ -432,9 +447,9 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
           // Newer Firmwares seem to have string-based types whereas
           // older ones use the numbers from the API documentation
           info.type !== 'WS2' &&
-          info.type !== 106 &&
+          info.type !== DeviceTypes.MYSTROM_SWITCH_CHV2 &&
           info.type !== 'WSEU' &&
-          info.type !== 107 &&
+          info.type !== DeviceTypes.MYSTROM_SWITCH_EU &&
           info.type !== undefined // Switch V1 does not have a type
         ) {
           throw new InvalidTypeError(
@@ -524,7 +539,11 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
       if (typeof data !== 'undefined') {
         const info = data as MyStromDeviceHWInfo;
 
-        if (info.type !== 102 && info.type !== 105 && info.type !== 'WRS') {
+        if (
+          info.type !== DeviceTypes.MYSTROM_BULB &&
+          info.type !== DeviceTypes.MYSTROM_LEDSTRIP &&
+          info.type !== 'WRS'
+        ) {
           throw new InvalidTypeError(
             `Device ${name} at ${address} is of the wrong type (${info.type} instead of "myStrom Lightbulb")`,
           );
@@ -535,7 +554,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
           address: address,
           mac: info.mac.toUpperCase(),
           token: token,
-          model: '102',
+          model: DeviceTypes.MYSTROM_BULB.toString(),
           hwInfo: info,
           accessoryClass: 'MyStromLightbulbAccessory',
         };
@@ -615,7 +634,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
         const info = data as MyStromDeviceHWInfo;
 
         // Need this to identify the right type
-        if (info.type !== 110) {
+        if (info.type !== DeviceTypes.MYSTROM_PIR) {
           throw new InvalidTypeError(
             `Device ${name} at ${address} is of the wrong type (${info.type} instead of "myStrom Lightbulb")`,
           );
@@ -628,7 +647,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
           address: address,
           mac: info.mac.toUpperCase(),
           token: token,
-          model: '110',
+          model: DeviceTypes.MYSTROM_PIR.toString(),
           hwInfo: info as MyStromDeviceHWInfo,
           accessoryClass: 'MyStromPIRAccessory',
         };
@@ -695,7 +714,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
     token?: string;
     mac: string;
   }): boolean {
-    // Run a diacovery of changed things every 10 seconds
+    // Run a discovery of changed things every 10 seconds
     this.log.debug(
       `Add configured/discovered myStrom Button device -> ${name} (${address})`,
     );
@@ -705,7 +724,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
       address: address,
       mac: mac?.toUpperCase(),
       token: token,
-      model: '104',
+      model: DeviceTypes.MYSTROM_BUTTON.toString(),
       accessoryClass: 'MyStromButtonAccessory',
     };
 
@@ -745,9 +764,93 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
         if (typeof data !== 'undefined') {
           const info = data as MyStromDeviceHWInfo;
 
-          if (info.type !== 104) {
+          if (info.type !== DeviceTypes.MYSTROM_BUTTON) {
             throw new InvalidTypeError(
               `Device ${name} at ${address} is of the wrong type (${info.type} instead of "myStrom Button")`,
+            );
+          }
+          accessory.context.device.hwInfo = info;
+        }
+      });
+
+      return true;
+    } else {
+      this.log.warn(
+        'Accessory',
+        chalk.magentaBright(`[${deviceInfo.name}]`),
+        `(${address}) already initialized`,
+      );
+      this.eb.emit(PlatformEvent.UPDATE_DEVICE_INFO, deviceInfo);
+      this.accessories[uuid].identify();
+      return true;
+    }
+  }
+
+  // Add one device based on address and name
+  private addMyStromButtonPlusDevice({
+    address,
+    name = 'Button+',
+    token,
+    mac,
+  }: {
+    address: string;
+    name?: string;
+    token?: string;
+    mac: string;
+  }): boolean {
+    // Run a discovery of changed things every 10 seconds
+    this.log.debug(
+      `Add configured/discovered myStrom Button+ (2nd Gen) device -> ${name} (${address})`,
+    );
+
+    const deviceInfo: DeviceInfo = {
+      name: name,
+      address: address,
+      mac: mac?.toUpperCase(),
+      token: token,
+      model: DeviceTypes.MYSTROM_BUTTON_PLUS_2G.toString(),
+      accessoryClass: 'MyStromButtonPlusAccessory',
+    };
+
+    const uuid = this.api.hap.uuid.generate(deviceInfo.mac);
+
+    // check that the device has not already been registered by checking the
+    // cached devices we stored in the `configureAccessory` method above
+    if (!this.accessories[uuid]) {
+      this.log.info('Registering new accessory:', name);
+      // create a new accessory
+      const accessory = new this.api.platformAccessory(name, uuid);
+
+      // store a copy of the device object in the `accessory.context`
+      // the `context` property can be used to store any data about the accessory you may need
+      accessory.context.device = deviceInfo;
+
+      // create the accessory handler (which will add services as needed)
+      // this is imported from `dingzDaAccessory.ts`
+      const myStromButtonPlusAccessory = new MyStromButtonPlusAccessory(
+        this,
+        accessory,
+      );
+
+      // link the accessory to your platform
+      this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [
+        accessory,
+      ]);
+
+      // push into accessory cache
+      this.accessories[uuid] = myStromButtonPlusAccessory;
+
+      // Buttons can be initialized without fetching all Info -- however it would be good to fetch it anyway
+      this.getMyStromDeviceInfo({
+        address,
+        token,
+      }).then((data) => {
+        if (typeof data !== 'undefined') {
+          const info = data as MyStromDeviceHWInfo;
+
+          if (info.type !== DeviceTypes.MYSTROM_BUTTON_PLUS_2G) {
+            throw new InvalidTypeError(
+              `Device ${name} at ${address} is of the wrong type (${info.type} instead of "myStrom Button+ (2nd Gen)")`,
             );
           }
           accessory.context.device.hwInfo = info;
@@ -819,6 +922,20 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
                   this.addMyStromButtonDevice({
                     address: remoteInfo.address,
                     name: `Button ${deviceSuffix}`,
+                    token: this.config.globalToken,
+                    mac: mac,
+                  });
+                })
+                .then(() => {
+                  this.discovered.set(mac, remoteInfo);
+                });
+              break;
+            case DeviceTypes.MYSTROM_BUTTON_PLUS_2G:
+              retryWithBreaker
+                .execute(() => {
+                  this.addMyStromButtonPlusDevice({
+                    address: remoteInfo.address,
+                    name: `Button+ ${deviceSuffix}`,
                     token: this.config.globalToken,
                     mac: mac,
                   });
@@ -1018,51 +1135,88 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
         const mac: string = b.mac ?? '';
         const module = b.index;
         const action = b.action;
-        const battery = b.battery;
+        const battery = b.battery ?? b.bat; // Difference between myStrom Buttons and Buttons+ (2nd Gen)
+        const temperature = b.temp;
+        const humidity = b.rh;
 
         // Various types of callbacks
-        if (module) {
+        /**
+         * module, battery, humidity & temperature: myStrom Button+ (2nd Gen)
+         * module: Dingz
+         * action: myStrom Button
+         * everything else: heartbeat
+         */
+
+        if (module && battery && temperature && humidity) {
+          // MyStrom Button+
           this.log.info(
             chalk.blueBright('[ACTION]'),
             `Module ${request.ip} (${module}/${action})`,
           );
-          // attempt-auto add of either a dingz
+
+          // attempt auto-add of a dingz
           if (
             request.socket.remoteAddress &&
             isValidHost(request.socket.remoteAddress)
           ) {
-            this.addDingzDevice({
+            this.addMyStromButtonPlusDevice({
               address: request.socket.remoteAddress,
-              name: `DINGZ ${mac.substr(6, 6)}`,
+              name: `BUTTON+ ${mac.substring(6, 12)}`,
+              mac: mac,
             });
           }
           this.eb.emit(
             PlatformEvent.ACTION,
             mac,
             action as ButtonAction,
-            module as ModuleId,
+            module as Module,
+            battery as number,
+            temperature as number,
+            humidity as number,
+          );
+        } else if (module) {
+          // Dingz
+          this.log.info(
+            chalk.blueBright('[ACTION]'),
+            `Module ${request.ip} (${module}/${action})`,
+          );
+          // attempt auto-add of a dingz
+          if (
+            request.socket.remoteAddress &&
+            isValidHost(request.socket.remoteAddress)
+          ) {
+            this.addDingzDevice({
+              address: request.socket.remoteAddress,
+              name: `DINGZ ${mac.substring(6, 12)}`,
+            });
+          }
+          this.eb.emit(
+            PlatformEvent.ACTION,
+            mac,
+            action as ButtonAction,
+            module as Module,
+          );
+        } else if (action) {
+          // myStrom Button
+          this.log.info(
+            chalk.blueBright('[ACTION] Simple'),
+            `Button ${request.ip} (${action})`,
+          );
+          this.eb.emit(
+            PlatformEvent.ACTION,
+            mac,
+            action as ButtonAction,
+            battery as number,
           );
         } else {
-          if (action) {
-            this.log.info(
-              chalk.blueBright('[ACTION] Simple'),
-              `Button ${request.ip} (${action})`,
-            );
-            this.eb.emit(
-              PlatformEvent.ACTION,
-              mac,
-              action as ButtonAction,
-              battery as number,
-            );
-          } else {
-            this.log.info(chalk.blueBright('[HEARTBEAT]'), request.ip);
-            this.eb.emit(
-              PlatformEvent.ACTION,
-              mac,
-              action as ButtonAction,
-              battery,
-            );
-          }
+          // Everything else (i.e. heartbeat)
+          this.log.info(chalk.blueBright('[HEARTBEAT]'), request.ip);
+          this.eb.emit(
+            PlatformEvent.ACTION,
+            mac,
+            action as ButtonAction,
+            battery,
+          );
         }
       });
     }

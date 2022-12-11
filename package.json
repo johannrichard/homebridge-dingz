@@ -28,7 +28,7 @@
     "prepublishOnly": "yarn pinst --disable",
     "prepare": "yarn run lint && yarn run build && yarn run depcheck",
     "changelog": "changelog --exclude ci,chore",
-    "debug": "yarn run lint && yarn run build && yarn dlx homebridge -I"
+    "debug": "yarn run lint && yarn run build && yarn dlx homebridge -I -D"
   },
   "keywords": [
     "homebridge-plugin",
@@ -52,34 +52,34 @@
     "simple-color-converter": "^2.1.13"
   },
   "devDependencies": {
-    "@commitlint/cli": "^17.2.0",
-    "@commitlint/config-conventional": "^17.2.0",
-    "@semantic-release/changelog": "^6.0.1",
+    "@commitlint/cli": "^17.3.0",
+    "@commitlint/config-conventional": "^17.3.0",
+    "@semantic-release/changelog": "^6.0.2",
     "@semantic-release/commit-analyzer": "^9.0.2",
-    "@semantic-release/github": "^8.0.6",
+    "@semantic-release/github": "^8.0.7",
     "@semantic-release/npm": "^9.0.1",
     "@semantic-release/release-notes-generator": "^10.0.3",
     "@types/body-parser": "^1.19.2",
     "@types/express": "^4.17.14",
-    "@types/node": "^18.11.9",
+    "@types/node": "^18.11.13",
     "@types/qs": "^6.9.7",
     "@types/semver": "^7.3.13",
-    "@typescript-eslint/eslint-plugin": "^5.42.1",
-    "@typescript-eslint/parser": "^5.42.1",
+    "@typescript-eslint/eslint-plugin": "^5.46.0",
+    "@typescript-eslint/parser": "^5.46.0",
     "depcheck": "^1.4.3",
-    "eslint": "^8.27.0",
+    "eslint": "^8.29.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-prettier": "^4.2.1",
     "generate-changelog": "^1.8.0",
     "homebridge": "^1.5.1",
     "husky": "^8.0.2",
-    "lint-staged": "^13.0.3",
+    "lint-staged": "^13.1.0",
     "nodemon": "^2.0.20",
     "pinst": "^3.0.0",
-    "prettier": "^2.7.1",
+    "prettier": "^2.8.1",
     "rimraf": "^3.0.2",
     "semantic-release": "^19.0.5",
-    "typescript": "^4.8.4"
+    "typescript": "^4.9.4"
   },
   "lint-staged": {
     "**/*.+(js|jsx|css|less|scss|ts|tsx|md)": [
@@ -104,5 +104,5 @@
       "@semantic-release/*"
     ]
   },
-  "packageManager": "yarn@3.2.4"
+  "packageManager": "yarn@3.3.0"
 }

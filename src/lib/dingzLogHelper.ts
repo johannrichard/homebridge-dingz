@@ -26,16 +26,7 @@ export class DingzLogger {
     ...parameters: unknown[]
   ): void {
     message = chalk.magentaBright(`[${this.dingzPrefix}] `) + message;
-
-    // FIXME: #142 Upstream "bug" (or feature) in Homerbidge's Logger class
-    // Only when Logger.debug() is called does the class check whether
-    // DEBUG is enabled or not.
-    // TODO: Wait for [homebridge/homebridge#2732](https://github.com/homebridge/homebridge/pull/2732)
-    if (logLevel === LogLevel.DEBUG) {
-      this.logger.debug(message, ...parameters);
-    } else {
-      this.logger.log(logLevel, message, ...parameters);
-    }
+    this.logger.log(logLevel, message, ...parameters);
   }
 
   public info(message: string, ...parameters: unknown[]): void {

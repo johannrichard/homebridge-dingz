@@ -12,16 +12,16 @@ import { MyStromDeviceHWInfo, MyStromSwitchReport } from './lib/myStromTypes';
 import { DingzDaBaseAccessory } from './lib/dingzDaBaseAccessory';
 
 /**
- * Platform Accessory
+ * Switch Platform Accessory
  * An instance of this class is created for each accessory your platform registers
  * Each accessory may expose multiple services of different service types.
+ * TODO: Implement Switch Zero in this class
  */
 export class MyStromSwitchAccessory extends DingzDaBaseAccessory {
   private outletService: Service;
   private temperatureService: Service | undefined = undefined;
 
   // Eventually replaced by:
-  private switchOn = false;
   private mystromDeviceInfo: MyStromDeviceHWInfo;
 
   private outletState = {

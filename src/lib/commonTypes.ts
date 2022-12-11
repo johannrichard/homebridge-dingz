@@ -13,13 +13,15 @@ import { MyStromDeviceHWInfo } from './myStromTypes';
 export enum DeviceTypes {
   MYSTROM_SWITCH_CHV1 = 101,
   MYSTROM_BULB = 102,
-  MYSTROM_BUTTON_PLUS = 103,
+  MYSTROM_BUTTON_PLUS = 103, // 1st Generation
   MYSTROM_BUTTON = 104,
   MYSTROM_LEDSTRIP = 105,
   MYSTROM_SWITCH_CHV2 = 106,
   MYSTROM_SWITCH_EU = 107,
   DINGZ = 108,
   MYSTROM_PIR = 110,
+  MYSTROM_BUTTON_PLUS_2G = 118, // 2nd Generation
+  MYSTROM_SWITCH_ZERO = 120,
 }
 
 export enum ButtonAction {
@@ -53,6 +55,7 @@ export type AccessoryClass =
   | 'MyStromSwitchAccessory'
   | 'MyStromLightbulbAccessory'
   | 'MyStromButtonAccessory'
+  | 'MyStromButtonPlusAccessory'
   | 'MyStromPIRAccessory';
 
 export type AccessoryType =
@@ -61,6 +64,7 @@ export type AccessoryType =
   | MyStromLightbulbAccessory
   | MyStromButtonAccessory
   | MyStromPIRAccessory;
+
 export interface AccessoryTypes {
   [key: string]: AccessoryType;
 }

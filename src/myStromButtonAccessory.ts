@@ -26,21 +26,18 @@ const retrySlow = Policy.handleAll()
  */
 export class MyStromButtonAccessory extends DingzDaBaseAccessory {
   // Eventually replaced by:
-  private mystromDeviceInfo: MyStromDeviceHWInfo;
   private buttonState: ButtonAction = ButtonAction.SINGLE_PRESS;
   private switchButtonState: ButtonState = ButtonState.OFF;
-  private batteryLevel: Nullable<number> = 0;
-  private chargingState = false;
+  protected batteryLevel: Nullable<number> = 0;
+  protected chargingState = false;
 
   constructor(
-    private readonly _platform: DingzDaHomebridgePlatform,
-    private readonly _accessory: PlatformAccessory,
+    protected readonly _platform: DingzDaHomebridgePlatform,
+    protected readonly _accessory: PlatformAccessory,
   ) {
     super(_platform, _accessory);
 
     // Set Base URL
-    this.mystromDeviceInfo = this.device.hwInfo as MyStromDeviceHWInfo;
-
     this.log.debug(
       'Setting informationService Characteristics ->',
       this.device.model,
@@ -69,9 +66,40 @@ export class MyStromButtonAccessory extends DingzDaBaseAccessory {
         this.device.mac,
       );
 
-    // get the LightBulb service if it exists, otherwise create a new LightBulb service
+    const batteryService: Service =
+      this.accessory.getService(this.platform.Service.Battery) ??
+      this.accessory.addService(this.platform.Service.Battery);
+
+    batteryService
+      .getCharacteristic(this.platform.Characteristic.BatteryLevel)
+      .on(CharacteristicEventTypes.GET, this.getBatteryLevel.bind(this));
+
+    batteryService
+      .getCharacteristic(this.platform.Characteristic.StatusLowBattery)
+      .on(CharacteristicEventTypes.GET, this.getStatusBatteryLow.bind(this));
+
+    batteryService
+      .getCharacteristic(this.platform.Characteristic.ChargingState)
+      .on(CharacteristicEventTypes.GET, this.getChargingState.bind(this));
+
+    // get the StatelessProgrammableSwitch service if it exists,
+    // otherwise create a new StatelessProgrammableSwitch service
     // you can create multiple services for each accessory
     this.log.info('Create Stateless Programmable Switch');
+    this.buttonServiceSetup();
+
+    // Set the callback URL (Override!)
+    retrySlow.execute(() => {
+      this.platform.setButtonCallbackUrl({
+        baseUrl: this.baseUrl,
+        token: this.device.token,
+        endpoints: ['generic'], // Buttons need the 'generic' endpoint specifically set
+      });
+    });
+  }
+
+  // Set-up the button (override in subclasses)
+  protected buttonServiceSetup() {
     const buttonService: Service =
       this.accessory.getService(
         this.platform.Service.StatelessProgrammableSwitch,
@@ -100,29 +128,13 @@ export class MyStromButtonAccessory extends DingzDaBaseAccessory {
       )
       .on(CharacteristicEventTypes.GET, this.getButtonState.bind(this));
 
-    const batteryService: Service =
-      this.accessory.getService(this.platform.Service.BatteryService) ??
-      this.accessory.addService(this.platform.Service.BatteryService);
-
-    batteryService
-      .getCharacteristic(this.platform.Characteristic.BatteryLevel)
-      .on(CharacteristicEventTypes.GET, this.getBatteryLevel.bind(this));
-
-    batteryService
-      .getCharacteristic(this.platform.Characteristic.StatusLowBattery)
-      .on(CharacteristicEventTypes.GET, this.getStatusBatteryLow.bind(this));
-
-    batteryService
-      .getCharacteristic(this.platform.Characteristic.ChargingState)
-      .on(CharacteristicEventTypes.GET, this.getChargingState.bind(this));
-
     this.platform.eb.on(PlatformEvent.ACTION, (mac, action, battery) => {
       if (mac === this.device.mac) {
         this.buttonState = action ?? ButtonAction.SINGLE_PRESS;
         this.batteryLevel = battery;
 
         const batteryService = this.accessory.getService(
-          this.platform.Service.BatteryService,
+          this.platform.Service.Battery,
         );
 
         if (batteryService) {
@@ -183,15 +195,6 @@ export class MyStromButtonAccessory extends DingzDaBaseAccessory {
         }
       }
     });
-
-    // Set the callback URL (Override!)
-    retrySlow.execute(() => {
-      this.platform.setButtonCallbackUrl({
-        baseUrl: this.baseUrl,
-        token: this.device.token,
-        endpoints: ['generic'], // Buttons need the 'generic' endpoint specifically set
-      });
-    });
   }
 
   private getButtonState(callback: CharacteristicGetCallback) {
@@ -199,18 +202,18 @@ export class MyStromButtonAccessory extends DingzDaBaseAccessory {
     callback(this.reachabilityState, currentState);
   }
 
-  private getSwitchButtonState(callback: CharacteristicGetCallback) {
+  protected getSwitchButtonState(callback: CharacteristicGetCallback) {
     const currentState = this.switchButtonState;
     this.log.info('Get Switch State ->', currentState);
     callback(this.reachabilityState, currentState);
   }
 
-  private getBatteryLevel(callback: CharacteristicGetCallback) {
+  protected getBatteryLevel(callback: CharacteristicGetCallback) {
     const currentLevel = this.batteryLevel;
     callback(this.reachabilityState, currentLevel);
   }
 
-  private getStatusBatteryLow(callback: CharacteristicGetCallback) {
+  protected getStatusBatteryLow(callback: CharacteristicGetCallback) {
     const currentLevel: number = this.batteryLevel ?? 0;
     callback(
       null,
@@ -220,7 +223,7 @@ export class MyStromButtonAccessory extends DingzDaBaseAccessory {
     );
   }
 
-  private getChargingState(callback: CharacteristicGetCallback) {
+  protected getChargingState(callback: CharacteristicGetCallback) {
     const currentState = this.chargingState;
     callback(this.reachabilityState, currentState);
   }
