@@ -891,7 +891,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
       // the MAC of the discovered device will be printed in debug
       if (!this.config.autoDiscover) {
         this.log.debug(
-          `auto-discovery disabled: ignoring discovered device ${mac} at ${remoteInfo.address}`,
+          `Auto-discovery disabled: ignoring discovered device ${mac} at ${remoteInfo.address}`,
         );
         return;
       }
@@ -904,7 +904,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
             'Ignoring discovered device',
             this.ignored.get(mac.toUpperCase()).comment || '',
             'at',
-            mac,
+            mac.toUpperCase(),
           );
           this.ignored.get(mac.toUpperCase()).isignored = true;
         }
@@ -913,7 +913,11 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
           switch (t) {
             case DeviceTypes.MYSTROM_BUTTON_PLUS:
               throw new DeviceNotImplementedError(
-                `Device discovered at ${remoteInfo.address} of unsupported type ${DeviceTypes[t]}`,
+                `Device discovered at ${
+                  remoteInfo.address
+                } (MAC:${mac.toUpperCase()}) of unsupported type ${
+                  DeviceTypes[t]
+                } `,
               );
               break;
             case DeviceTypes.MYSTROM_BUTTON:
@@ -1017,7 +1021,9 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
               break;
           }
         } else {
-          this.log.debug('Stopping discovery of already known device:', mac);
+          this.log.debug(
+            `Stopping discovery of already known device: ${mac.toUpperCase()}`,
+          );
         }
       }
     } catch (e) {
