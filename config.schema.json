@@ -102,7 +102,11 @@
                   "title": "myStrom PIR (Motion) Sensor",
                   "enum": ["myStromPIR"]
                 },
-                { "title": "myStrom Button", "enum": ["myStromButton"] }
+                { "title": "myStrom Button", "enum": ["myStromButton"] },
+                {
+                  "title": "myStrom Button+ (2nd Gen)",
+                  "enum": ["myStromButtonPlus"]
+                }
               ],
               "required": true
             },
