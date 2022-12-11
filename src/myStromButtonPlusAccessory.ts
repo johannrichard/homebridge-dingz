@@ -213,6 +213,9 @@ export class MyStromButtonPlusAccessory extends MyStromButtonAccessory {
             this.batteryService
               .getCharacteristic(this.platform.Characteristic.BatteryLevel)
               .updateValue(this.batteryLevel);
+            this.log.debug(
+              `Setting new battery level to ${this.batteryLevel}%`,
+            );
           }
 
           if (this.temperatureService && temperature) {
@@ -222,6 +225,9 @@ export class MyStromButtonPlusAccessory extends MyStromButtonAccessory {
                 this.platform.Characteristic.CurrentTemperature,
               )
               .updateValue(temperature);
+            this.log.debug(
+              `Setting new battery temperature to ${temperature}%`,
+            );
           }
 
           if (this.humidityService && humidity) {
@@ -231,6 +237,7 @@ export class MyStromButtonPlusAccessory extends MyStromButtonAccessory {
                 this.platform.Characteristic.CurrentRelativeHumidity,
               )
               .updateValue(humidity);
+            this.log.debug(`Setting new humidty level to ${humidity}%`);
           }
 
           switch (module) {
