@@ -192,6 +192,7 @@ export class MyStromButtonPlusAccessory extends MyStromButtonAccessory {
         if (mac === this.device.mac && module) {
           this.log.debug(
             `Module ${module} triggered -> ${action}, MAC: ${mac} (This: ${this.device.mac})`,
+            `\nBatt [V]: ${battery}, °C: ${temperature}, RH: ${humidity})`,
           );
 
           // battery, temperature and humidity are reported in any case
@@ -213,9 +214,7 @@ export class MyStromButtonPlusAccessory extends MyStromButtonAccessory {
             batteryService
               .getCharacteristic(this.platform.Characteristic.BatteryLevel)
               .updateValue(this.batteryLevel);
-            this.log.debug(
-              `Setting new battery level to ${this.batteryLevel}%`,
-            );
+            this.log.debug(`Setting battery level to ${this.batteryLevel}%`);
           }
 
           const temperatureService = this.accessory.getService(
@@ -229,9 +228,7 @@ export class MyStromButtonPlusAccessory extends MyStromButtonAccessory {
                 this.platform.Characteristic.CurrentTemperature,
               )
               .updateValue(temperature);
-            this.log.debug(
-              `Setting new battery temperature to ${temperature}%`,
-            );
+            this.log.debug(`Setting temperature to ${temperature}°`);
           }
 
           const humidityService = this.accessory.getService(
@@ -244,7 +241,7 @@ export class MyStromButtonPlusAccessory extends MyStromButtonAccessory {
                 this.platform.Characteristic.CurrentRelativeHumidity,
               )
               .updateValue(humidity);
-            this.log.debug(`Setting new humidty level to ${humidity}%`);
+            this.log.debug(`Setting humidty level to ${humidity}%`);
           }
 
           switch (module) {
