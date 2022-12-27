@@ -450,6 +450,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
           info.type !== DeviceTypes.MYSTROM_SWITCH_CHV2 &&
           info.type !== 'WSEU' &&
           info.type !== DeviceTypes.MYSTROM_SWITCH_EU &&
+          info.type !== 'LCS' &&
           info.type !== undefined // Switch V1 does not have a type
         ) {
           throw new InvalidTypeError(
@@ -977,6 +978,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
             case DeviceTypes.MYSTROM_SWITCH_CHV1:
             case DeviceTypes.MYSTROM_SWITCH_CHV2:
             case DeviceTypes.MYSTROM_SWITCH_EU:
+            case DeviceTypes.MYSTROM_SWITCH_ZERO:
               retryWithBreaker
                 .execute(() => {
                   this.addMyStromSwitchDevice({
