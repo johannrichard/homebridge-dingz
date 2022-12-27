@@ -450,6 +450,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
           info.type !== DeviceTypes.MYSTROM_SWITCH_CHV2 &&
           info.type !== 'WSEU' &&
           info.type !== DeviceTypes.MYSTROM_SWITCH_EU &&
+          info.type !== 'LCS' &&
           info.type !== undefined // Switch V1 does not have a type
         ) {
           throw new InvalidTypeError(
@@ -891,7 +892,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
       // the MAC of the discovered device will be printed in debug
       if (!this.config.autoDiscover) {
         this.log.debug(
-          `auto-discovery disabled: ignoring discovered device ${mac} at ${remoteInfo.address}`,
+          `Auto-discovery disabled: ignoring discovered device ${mac} at ${remoteInfo.address}`,
         );
         return;
       }
@@ -904,7 +905,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
             'Ignoring discovered device',
             this.ignored.get(mac.toUpperCase()).comment || '',
             'at',
-            mac,
+            mac.toUpperCase(),
           );
           this.ignored.get(mac.toUpperCase()).isignored = true;
         }
@@ -913,7 +914,11 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
           switch (t) {
             case DeviceTypes.MYSTROM_BUTTON_PLUS:
               throw new DeviceNotImplementedError(
-                `Device discovered at ${remoteInfo.address} of unsupported type ${DeviceTypes[t]}`,
+                `Device discovered at ${
+                  remoteInfo.address
+                } (MAC:${mac.toUpperCase()}) of unsupported type ${
+                  DeviceTypes[t]
+                } `,
               );
               break;
             case DeviceTypes.MYSTROM_BUTTON:
@@ -973,6 +978,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
             case DeviceTypes.MYSTROM_SWITCH_CHV1:
             case DeviceTypes.MYSTROM_SWITCH_CHV2:
             case DeviceTypes.MYSTROM_SWITCH_EU:
+            case DeviceTypes.MYSTROM_SWITCH_ZERO:
               retryWithBreaker
                 .execute(() => {
                   this.addMyStromSwitchDevice({
@@ -1017,7 +1023,9 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
               break;
           }
         } else {
-          this.log.debug('Stopping discovery of already known device:', mac);
+          this.log.debug(
+            `Stopping discovery of already known device: ${mac.toUpperCase()}`,
+          );
         }
       }
     } catch (e) {

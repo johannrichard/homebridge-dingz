@@ -21,11 +21,11 @@
   "scripts": {
     "lint": "eslint src/**.ts",
     "postinstall": "husky install",
-    "postpublish": "yarn pinst --enable",
+    "prepack": "yarn pinst --disable",
+    "postpack": "yarn pinst --enable",
     "watch": "yarn dlx nodemon",
     "build": "yarn rimraf ./dist && tsc",
     "depcheck": "depcheck",
-    "prepublishOnly": "yarn pinst --disable",
     "prepare": "yarn run lint && yarn run build && yarn run depcheck",
     "changelog": "changelog --exclude ci,chore",
     "debug": "yarn run lint && yarn run build && yarn dlx homebridge -I -D"
@@ -60,18 +60,18 @@
     "@semantic-release/npm": "^9.0.1",
     "@semantic-release/release-notes-generator": "^10.0.3",
     "@types/body-parser": "^1.19.2",
-    "@types/express": "^4.17.14",
-    "@types/node": "^18.11.13",
+    "@types/express": "^4.17.15",
+    "@types/node": "^18.11.18",
     "@types/qs": "^6.9.7",
     "@types/semver": "^7.3.13",
-    "@typescript-eslint/eslint-plugin": "^5.46.0",
-    "@typescript-eslint/parser": "^5.46.0",
+    "@typescript-eslint/eslint-plugin": "^5.47.1",
+    "@typescript-eslint/parser": "^5.47.1",
     "depcheck": "^1.4.3",
-    "eslint": "^8.29.0",
+    "eslint": "^8.30.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-prettier": "^4.2.1",
     "generate-changelog": "^1.8.0",
-    "homebridge": "^1.5.1",
+    "homebridge": "^1.6.0",
     "husky": "^8.0.2",
     "lint-staged": "^13.1.0",
     "nodemon": "^2.0.20",
@@ -104,5 +104,5 @@
       "@semantic-release/*"
     ]
   },
-  "packageManager": "yarn@3.3.0"
+  "packageManager": "yarn@3.3.1"
 }

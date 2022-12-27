@@ -6,7 +6,10 @@ export const MyStromSwitchTypes = {
   '106': 'CH v2',
   WSEU: 'EU',
   '107': 'EU',
+  LCS: 'Zero',
+  '120': 'Zero',
 };
+
 export interface MyStromDeviceHWInfo {
   version: string;
   mac: string;
