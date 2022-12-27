@@ -62,7 +62,7 @@ export class MyStromSwitchAccessory extends DingzDaBaseAccessory {
       )
       .setCharacteristic(
         this.platform.Characteristic.HardwareRevision,
-        this.mystromDeviceInfo ? 'EU/CH v2' : 'CH v1',
+        this.mystromDeviceInfo ? 'EU/CH v2/Zero' : 'CH v1',
       )
       .setCharacteristic(
         this.platform.Characteristic.SerialNumber,
@@ -86,12 +86,11 @@ export class MyStromSwitchAccessory extends DingzDaBaseAccessory {
 
     this.outletService
       .getCharacteristic(this.platform.Characteristic.OutletInUse)
-      //      .on(CharacteristicEventTypes.SET, this.setOutletInUse.bind(this)) // SET - bind to the `setOn` method below
       .on(CharacteristicEventTypes.GET, this.getOutletInUse.bind(this)); // GET - bind to the `getOn` method below
 
-    if (this.device.hwInfo?.type !== undefined) {
+    // Only EU and CH v2 Switches have temperature sensor
+    if (this.device.model !== 'Zero' && this.device.model !== undefined) {
       // Switch has a temperature sensor, make it available here
-      // create a new Temperature Sensor service
       this.temperatureService =
         this.accessory.getService(this.platform.Service.TemperatureSensor) ??
         this.accessory.addService(this.platform.Service.TemperatureSensor);
@@ -121,9 +120,19 @@ export class MyStromSwitchAccessory extends DingzDaBaseAccessory {
           .getCharacteristic(this.platform.Characteristic.On)
           .updateValue(this.outletState.relay);
 
-        this.outletService
-          .getCharacteristic(this.platform.Characteristic.OutletInUse)
-          .updateValue(this.outletState.power > 0);
+        switch (this.device.model ?? 'unknown') {
+          case 'CH v1':
+          case 'Zero':
+            this.outletService
+              .getCharacteristic(this.platform.Characteristic.OutletInUse)
+              .updateValue(this.outletState.relay);
+            break;
+          default:
+            this.outletService
+              .getCharacteristic(this.platform.Characteristic.OutletInUse)
+              .updateValue(this.outletState.power > 0);
+            break;
+        }
 
         if (this.temperatureService) {
           this.temperatureService
@@ -160,7 +169,10 @@ export class MyStromSwitchAccessory extends DingzDaBaseAccessory {
   }
 
   private getOutletInUse(callback: CharacteristicGetCallback) {
-    const inUse: boolean = this.outletState?.power > 0;
+    const inUse: boolean =
+      this.device.model === 'Zero' // Zero does not measure power
+        ? this.outletState?.relay
+        : this.outletState?.power > 0;
     this.log.debug('Get Characteristic OutletInUse ->', inUse);
     callback(this.reachabilityState, inUse);
   }
