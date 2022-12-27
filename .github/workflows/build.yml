@@ -26,7 +26,6 @@ jobs:
       #        run: yarn set version berry
 
       - name: Install dependencies
-        run: yarn set version 3.3.0
       - run: yarn
 
       - name: Lint the project
