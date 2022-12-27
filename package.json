@@ -21,11 +21,11 @@
   "scripts": {
     "lint": "eslint src/**.ts",
     "postinstall": "husky install",
-    "postpublish": "yarn pinst --enable",
+    "prepack": "pinst --disable",
+    "postpack": "pinst --enable",
     "watch": "yarn dlx nodemon",
     "build": "yarn rimraf ./dist && tsc",
     "depcheck": "depcheck",
-    "prepublishOnly": "yarn pinst --disable",
     "prepare": "yarn run lint && yarn run build && yarn run depcheck",
     "changelog": "changelog --exclude ci,chore",
     "debug": "yarn run lint && yarn run build && yarn dlx homebridge -I -D"
