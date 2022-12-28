@@ -9,7 +9,7 @@ module.exports = {
     'scope-enum': [
       2,
       'always',
-      ['deps-dev', 'github', 'platform', 'accessory'],
+      ['dev', 'deps', 'deps-dev', 'github', 'platform', 'accessory'],
     ],
     'type-enum': [
       2,
