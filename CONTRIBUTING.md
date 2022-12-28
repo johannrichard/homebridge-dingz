@@ -8,4 +8,6 @@ Contributions are welcome. Here's a few housekeeping rules:
 
 I've worked on this plug-in mostly alone for the past few years so please allow me to get used to working with others as the maintainer. It's a new role for me too. ☺️
 
+[Here](https://medium.com/neudesic-innovation/conventional-commits-a-better-way-78d6785c2e08)'s a good article describing the use of conventional commits and semantic-release. This repository aims to adhere to these rules as much as possible. 
+
 And last but not least: please be kind. 
