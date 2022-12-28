@@ -15,6 +15,8 @@ Please have a look at the [Wiki](https://github.com/johannrichard/homebridge-din
 - [Usage](#usage)
 - [Caveats](#caveats)
 - [Disclaimer](#disclaimer)
+- [Contributing](#contributing)
+
 <!-- /TOC -->
 
 ## Auto-discovery
@@ -64,6 +66,9 @@ Harder: See [the Wiki](https://github.com/johannrichard/homebridge-dingz/wiki) f
 
 **Full disclosure**: The author of this plugin is not affiliated in any way with Iolo AG or MyStrom AG. [Iolo AG](https://iolo.ch), the producer of dingz', was so kind to provide me with one test device. I'm very grateful for this and hope this little plugin can contribute a little bit to help dingz spread its wings. Thanks also to [myStrom AG](mystrom.ch) who provided me with some gear to implement additional myStrom Devices.
 
+## Contributing
+
+Contributions are welcome. Please have a look at [CONTRIBUTING.md](CONTRIBUTING.md) for details. 
 ## License
 
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fjohannrichard%2Fhomebridge-dingz.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fjohannrichard%2Fhomebridge-dingz?ref=badge_large)
