@@ -141,7 +141,12 @@ export class MyStromButtonPlusAccessory extends MyStromButtonAccessory {
   private getTemperature(callback: CharacteristicGetCallback) {
     const temperature: number = this.buttonPlusState?.temperature;
     this.log.debug('Get Characteristic Temperature ->', temperature, '° C');
-    callback(this.reachabilityState, temperature);
+    // Don't return a value if temperature is not defined
+    if (temperature !== null && temperature !== undefined) {
+      callback(this.reachabilityState, temperature);
+    } else {
+      callback(new Error('No valid temperature value'));
+    }
   }
 
   private getHumidity(callback: CharacteristicGetCallback) {
@@ -151,7 +156,12 @@ export class MyStromButtonPlusAccessory extends MyStromButtonAccessory {
       humidity,
       '% (relative humidity)',
     );
-    callback(this.reachabilityState, humidity);
+    // Don't return a value if humidity is not defined
+    if (humidity !== null && humidity !== undefined) {
+      callback(this.reachabilityState, humidity);
+    } else {
+      callback(new Error('No valid humidity value'));
+    }
   }
 
   // FIXME: initHandler is probably not needed
