@@ -348,11 +348,13 @@ export class DingzAccessory extends DingzDaBaseAccessory {
   }
 
   private updateTemperature(temperatureService: Service) {
-    const currentTemperature: number = this.dingzStates.Temperature;
+    const temperature: number = this.dingzStates.Temperature;
 
-    temperatureService
-      .getCharacteristic(this.platform.Characteristic.CurrentTemperature)
-      .updateValue(currentTemperature);
+    if (temperature !== null || temperature !== undefined) {
+      temperatureService
+        .getCharacteristic(this.platform.Characteristic.CurrentTemperature)
+        .updateValue(temperature);
+    }
   }
 
   /**
@@ -361,8 +363,15 @@ export class DingzAccessory extends DingzDaBaseAccessory {
    */
   private getTemperature(callback: CharacteristicSetCallback) {
     // set this to a valid value for CurrentTemperature
-    const currentTemperature: number = this.dingzStates.Temperature;
-    callback(this.reachabilityState, currentTemperature);
+    const temperature: number = this.dingzStates.Temperature;
+    this.log.debug('Get Characteristic Temperature ->', temperature, '° C');
+
+    // Don't return a value if temperature is not defined
+    if (temperature !== null && temperature !== undefined) {
+      callback(this.reachabilityState, temperature);
+    } else {
+      callback(new Error('No valid Temperature value'));
+    }
   }
 
   private addLightSensorService() {
@@ -657,16 +666,6 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     callback(this.reachabilityState, currentState);
   }
 
-  private setSwitchButtonState(
-    button: ButtonId,
-    value: CharacteristicValue,
-    callback: CharacteristicSetCallback,
-  ) {
-    this.dingzStates.Buttons[button].state = value as ButtonState;
-    this.log.info('Set Switch State of ->', button, '-> state:', value);
-    callback(this.reachabilityState);
-  }
-
   private reconfigureOutput({
     name,
     output,
@@ -768,8 +767,14 @@ export class DingzAccessory extends DingzDaBaseAccessory {
    * Handle the "GET" requests from HomeKit
    */
   private getOn(index: DimmerIndex, callback: CharacteristicGetCallback) {
-    const isOn: boolean = this.dingzStates.Dimmers[index]?.on ?? false;
-    callback(this.reachabilityState, isOn);
+    const isOn: boolean = this.dingzStates.Dimmers[index]?.on;
+
+    this.log.debug('Get Characteristic On ->', isOn, '');
+    if (isOn !== null && isOn !== undefined && typeof isOn === 'boolean') {
+      callback(this.reachabilityState, isOn);
+    } else {
+      callback(new Error('No temperature value available'));
+    }
   }
 
   private async setBrightness(
@@ -1350,9 +1355,14 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     ledService
       .getCharacteristic(this.platform.Characteristic.Brightness)
       .updateValue(this.dingzStates.LED.value);
-    ledService
-      .getCharacteristic(this.platform.Characteristic.On)
-      .updateValue(this.dingzStates.LED.on);
+    if (
+      this.dingzStates.LED.on !== null &&
+      this.dingzStates.LED.on !== undefined
+    ) {
+      ledService
+        .getCharacteristic(this.platform.Characteristic.On)
+        .updateValue(this.dingzStates.LED.on);
+    }
   }
 
   private setLEDOn(
@@ -1365,7 +1375,11 @@ export class DingzAccessory extends DingzDaBaseAccessory {
 
   private getLEDOn(callback: CharacteristicGetCallback) {
     const isOn = this.dingzStates.LED.on;
-    callback(this.reachabilityState, isOn);
+    if (isOn !== null && isOn !== undefined) {
+      callback(this.reachabilityState, isOn);
+    } else {
+      callback(new Error('No LED status available'));
+    }
   }
 
   private setLEDHue(
