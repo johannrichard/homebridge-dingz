@@ -664,16 +664,6 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     callback(this.reachabilityState, currentState);
   }
 
-  private setSwitchButtonState(
-    button: ButtonId,
-    value: CharacteristicValue,
-    callback: CharacteristicSetCallback,
-  ) {
-    this.dingzStates.Buttons[button].state = value as ButtonState;
-    this.log.info('Set Switch State of ->', button, '-> state:', value);
-    callback(this.reachabilityState);
-  }
-
   private reconfigureOutput({
     name,
     output,
