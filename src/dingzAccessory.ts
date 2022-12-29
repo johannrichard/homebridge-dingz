@@ -361,8 +361,15 @@ export class DingzAccessory extends DingzDaBaseAccessory {
    */
   private getTemperature(callback: CharacteristicSetCallback) {
     // set this to a valid value for CurrentTemperature
-    const currentTemperature: number = this.dingzStates.Temperature;
-    callback(this.reachabilityState, currentTemperature);
+    const temperature: number = this.dingzStates.Temperature;
+    this.log.debug('Get Characteristic Temperature ->', temperature, '° C');
+
+    // Don't return a value if temperature is not defined
+    if (temperature !== null && temperature !== undefined) {
+      callback(this.reachabilityState, temperature);
+    } else {
+      callback(this.reachabilityState);
+    }
   }
 
   private addLightSensorService() {
@@ -768,8 +775,12 @@ export class DingzAccessory extends DingzDaBaseAccessory {
    * Handle the "GET" requests from HomeKit
    */
   private getOn(index: DimmerIndex, callback: CharacteristicGetCallback) {
-    const isOn: boolean = this.dingzStates.Dimmers[index]?.on ?? false;
-    callback(this.reachabilityState, isOn);
+    const isOn: boolean = this.dingzStates.Dimmers[index]?.on;
+    if (isOn !== null && isOn !== undefined) {
+      callback(this.reachabilityState, isOn);
+    } else {
+      callback(this.reachabilityState);
+    }
   }
 
   private async setBrightness(

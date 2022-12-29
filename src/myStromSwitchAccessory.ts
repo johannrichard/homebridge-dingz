@@ -165,7 +165,13 @@ export class MyStromSwitchAccessory extends DingzDaBaseAccessory {
   private getTemperature(callback: CharacteristicGetCallback) {
     const temperature: number = this.outletState?.temperature;
     this.log.debug('Get Characteristic Temperature ->', temperature, '° C');
-    callback(this.reachabilityState, temperature);
+
+    // Don't return a value if temperature is not defined
+    if (temperature !== null && temperature !== undefined) {
+      callback(this.reachabilityState, temperature);
+    } else {
+      callback(this.reachabilityState);
+    }
   }
 
   private getOutletInUse(callback: CharacteristicGetCallback) {
