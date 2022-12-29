@@ -1,7 +1,7 @@
 # Homebridge Plugin for dingz Devices: homebridge-dingz
 
 ![Build and Lint](https://github.com/johannrichard/homebridge-dingz/workflows/Build%20and%20Lint/badge.svg)
-![Node.js Package](https://github.com/johannrichard/homebridge-dingz/workflows/Node.js%20Package/badge.svg)
+[![Semantic release](https://github.com/johannrichard/homebridge-dingz/actions/workflows/semantic-release.yml/badge.svg?branch=master)](https://github.com/johannrichard/homebridge-dingz/actions/workflows/semantic-release.yml)
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fjohannrichard%2Fhomebridge-dingz.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fjohannrichard%2Fhomebridge-dingz?ref=badge_shield)
 
 This plugin implements some (but not all) functions of [dingz](https://dingz.ch) Smart Home Devices. The plugin also supports (some) [myStrom](https://mystrom.ch) Devices as they share much of the same API definitions and concepts with dingz.
@@ -68,7 +68,8 @@ Harder: See [the Wiki](https://github.com/johannrichard/homebridge-dingz/wiki) f
 
 ## Contributing
 
-Contributions are welcome. Please have a look at [CONTRIBUTING.md](CONTRIBUTING.md) for details. 
+Contributions are welcome. Please have a look at [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+
 ## License
 
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fjohannrichard%2Fhomebridge-dingz.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fjohannrichard%2Fhomebridge-dingz?ref=badge_large)
