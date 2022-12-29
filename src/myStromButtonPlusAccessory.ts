@@ -145,7 +145,7 @@ export class MyStromButtonPlusAccessory extends MyStromButtonAccessory {
     if (temperature !== null && temperature !== undefined) {
       callback(this.reachabilityState, temperature);
     } else {
-      callback(this.reachabilityState);
+      callback(new Error('No valid temperature value'));
     }
   }
 
@@ -160,7 +160,7 @@ export class MyStromButtonPlusAccessory extends MyStromButtonAccessory {
     if (humidity !== null && humidity !== undefined) {
       callback(this.reachabilityState, humidity);
     } else {
-      callback(this.reachabilityState);
+      callback(new Error('No valid humidity value'));
     }
   }
 

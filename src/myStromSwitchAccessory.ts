@@ -170,7 +170,7 @@ export class MyStromSwitchAccessory extends DingzDaBaseAccessory {
     if (temperature !== null && temperature !== undefined) {
       callback(this.reachabilityState, temperature);
     } else {
-      callback(this.reachabilityState);
+      callback(new Error('No valid temperature value'));
     }
   }
 
