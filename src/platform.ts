@@ -8,6 +8,7 @@ import type {
 } from 'homebridge';
 import { Policy, ConsecutiveBreaker } from 'cockatiel';
 import { createSocket, Socket, RemoteInfo } from 'dgram';
+import { isNativeError } from 'util/types';
 import axios, { AxiosError } from 'axios';
 import axiosRetry from 'axios-retry';
 import * as bodyParser from 'body-parser';
@@ -1052,9 +1053,9 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
       process.on('exit', () => {
         try {
           discoverySocket.close();
-        } catch (e: any) {
-          if (e.code === 'ERR_SOCKET_DGRAM_NOT_CONNECTED') {
-            this.log.info('Socket already destroyed');
+        } catch (e: unknown) {
+          if (isNativeError(e)) {
+            this.log.error(`${e.name}: ${e.message}`);
           }
         } finally {
           this.log.info('Process ended, socket destroyed');
@@ -1068,15 +1069,17 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
         this.log.info('Stopping discovery');
         try {
           discoverySocket.close();
-        } catch (e: any) {
-          if (e.code === 'ERR_SOCKET_DGRAM_NOT_CONNECTED') {
-            this.log.info('Socket already destroyed');
+        } catch (e: unknown) {
+          if (isNativeError(e)) {
+            this.log.error(`${e.name}: ${e.message}`);
           }
         }
       }, 600000); // Discover for 10 min then stop
       // Make sure we close the socket even if we get killed
-    } catch (e: any) {
-      this.log.error(e.code + ' Socket error');
+    } catch (e: unknown) {
+      if (isNativeError(e)) {
+        this.log.error(`${e.name}: ${e.message}`);
+      }
     }
     return true;
   }
