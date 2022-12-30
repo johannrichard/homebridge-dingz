@@ -54,7 +54,7 @@ export class MyStromSwitchAccessory extends DingzDaBaseAccessory {
       )
       .setCharacteristic(
         this.platform.Characteristic.Model,
-        this.device.model as string,
+        `MyStrom WiFi Switch  ${this.device.model as string}`,
       )
       .setCharacteristic(
         this.platform.Characteristic.FirmwareRevision,
@@ -62,7 +62,7 @@ export class MyStromSwitchAccessory extends DingzDaBaseAccessory {
       )
       .setCharacteristic(
         this.platform.Characteristic.HardwareRevision,
-        this.mystromDeviceInfo ? 'EU/CH v2/Zero' : 'CH v1',
+        this.device.model as string,
       )
       .setCharacteristic(
         this.platform.Characteristic.SerialNumber,
@@ -89,7 +89,11 @@ export class MyStromSwitchAccessory extends DingzDaBaseAccessory {
       .on(CharacteristicEventTypes.GET, this.getOutletInUse.bind(this)); // GET - bind to the `getOn` method below
 
     // Only EU and CH v2 Switches have temperature sensor
-    if (this.device.model !== 'Zero' && this.device.model !== undefined) {
+    if (
+      this.device.model !== 'Zero' &&
+      this.device.model !== 'CH v1' &&
+      this.device.model !== undefined
+    ) {
       // Switch has a temperature sensor, make it available here
       this.temperatureService =
         this.accessory.getService(this.platform.Service.TemperatureSensor) ??
@@ -134,7 +138,11 @@ export class MyStromSwitchAccessory extends DingzDaBaseAccessory {
             break;
         }
 
-        if (this.temperatureService) {
+        if (
+          this.temperatureService &&
+          this.outletState.temperature !== null &&
+          this.outletState.temperature !== undefined
+        ) {
           this.temperatureService
             .getCharacteristic(this.platform.Characteristic.CurrentTemperature)
             .updateValue(this.outletState.temperature);
