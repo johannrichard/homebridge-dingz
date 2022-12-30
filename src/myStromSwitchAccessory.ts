@@ -54,7 +54,7 @@ export class MyStromSwitchAccessory extends DingzDaBaseAccessory {
       )
       .setCharacteristic(
         this.platform.Characteristic.Model,
-        'MyStrom WiFi Switch',
+        `MyStrom WiFi Switch  ${this.device.model as string}`,
       )
       .setCharacteristic(
         this.platform.Characteristic.FirmwareRevision,
