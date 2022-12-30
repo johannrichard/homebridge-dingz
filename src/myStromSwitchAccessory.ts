@@ -54,7 +54,7 @@ export class MyStromSwitchAccessory extends DingzDaBaseAccessory {
       )
       .setCharacteristic(
         this.platform.Characteristic.Model,
-        this.device.model as string,
+        `MyStrom WiFi Switch ${this.device.model as string}`,
       )
       .setCharacteristic(
         this.platform.Characteristic.FirmwareRevision,
@@ -62,7 +62,7 @@ export class MyStromSwitchAccessory extends DingzDaBaseAccessory {
       )
       .setCharacteristic(
         this.platform.Characteristic.HardwareRevision,
-        this.mystromDeviceInfo ? 'EU/CH v2/Zero' : 'CH v1',
+        this.device.model as string,
       )
       .setCharacteristic(
         this.platform.Characteristic.SerialNumber,
