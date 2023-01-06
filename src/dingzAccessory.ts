@@ -119,11 +119,22 @@ export class DingzAccessory extends DingzDaBaseAccessory {
       .on(
         CharacteristicEventTypes.SET,
         this.setOn.bind(this, index as DimmerIndex),
-      ) // SET - bind to the `setOn` method below
-      .on(
-        CharacteristicEventTypes.GET,
-        this.getOn.bind(this, index as DimmerIndex),
-      );
+      )
+      .onGet(async () => {
+        const isOn: boolean = this.dingzStates.Dimmers[index]?.on;
+
+        this.log.debug('Get Characteristic On ->', isOn, '');
+        if (isOn !== null && isOn !== undefined && typeof isOn === 'boolean') {
+          return isOn;
+        } else {
+          this.log.warn('New code returning no valid temperature');
+          throw new Error('New code returning no valid temperature');
+        }
+      });
+    // .on(
+    //   CharacteristicEventTypes.GET,
+    //   this.getOn.bind(this, index as DimmerIndex),
+    // );
 
     this.eb.on(
       AccessoryEvent.PUSH_STATE_UPDATE,
