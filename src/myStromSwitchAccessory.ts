@@ -107,6 +107,15 @@ export class MyStromSwitchAccessory extends DingzDaBaseAccessory {
       this.temperatureService
         .getCharacteristic(this.platform.Characteristic.CurrentTemperature)
         .on(CharacteristicEventTypes.GET, this.getTemperature.bind(this));
+    } else {
+      // Make sure spurious temperature services (e.g. from Zero and CH v1) don't remain in the system
+      const temperatureService: Service | undefined = this.accessory.getService(
+        this.platform.Service.TemperatureSensor,
+      );
+      if (temperatureService !== undefined) {
+        this.platform.log.warn('Removing spurious temperature service');
+        this.accessory.removeService(temperatureService);
+      }
     }
   }
 

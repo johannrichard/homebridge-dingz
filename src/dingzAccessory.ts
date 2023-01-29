@@ -951,7 +951,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
       await this.setWindowCovering({
         id: id,
         blind: position as number,
-        lamella: (windowCovering.lamella / 90) * 100, // FIXES #419, we must convert ° to %
+        lamella: windowCovering.lamella, // FIXES #419, we must convert ° to %
         callback: callback,
       });
     }
@@ -1518,7 +1518,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     lamella = Math.round(lamella);
 
     this.log.debug(
-      `Setting WindowCovering ${id} to position ${blind} and angle ${lamella}°`,
+      `Setting WindowCovering ${id} to position ${blind} and ${lamella}% tilt position`,
     );
     // The API says the parameters can be omitted. This is not true
     // {{ip}}/api/v1/shade/0?blind=<value>&lamella=<value>
