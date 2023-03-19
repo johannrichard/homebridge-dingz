@@ -2181,10 +2181,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cockatiel@npm:^2.0.2":
-  version: 2.0.2
-  resolution: "cockatiel@npm:2.0.2"
-  checksum: 721bcaa8b2a430abf13fbebc4b069adecd912c5a221a9cdc486406920e6125f8d68f5cd399121fc9d4b7ace0ec1c642817132b257cbc3a3326b5ab59ad0f90c2
+"cockatiel@npm:^3.1.1":
+  version: 3.1.1
+  resolution: "cockatiel@npm:3.1.1"
+  checksum: c394fa5dc5a0f21a9ff9f007f16320a162000191c570fa277b527a72505a954aae5f2e93b0de0a558f5e3340fed37c014c9fe72d43adfee4aa09d976bdefe745
   languageName: node
   linkType: hard
 
@@ -3853,7 +3853,7 @@ __metadata:
     axios-retry: ^3.2.4
     body-parser: ^1.20.2
     chalk: 4.1.2
-    cockatiel: ^2.0.2
+    cockatiel: ^3.1.1
     depcheck: ^1.4.3
     eslint: ^8.36.0
     eslint-config-prettier: ^8.7.0
