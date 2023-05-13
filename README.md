@@ -2,7 +2,7 @@
 
 :construction: **Incompatibility w/ dingz Firmware v2.x.x** 🚧
 
-Dingz recently released v2.x of their firmware [with a lot of changes](http://dingz.ch/en/changelog-en/) which I neither had the time to review. Unfortunately, the changes [are breaking things](https://github.com/johannrichard/homebridge-dingz/issues/611) if you use this homebridge plugin with dingz running on Firmware v2.x. 
+Dingz recently released v2.x of their firmware [with a lot of changes](http://dingz.ch/en/changelog-en/) which I neither had the time to review nor to cope with. Unfortunately, the changes [are breaking things](https://github.com/johannrichard/homebridge-dingz/issues/611) if you use this homebridge plugin with dingz running on Firmware v2.x. 
 
 I have neither an idea of how bad this is (i.e. what broke) nor an ETA until when this can or will be fixed. 
 
