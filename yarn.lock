@@ -1761,12 +1761,12 @@ __metadata:
   linkType: hard
 
 "axios-retry@npm:^3.2.4":
-  version: 3.3.1
-  resolution: "axios-retry@npm:3.3.1"
+  version: 3.5.1
+  resolution: "axios-retry@npm:3.5.1"
   dependencies:
     "@babel/runtime": ^7.15.4
     is-retry-allowed: ^2.2.0
-  checksum: 125c75e08048a28de5d0dfa9de9a1924185d863a4323a71472646a1d5a326f727ff59e75e1b557220da1aad7cba01222c47c26194c5940f295378668dd3b9163
+  checksum: ff1690a635c74b45a0ff60b2608d36bae82ea23660a2571dea918c79242fd88cc0332ba9757810bfac398c947a950299078cef2bc2b08807c27c6ffe069aad4a
   languageName: node
   linkType: hard
 
