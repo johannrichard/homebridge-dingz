@@ -782,7 +782,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     value: CharacteristicValue,
     callback: CharacteristicSetCallback,
   ) {
-    const isOn: boolean = value > 0 ? true : false;
+    const isOn: boolean = Number(value) > 0 ? true : false;
     this.dingzStates.Dimmers[index].output = value as number;
     this.dingzStates.Dimmers[index].on = isOn;
 
@@ -938,9 +938,9 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     const windowCovering = this.dingzStates.WindowCovers[id];
     if (windowCovering) {
       // Make sure we're setting motion when changing the position
-      if (position > windowCovering.position) {
+      if (Number(position) > windowCovering.position) {
         windowCovering.moving = 'up';
-      } else if (position < windowCovering.position) {
+      } else if (Number(position) < windowCovering.position) {
         windowCovering.moving = 'down';
       } else {
         windowCovering.moving = 'stop';
