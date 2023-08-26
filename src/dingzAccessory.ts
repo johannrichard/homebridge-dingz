@@ -72,7 +72,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     Brightness: 0 as number,
   };
 
-  private motionTimer?: NodeJS.Timer;
+  private motionTimer?: NodeJS.Timeout;
 
   private config: DingzDeviceConfig;
   private hw: DingzDeviceHWInfo;
@@ -782,7 +782,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     value: CharacteristicValue,
     callback: CharacteristicSetCallback,
   ) {
-    const isOn: boolean = value > 0 ? true : false;
+    const isOn: boolean = Number(value) > 0 ? true : false;
     this.dingzStates.Dimmers[index].output = value as number;
     this.dingzStates.Dimmers[index].on = isOn;
 
@@ -938,9 +938,9 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     const windowCovering = this.dingzStates.WindowCovers[id];
     if (windowCovering) {
       // Make sure we're setting motion when changing the position
-      if (position > windowCovering.position) {
+      if (Number(position) > windowCovering.position) {
         windowCovering.moving = 'up';
-      } else if (position < windowCovering.position) {
+      } else if (Number(position) < windowCovering.position) {
         windowCovering.moving = 'down';
       } else {
         windowCovering.moving = 'stop';
@@ -1078,7 +1078,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     // Only check for motion if we have a PIR and set the Interval
     if (this.platform.config.motionPoller ?? true) {
       this.log.info('Motion POLLING enabled');
-      const motionInterval: NodeJS.Timer = setInterval(() => {
+      const motionInterval: NodeJS.Timeout = setInterval(() => {
         this.getDeviceMotion()
           .then((data) => {
             if (data?.success) {
@@ -1115,7 +1115,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
   private removeMotionService() {
     // Remove motionService & motionTimer
     if (this.motionTimer) {
-      clearTimeout(this.motionTimer);
+      clearInterval(this.motionTimer);
       this.motionTimer = undefined;
     }
     const service: Service | undefined = this.accessory.getService(
