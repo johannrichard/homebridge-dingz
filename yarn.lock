@@ -2012,12 +2012,12 @@ __metadata:
   linkType: hard
 
 "axios-retry@npm:^3.2.4":
-  version: 3.3.1
-  resolution: "axios-retry@npm:3.3.1"
+  version: 3.8.0
+  resolution: "axios-retry@npm:3.8.0"
   dependencies:
     "@babel/runtime": ^7.15.4
     is-retry-allowed: ^2.2.0
-  checksum: 125c75e08048a28de5d0dfa9de9a1924185d863a4323a71472646a1d5a326f727ff59e75e1b557220da1aad7cba01222c47c26194c5940f295378668dd3b9163
+  checksum: 448d951b971ccd35eaedc0f10ff1129a6bf2b3dfe13ce57749809bd37975332ae0e906ea4e67a41c9c98215bb1bf8a554e6880f1272419c758f91e4d68ca6b55
   languageName: node
   linkType: hard
 
