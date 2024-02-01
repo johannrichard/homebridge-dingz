@@ -39,7 +39,7 @@
   "dependencies": {
     "async-mutex": "^0.3.2",
     "axios": "^0.25.0",
-    "axios-retry": "^3.2.4",
+    "axios-retry": "^4.0.0",
     "body-parser": "^1.20.2",
     "chalk": "4.1.2",
     "cockatiel": "^2.0.2",
