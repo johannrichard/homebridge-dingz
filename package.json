@@ -37,7 +37,7 @@
     "iot"
   ],
   "dependencies": {
-    "async-mutex": "^0.3.2",
+    "async-mutex": "^0.5.0",
     "axios": "^0.25.0",
     "axios-retry": "^3.2.4",
     "body-parser": "^1.20.2",
