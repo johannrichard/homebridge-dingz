@@ -717,7 +717,9 @@ export class DingzAccessory extends DingzDaBaseAccessory {
           service.getCharacteristic(this.platform.Characteristic.Brightness),
         );
       } catch (e) {
-        this.log.warn('Attempt to remove "Brightness" characteristic failed');
+        this.log.warn(
+          `Attempt to remove "Brightness" characteristic failed ${e}`,
+        );
       } finally {
         service.addCharacteristic(this.platform.Characteristic.Brightness);
         service
