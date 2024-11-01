@@ -107,5 +107,5 @@
       "@semantic-release/*"
     ]
   },
-  "packageManager": "yarn@3.3.1"
+  "packageManager": "yarn@4.5.1"
 }
