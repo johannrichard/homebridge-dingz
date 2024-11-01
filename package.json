@@ -44,7 +44,6 @@
     "chalk": "4.1.2",
     "cockatiel": "^3.2.1",
     "express": "^4.21.1",
-    "fakegato-history": "^0.6.5",
     "intervals-for-humans": "^1.0.4",
     "is-valid-host": "^1.0.1",
     "limit-number": "^3.0.0",
@@ -103,6 +102,8 @@
     "ignores": [
       "@commitlint/*",
       "eslint*",
+      "prettier*",
+      "rimraf*",
       "semantic-release",
       "@semantic-release/*"
     ]
