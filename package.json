@@ -112,6 +112,8 @@
       "eslint*",
       "prettier*",
       "rimraf*",
+      "husky*",
+      
       "semantic-release",
       "@semantic-release/*"
     ]
