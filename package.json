@@ -3,7 +3,7 @@
   "name": "homebridge-dingz",
   "version": "3.0.0",
   "author": "johannrichard",
-  "description": "Homebridge Plugin for dingz & myStrom Devices. Implements some (but not all, due to API limitations) functions of a [dingz](https://dingz.ch) Smart Home Device.",
+  "description": "Homebridge Plugin for dingz & myStrom Devices. Implements some (but not all, due to API limitations) functions of a [dingz](https://dingz.ch) Smart Home Device. Not regularly updated.",
   "license": "Apache-2.0",
   "homepage": "https://github.com/johannrichard/homebridge-dingz#readme",
   "repository": {
