@@ -20,7 +20,6 @@
   "main": "dist/index.js",
   "scripts": {
     "lint": "eslint src/**.ts",
-    "postinstall": "yarn husky install",
     "prepack": "yarn pinst --disable",
     "postpack": "yarn pinst --enable",
     "watch": "yarn dlx nodemon",
