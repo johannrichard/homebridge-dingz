@@ -138,6 +138,7 @@ web_modules/
 # Github templates and actions, own stuff
 .github
 api
+.husky
 .prettierrc
 .prettierignore
 commitlint.config.js 

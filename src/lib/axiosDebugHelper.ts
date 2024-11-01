@@ -3,6 +3,7 @@ import {
   AxiosInstance,
   AxiosRequestConfig,
   AxiosResponse,
+  InternalAxiosRequestConfig,
 } from 'axios';
 import { Logger } from 'homebridge';
 import { DingzLogger } from './dingzLogHelper';
@@ -38,8 +39,8 @@ export class AxiosDebugHelper {
 
   public addLogger(
     instance: AxiosInstance,
-  ): AxiosRequestConfig | AxiosResponse | void {
-    instance.interceptors.request.use((config: AxiosRequestConfig) => {
+  ): InternalAxiosRequestConfig | AxiosResponse | void {
+    instance.interceptors.request.use((config: InternalAxiosRequestConfig) => {
       this.request(config);
       return config;
     });

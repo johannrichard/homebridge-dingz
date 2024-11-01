@@ -186,8 +186,9 @@ export class DingzDaBaseAccessory {
           break;
         default:
           this.log.error(
-            `HTTP ${e.code} ${e.message} ${e.response?.statusText ?? ' '}--> ` +
-              this.device.address,
+            `HTTP ${e.code} ${e.message} ${e.response?.statusText ?? ' '}--> ${
+              this.device.address
+            }`,
           );
           break;
       }

@@ -6,7 +6,14 @@ import type {
   PlatformAccessory,
   PlatformConfig,
 } from 'homebridge';
-import { Policy, ConsecutiveBreaker } from 'cockatiel';
+import {
+  ConsecutiveBreaker,
+  circuitBreaker,
+  handleAll,
+  wrap,
+  retry,
+  ExponentialBackoff,
+} from 'cockatiel';
 import { createSocket, Socket, RemoteInfo } from 'dgram';
 import { isNativeError } from 'util/types';
 import axios, { AxiosError } from 'axios';
@@ -16,6 +23,7 @@ import i4h from 'intervals-for-humans';
 import chalk from 'chalk';
 import isValidHost from 'is-valid-host';
 import * as os from 'os';
+import { Request, Response, Application } from 'express';
 import e = require('express');
 
 // Internal Types
@@ -56,22 +64,23 @@ import { MyStromPIRAccessory } from './myStromPIRAccessory';
 import { MyStromButtonPlusAccessory } from './myStromButtonPlusAccessory';
 
 // Define a policy that will retry 20 times at most
-const retry = Policy.handleAll()
-  .retry()
-  .attempts(20)
-  .exponential({
+const retryPolicy = retry(handleAll, {
+  maxAttempts: 20,
+  backoff: new ExponentialBackoff({
     maxDelay: i4h('1h') as number,
     initialDelay: i4h('2s') as number,
-  });
+  }),
+});
 
 // Create a circuit breaker that'll stop calling the executed function for 10
 // seconds if it fails 5 times in a row. This can give time for e.g. a database
 // to recover without getting tons of traffic.
-const circuitBreaker = Policy.handleAll().circuitBreaker(
-  10 * 1000,
-  new ConsecutiveBreaker(5),
-);
-const retryWithBreaker = Policy.wrap(retry, circuitBreaker);
+//
+const circuitBreakerPolicy = circuitBreaker(handleAll, {
+  halfOpenAfter: 10 * 1000,
+  breaker: new ConsecutiveBreaker(5),
+});
+const retryWithBreaker = wrap(retryPolicy, circuitBreakerPolicy);
 
 /**
  * HomebridgePlatform
@@ -87,7 +96,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
   public accessories: AccessoryTypes = {};
   private discovered = new Map();
   private ignored = new Map();
-  private readonly app: e.Application = e();
+  private readonly app: Application = e();
 
   constructor(
     public readonly log: Logger,
@@ -386,6 +395,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
               this.accessories[uuid] = dingzDaAccessory;
               return dingzDaAccessory;
             } catch (e: unknown) {
+              this.log.warn(`Unknown error ${e}`);
               return Promise.reject();
             }
           } else {
@@ -1133,7 +1143,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
     );
   }
 
-  private handleRequest(request: e.Request, response: e.Response) {
+  private handleRequest(request: Request, response: Response) {
     if (request.url) {
       response.writeHead(204); // 204 No content
       response.end(() => {
@@ -1278,7 +1288,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
     } else if (e.request) {
       this.log.error(`HTTP ${e.code} ${e.message}}--> ` + e.request.url);
     } else {
-      this.log.error('HTTP Response Error ->' + e.config.url);
+      this.log.error('HTTP Response Error ->' + e.config?.url);
       this.log.error(e.message);
     }
   };
