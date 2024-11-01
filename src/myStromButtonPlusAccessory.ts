@@ -4,7 +4,7 @@ import type {
   PlatformAccessory,
   CharacteristicGetCallback,
 } from 'homebridge';
-import { Policy } from 'cockatiel';
+import { ExponentialBackoff, handleAll, retry } from 'cockatiel';
 
 import { DingzDaHomebridgePlatform } from './platform';
 import {
@@ -17,11 +17,12 @@ import { ButtonId, ButtonState } from './lib/dingzTypes';
 import { MyStromButtonAccessory } from './myStromButtonAccessory';
 
 // Policy for long running tasks, retry every hour
-const retrySlow = Policy.handleAll()
-  .orWhenResult((retry) => retry === true)
-  .retry()
-  .exponential({ initialDelay: 10000, maxDelay: 60 * 60 * 1000 });
-
+const retrySlowPolicy = retry(handleAll, {
+  backoff: new ExponentialBackoff({
+    maxDelay: 60 * 60 * 1000,
+    initialDelay: 10000,
+  }),
+});
 /**
  * Platform Accessory
  * An instance of this class is created for each accessory your platform registers
@@ -129,7 +130,7 @@ export class MyStromButtonPlusAccessory extends MyStromButtonAccessory {
       .on(CharacteristicEventTypes.GET, this.getHumidity.bind(this));
 
     // Set the callback URL (Override!)
-    retrySlow.execute(() => {
+    retrySlowPolicy.execute(() => {
       this.platform.setButtonCallbackUrl({
         baseUrl: this.baseUrl,
         token: this.device.token,

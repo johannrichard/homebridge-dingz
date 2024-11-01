@@ -72,7 +72,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     Brightness: 0 as number,
   };
 
-  private motionTimer?: NodeJS.Timer;
+  private motionTimer?: NodeJS.Timeout;
 
   private config: DingzDeviceConfig;
   private hw: DingzDeviceHWInfo;
@@ -717,7 +717,9 @@ export class DingzAccessory extends DingzDaBaseAccessory {
           service.getCharacteristic(this.platform.Characteristic.Brightness),
         );
       } catch (e) {
-        this.log.warn('Attempt to remove "Brightness" characteristic failed');
+        this.log.warn(
+          `Attempt to remove "Brightness" characteristic failed ${e}`,
+        );
       } finally {
         service.addCharacteristic(this.platform.Characteristic.Brightness);
         service
@@ -782,7 +784,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     value: CharacteristicValue,
     callback: CharacteristicSetCallback,
   ) {
-    const isOn: boolean = value > 0 ? true : false;
+    const isOn: boolean = Number(value) > 0 ? true : false;
     this.dingzStates.Dimmers[index].output = value as number;
     this.dingzStates.Dimmers[index].on = isOn;
 
@@ -938,9 +940,9 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     const windowCovering = this.dingzStates.WindowCovers[id];
     if (windowCovering) {
       // Make sure we're setting motion when changing the position
-      if (position > windowCovering.position) {
+      if (Number(position) > windowCovering.position) {
         windowCovering.moving = 'up';
-      } else if (position < windowCovering.position) {
+      } else if (Number(position) < windowCovering.position) {
         windowCovering.moving = 'down';
       } else {
         windowCovering.moving = 'stop';
@@ -951,7 +953,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
       await this.setWindowCovering({
         id: id,
         blind: position as number,
-        lamella: (windowCovering.lamella / 90) * 100, // FIXES #419, we must convert ° to %
+        lamella: windowCovering.lamella, // FIXES #419, we must convert ° to %
         callback: callback,
       });
     }
@@ -1078,7 +1080,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     // Only check for motion if we have a PIR and set the Interval
     if (this.platform.config.motionPoller ?? true) {
       this.log.info('Motion POLLING enabled');
-      const motionInterval: NodeJS.Timer = setInterval(() => {
+      const motionInterval: NodeJS.Timeout = setInterval(() => {
         this.getDeviceMotion()
           .then((data) => {
             if (data?.success) {
@@ -1115,7 +1117,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
   private removeMotionService() {
     // Remove motionService & motionTimer
     if (this.motionTimer) {
-      clearTimeout(this.motionTimer);
+      clearInterval(this.motionTimer);
       this.motionTimer = undefined;
     }
     const service: Service | undefined = this.accessory.getService(
@@ -1518,7 +1520,7 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     lamella = Math.round(lamella);
 
     this.log.debug(
-      `Setting WindowCovering ${id} to position ${blind} and angle ${lamella}°`,
+      `Setting WindowCovering ${id} to position ${blind} and ${lamella}% tilt position`,
     );
     // The API says the parameters can be omitted. This is not true
     // {{ip}}/api/v1/shade/0?blind=<value>&lamella=<value>
