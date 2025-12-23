@@ -14,8 +14,8 @@
     "url": "https://github.com/johannrichard/homebridge-dingz/issues"
   },
   "engines": {
-    "node": ">=14.0.0",
-    "homebridge": ">1.0"
+    "node": ">=18.0.0",
+    "homebridge": ">=1.8.0"
   },
   "main": "dist/index.js",
   "scripts": {
