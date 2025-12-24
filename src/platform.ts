@@ -18,7 +18,6 @@ import { createSocket, Socket, RemoteInfo } from 'dgram';
 import { isNativeError } from 'util/types';
 import axios, { AxiosError } from 'axios';
 import axiosRetry from 'axios-retry';
-import * as bodyParser from 'body-parser';
 import i4h from 'intervals-for-humans';
 import chalk from 'chalk';
 import isValidHost from 'is-valid-host';
@@ -1132,7 +1131,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
 
   // Create a Service to listen for dingz Button events
   private callbackServer() {
-    this.app.use(bodyParser.urlencoded());
+    this.app.use(e.urlencoded({ extended: true }));
     this.app.post('/button', this.handleRequest.bind(this));
     this.app.listen(this.config.callbackPort ?? DINGZ_CALLBACK_PORT, () =>
       this.log.warn(
