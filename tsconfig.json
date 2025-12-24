@@ -15,5 +15,5 @@
     "noImplicitAny": false
   },
   "include": ["src/"],
-  "exclude": ["**/*.spec.ts"]
+  "exclude": ["**/*.spec.ts", "**/*.test.ts", "**/__tests__"]
 }
