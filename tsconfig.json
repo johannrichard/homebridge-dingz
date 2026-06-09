@@ -13,8 +13,7 @@
     "skipLibCheck": true,
     "strict": true,
     "esModuleInterop": true,
-    "noImplicitAny": false,
-    "types": ["node", "jest"]
+    "noImplicitAny": false
   },
   "include": ["src/"],
   "exclude": ["**/*.spec.ts", "**/*.test.ts", "**/__tests__"]

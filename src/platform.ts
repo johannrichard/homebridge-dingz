@@ -87,8 +87,9 @@ const retryWithBreaker = wrap(retryPolicy, circuitBreakerPolicy);
  * parse the user config and discover/register accessories with Homebridge.
  */
 export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
-  public readonly Service!: API['hap']['Service'];
-  public readonly Characteristic!: API['hap']['Characteristic'];
+  // Must be initialized in constructor after Homebridge API is available.
+  public readonly Service: API['hap']['Service'];
+  public readonly Characteristic: API['hap']['Characteristic'];
   public readonly eb = new PlatformEventBus();
 
   // this is used to track restored cached accessories
