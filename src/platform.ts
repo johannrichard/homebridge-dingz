@@ -18,7 +18,6 @@ import { createSocket, Socket, RemoteInfo } from 'dgram';
 import { isNativeError } from 'util/types';
 import axios, { AxiosError } from 'axios';
 import axiosRetry from 'axios-retry';
-import * as bodyParser from 'body-parser';
 import i4h from 'intervals-for-humans';
 import chalk from 'chalk';
 import isValidHost from 'is-valid-host';
@@ -88,8 +87,9 @@ const retryWithBreaker = wrap(retryPolicy, circuitBreakerPolicy);
  * parse the user config and discover/register accessories with Homebridge.
  */
 export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
-  public readonly Service = this.api.hap.Service;
-  public readonly Characteristic = this.api.hap.Characteristic;
+  // Must be initialized in constructor after Homebridge API is available.
+  public readonly Service: API['hap']['Service'];
+  public readonly Characteristic: API['hap']['Characteristic'];
   public readonly eb = new PlatformEventBus();
 
   // this is used to track restored cached accessories
@@ -103,6 +103,9 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
     public readonly config: PlatformConfig,
     public readonly api: API,
   ) {
+    this.Service = this.api.hap.Service;
+    this.Characteristic = this.api.hap.Characteristic;
+
     axiosRetry(axios, { retries: 5, retryDelay: axiosRetry.exponentialDelay });
 
     // Adds ignored devices from Config
@@ -1132,7 +1135,7 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
 
   // Create a Service to listen for dingz Button events
   private callbackServer() {
-    this.app.use(bodyParser.urlencoded());
+    this.app.use(e.urlencoded({ extended: true }));
     this.app.post('/button', this.handleRequest.bind(this));
     this.app.listen(this.config.callbackPort ?? DINGZ_CALLBACK_PORT, () =>
       this.log.warn(

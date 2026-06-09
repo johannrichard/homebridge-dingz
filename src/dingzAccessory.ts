@@ -5,6 +5,7 @@ import {
   CharacteristicValue,
   PlatformAccessory,
   Service,
+  WithUUID,
 } from 'homebridge';
 
 import { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
@@ -105,11 +106,16 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     }
 
     // Remove Reachability service if still present
-    const bridgingService: Service | undefined = this.accessory.getService(
-      this.platform.Service.BridgingState,
-    );
-    if (bridgingService) {
-      this.accessory.removeService(bridgingService);
+    const serviceRegistry = this.platform.Service as object;
+    if ('BridgingState' in serviceRegistry) {
+      const bridgingStateService = (
+        serviceRegistry as { BridgingState: WithUUID<typeof Service> }
+      ).BridgingState;
+      const bridgingService: Service | undefined =
+        this.accessory.getService(bridgingStateService);
+      if (bridgingService) {
+        this.accessory.removeService(bridgingService);
+      }
     }
   }
 
