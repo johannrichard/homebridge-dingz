@@ -87,8 +87,8 @@ const retryWithBreaker = wrap(retryPolicy, circuitBreakerPolicy);
  * parse the user config and discover/register accessories with Homebridge.
  */
 export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
-  public readonly Service = this.api.hap.Service;
-  public readonly Characteristic = this.api.hap.Characteristic;
+  public readonly Service!: API['hap']['Service'];
+  public readonly Characteristic!: API['hap']['Characteristic'];
   public readonly eb = new PlatformEventBus();
 
   // this is used to track restored cached accessories
@@ -102,6 +102,9 @@ export class DingzDaHomebridgePlatform implements DynamicPlatformPlugin {
     public readonly config: PlatformConfig,
     public readonly api: API,
   ) {
+    this.Service = this.api.hap.Service;
+    this.Characteristic = this.api.hap.Characteristic;
+
     axiosRetry(axios, { retries: 5, retryDelay: axiosRetry.exponentialDelay });
 
     // Adds ignored devices from Config

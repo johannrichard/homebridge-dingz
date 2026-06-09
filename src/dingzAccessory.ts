@@ -105,11 +105,15 @@ export class DingzAccessory extends DingzDaBaseAccessory {
     }
 
     // Remove Reachability service if still present
-    const bridgingService: Service | undefined = this.accessory.getService(
-      this.platform.Service.BridgingState,
-    );
-    if (bridgingService) {
-      this.accessory.removeService(bridgingService);
+    const bridgingStateService = (
+      this.platform.Service as unknown as { BridgingState?: string }
+    ).BridgingState;
+    if (bridgingStateService) {
+      const bridgingService: Service | undefined =
+        this.accessory.getService(bridgingStateService);
+      if (bridgingService) {
+        this.accessory.removeService(bridgingService);
+      }
     }
   }
 

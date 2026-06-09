@@ -1,10 +1,10 @@
 # Homebridge Plugin for dingz Devices: homebridge-dingz
 
-:construction: **Incompatibility w/ dingz Firmware v2.x.x** 🚧
+:construction: **Firmware v2 support is partial and evolving** 🚧
 
-Dingz recently released v2.x of their firmware [with a lot of changes](http://dingz.ch/en/changelog-en/) which I neither had the time to review nor to cope with. Unfortunately, the changes [are breaking things](https://github.com/johannrichard/homebridge-dingz/issues/611) if you use this homebridge plugin with dingz running on Firmware v2.x. 
+Firmware v2 changed API shapes and added new capabilities. This plugin already supports core v2 state polling and common accessories (lights/dimmers, blinds, buttons, PIR, LED, and sensors), but it does **not** yet cover the full firmware v2 feature set.
 
-I have neither an idea of how bad this is (i.e. what broke) nor an ETA until when this can or will be fixed. 
+For an updated gap/capability review based on the actively maintained Home Assistant integration, see [FIRMWARE_V2_ANALYSIS.md](FIRMWARE_V2_ANALYSIS.md).
 
 ![Build and Lint](https://github.com/johannrichard/homebridge-dingz/workflows/Build%20and%20Lint/badge.svg)
 [![Semantic release](https://github.com/johannrichard/homebridge-dingz/actions/workflows/semantic-release.yml/badge.svg?branch=master)](https://github.com/johannrichard/homebridge-dingz/actions/workflows/semantic-release.yml)
